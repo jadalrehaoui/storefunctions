@@ -1,0 +1,13 @@
+{
+  "@@locale": "es",
+  "appTitle": "Storefunctions",
+  "navInventory": "Inventario",
+  "navSearch": "Buscar",
+  "navCollapse": "Colapsar menú",
+  "navExpand": "Expandir menú",
+  "inventoryTitle": "Inventario",
+  "inventorySearchTitle": "Buscar en inventario",
+  "navPrintLabels": "Imprimir etiquetas",
+  "inventoryPrintLabelsTitle": "Imprimir etiquetas",
+  "navExportInventory": "Exportar inventario"
+}
