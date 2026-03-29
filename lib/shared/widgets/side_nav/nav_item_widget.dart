@@ -9,10 +9,12 @@ import 'nav_sub_item_widget.dart';
 
 class NavItemWidget extends StatelessWidget {
   final NavItemConfig config;
+  final List<NavSubConfig> visibleSubItems;
   final bool isCollapsed;
 
   const NavItemWidget({
     required this.config,
+    required this.visibleSubItems,
     required this.isCollapsed,
     super.key,
   });
@@ -23,7 +25,7 @@ class NavItemWidget extends StatelessWidget {
       (NavCubit c) => c.state.openItems.contains(config.id),
     );
     final l10n = context.l10n;
-    final hasSubItems = config.subItems.isNotEmpty;
+    final hasSubItems = visibleSubItems.isNotEmpty;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -47,7 +49,7 @@ class NavItemWidget extends StatelessWidget {
           },
         ),
         if (!isCollapsed && isOpen)
-          ...config.subItems.map(
+          ...visibleSubItems.map(
             (sub) => NavSubItemWidget(config: sub),
           ),
       ],

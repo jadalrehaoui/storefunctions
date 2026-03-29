@@ -9,6 +9,8 @@ class SitsaItem {
   final double? vendido;
   final String? codigoBarras;
   final double? disponible;
+  final double? salida;
+  final bool? invoiceError;
 
   const SitsaItem({
     required this.description,
@@ -21,6 +23,8 @@ class SitsaItem {
     this.vendido,
     this.codigoBarras,
     this.disponible,
+    this.salida,
+    this.invoiceError,
   });
 
   factory SitsaItem.fromJson(Map<String, dynamic> json) {
@@ -39,6 +43,8 @@ class SitsaItem {
       vendido: (json['VendidoEnSitsa'] as num?)?.toDouble(),
       codigoBarras: json['Codigo_Barras'] as String?,
       disponible: (json['Disponible'] as num?)?.toDouble(),
+      salida: (json['Salida'] as num?)?.toDouble(),
+      invoiceError: json['invoiceError'] as bool?,
     );
   }
 }

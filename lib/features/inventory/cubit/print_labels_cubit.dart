@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../models/article_result.dart';
+import '../../../models/combined_item.dart';
 import '../../../services/inventory_service.dart';
 import 'print_labels_state.dart';
 
@@ -14,18 +14,15 @@ class PrintLabelsCubit extends Cubit<PrintLabelsState> {
 
   void reset() => emit(PrintLabelsInitial());
 
-  Future<void> searchByBarcode(String articleId) async {
-    final id = articleId.trim();
-    if (id.isEmpty) return;
+  Future<void> search(String code) async {
+    final c = code.trim();
+    if (c.isEmpty) return;
 
     emit(PrintLabelsLoading());
     try {
-      final response = await _inventoryService.searchByBarcode(id);
-      final data = response['data'] as List<dynamic>;
-      final results = data
-          .map((e) => ArticleResult.fromJson(e as Map<String, dynamic>))
-          .toList();
-      emit(PrintLabelsSuccess(results));
+      final data = await _inventoryService.getItemCombined(c);
+      final item = CombinedItem.fromJson(data);
+      emit(PrintLabelsSuccess(item));
     } on DioException catch (e) {
       emit(PrintLabelsFailure(e.message ?? 'Error de conexión'));
     } catch (e) {

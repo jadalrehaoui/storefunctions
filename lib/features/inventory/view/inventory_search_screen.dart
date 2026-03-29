@@ -60,10 +60,10 @@ class _InventorySearchViewState extends State<_InventorySearchView> {
               Expanded(
                 child: TextField(
                   controller: _controller,
-                  decoration: const InputDecoration(
-                    labelText: 'Código',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.searchFieldLabel,
+                    prefixIcon: const Icon(Icons.search),
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   onSubmitted: (_) => _submit(),
@@ -74,7 +74,7 @@ class _InventorySearchViewState extends State<_InventorySearchView> {
               FilledButton.icon(
                 onPressed: _submit,
                 icon: const Icon(Icons.search, size: 18),
-                label: const Text('Buscar'),
+                label: Text(context.l10n.btnSearch),
               ),
             ],
           ),
@@ -163,7 +163,7 @@ class _ModeloSection extends StatelessWidget {
           onPressed: () =>
               context.read<InventorySearchCubit>().loadModeloItems(modelo),
           icon: const Icon(Icons.inventory_2_outlined, size: 16),
-          label: Text('Ver más con modelo $modelo'),
+          label: Text(context.l10n.msgVerMasModelo(modelo)),
         ),
       );
     }
@@ -171,7 +171,8 @@ class _ModeloSection extends StatelessWidget {
     final items = state.modeloItems!;
     final fobFmt = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
 
-    final columns = ['Código', 'Barras', 'Descripción', 'FOB', 'Disp.', 'Res.'];
+    final l10n = context.l10n;
+    final columns = [l10n.labelCodigo, 'Barras', l10n.colDescripcion, l10n.labelFob, l10n.colDisp, 'Res.'];
     final colWidths = [100.0, 130.0, null, 90.0, 60.0, 60.0]; // null = flex
 
     return Column(
@@ -179,7 +180,7 @@ class _ModeloSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text('Modelo $modelo',
+            Text(context.l10n.msgModeloHeader(modelo),
                 style: textTheme.labelLarge
                     ?.copyWith(color: colorScheme.onSurfaceVariant)),
             const SizedBox(width: 8),
@@ -268,37 +269,87 @@ class _ModeloSection extends StatelessWidget {
   }
 }
 
-class _DescriptionResultsList extends StatelessWidget {
+class _DescriptionResultsList extends StatefulWidget {
   final InventorySearchDescriptionResults state;
   final void Function(String) onCodeSelected;
   const _DescriptionResultsList(
       {required this.state, required this.onCodeSelected});
 
   @override
+  State<_DescriptionResultsList> createState() =>
+      _DescriptionResultsListState();
+}
+
+class _DescriptionResultsListState extends State<_DescriptionResultsList> {
+  static const _headers = [
+    'Código', 'Barras', 'Descripción', 'Modelo', 'FOB', 'Costo', 'G%', 'Precio', 'Disp.', 'Res.'
+  ];
+  static const _widths = [100.0, 130.0, null, 120.0, 85.0, 105.0, 50.0, 105.0, 55.0, 45.0];
+
+  // sortable column indices → data keys
+  static const _sortKeys = {
+    0: 'PK_FK_Articulo',
+    2: 'Articulo_Descripcion',
+    3: 'MODELO',
+    5: 'Costo',
+    8: 'Cantidad_Disponible',
+  };
+
+  int? _sortCol;
+  bool _sortAsc = true;
+
+  List<dynamic> _sorted(List<dynamic> items) {
+    if (_sortCol == null) return items;
+    final key = _sortKeys[_sortCol!]!;
+    final copy = List<dynamic>.from(items);
+    copy.sort((a, b) {
+      final av = (a as Map<String, dynamic>)[key];
+      final bv = (b as Map<String, dynamic>)[key];
+      int cmp;
+      if (av is num && bv is num) {
+        cmp = av.compareTo(bv);
+      } else {
+        cmp = '${av ?? ''}'.compareTo('${bv ?? ''}');
+      }
+      return _sortAsc ? cmp : -cmp;
+    });
+    return copy;
+  }
+
+  void _onHeaderTap(int index) {
+    if (!_sortKeys.containsKey(index)) return;
+    setState(() {
+      if (_sortCol == index) {
+        _sortAsc = !_sortAsc;
+      } else {
+        _sortCol = index;
+        _sortAsc = true;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final items = state.items;
+    final items = _sorted(widget.state.items);
     final fobFmt = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
     final costFmt = NumberFormat.currency(symbol: '₡', decimalDigits: 2);
 
     if (items.isEmpty) {
       return Center(
-        child: Text('Sin resultados para "${state.query}"',
+        child: Text(context.l10n.msgSinResultados(widget.state.query),
             style: textTheme.bodyMedium
                 ?.copyWith(color: colorScheme.onSurfaceVariant)),
       );
     }
-
-    const headers = ['Código', 'Barras', 'Descripción', 'Modelo', 'FOB', 'Costo', 'G%', 'Disp.', 'Res.'];
-    const widths = [100.0, 130.0, null, 120.0, 85.0, 105.0, 50.0, 55.0, 45.0];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text('Resultados para "${state.query}"',
+            Text(context.l10n.msgResultadosPara(widget.state.query),
                 style: textTheme.labelLarge
                     ?.copyWith(color: colorScheme.onSurfaceVariant)),
             const SizedBox(width: 8),
@@ -330,10 +381,13 @@ class _DescriptionResultsList extends StatelessWidget {
                     color: colorScheme.surfaceContainerLow,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 8),
-                    child: _ModeloRow(
-                      columns: headers,
-                      widths: widths,
-                      isHeader: true,
+                    child: _SortableHeaderRow(
+                      headers: _headers,
+                      widths: _widths,
+                      sortableIndices: _sortKeys.keys.toSet(),
+                      sortCol: _sortCol,
+                      sortAsc: _sortAsc,
+                      onTap: _onHeaderTap,
                       textTheme: textTheme,
                       colorScheme: colorScheme,
                     ),
@@ -348,7 +402,7 @@ class _DescriptionResultsList extends StatelessWidget {
                         final m = items[i] as Map<String, dynamic>;
                         final code = m['PK_FK_Articulo'] as String? ?? '';
                         return InkWell(
-                          onTap: () => onCodeSelected(code),
+                          onTap: () => widget.onCodeSelected(code),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 8),
@@ -364,10 +418,15 @@ class _DescriptionResultsList extends StatelessWidget {
                                 fobFmt.format(m['FOB'] ?? 0),
                                 costFmt.format(m['Costo'] ?? 0),
                                 '${(m['Ganancia'] as num?)?.toStringAsFixed(0) ?? '0'}%',
+                                () {
+                                  final costo = (m['Costo'] as num?)?.toDouble() ?? 0;
+                                  final ganancia = (m['Ganancia'] as num?)?.toDouble() ?? 0;
+                                  return costFmt.format(costo + costo * ganancia / 100);
+                                }(),
                                 '${m['Cantidad_Disponible'] ?? 0}',
                                 '${m['Cantidad_Reservada'] ?? 0}',
                               ],
-                              widths: widths,
+                              widths: _widths,
                               isHeader: false,
                               textTheme: textTheme,
                               colorScheme: colorScheme,
@@ -383,6 +442,70 @@ class _DescriptionResultsList extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SortableHeaderRow extends StatelessWidget {
+  final List<String> headers;
+  final List<double?> widths;
+  final Set<int> sortableIndices;
+  final int? sortCol;
+  final bool sortAsc;
+  final void Function(int) onTap;
+  final TextTheme textTheme;
+  final ColorScheme colorScheme;
+
+  const _SortableHeaderRow({
+    required this.headers,
+    required this.widths,
+    required this.sortableIndices,
+    required this.sortCol,
+    required this.sortAsc,
+    required this.onTap,
+    required this.textTheme,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(headers.length, (i) {
+        final isSortable = sortableIndices.contains(i);
+        final isActive = sortCol == i;
+        final cell = GestureDetector(
+          onTap: isSortable ? () => onTap(i) : null,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                headers[i],
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.labelSmall?.copyWith(
+                  color: isActive
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (isSortable) ...[
+                const SizedBox(width: 2),
+                Icon(
+                  isActive
+                      ? (sortAsc ? Icons.arrow_upward : Icons.arrow_downward)
+                      : Icons.unfold_more,
+                  size: 12,
+                  color: isActive
+                      ? colorScheme.primary
+                      : colorScheme.outlineVariant,
+                ),
+              ],
+            ],
+          ),
+        );
+        final w = widths[i];
+        return w == null ? Expanded(child: cell) : SizedBox(width: w, child: cell);
+      }),
     );
   }
 }
@@ -466,9 +589,36 @@ class _SitsaCard extends StatelessWidget {
                         style: textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant)),
                     const SizedBox(height: 2),
-                    Text(sitsa.classification,
-                        style: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant)),
+                    Row(
+                      children: [
+                        Text(sitsa.classification,
+                            style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant)),
+                        if (sitsa.invoiceError != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: sitsa.invoiceError!
+                                  ? const Color(0xFFFFDEDE)
+                                  : const Color(0xFFDEF5E4),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Invoice ${sitsa.invoiceError! ? 'Error' : 'OK'}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: sitsa.invoiceError!
+                                    ? const Color(0xFFB00020)
+                                    : const Color(0xFF1B5E2A),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
                 const Spacer(),
@@ -484,7 +634,7 @@ class _SitsaCard extends StatelessWidget {
                           children: [
                             if (sitsa.vendido != null)
                               _Badge(
-                                label: 'Vendido Sitsa',
+                                label: context.l10n.labelVendidoSitsa,
                                 value: num_.format(sitsa.vendido),
                                 color: const Color(0xFFD0E4FF),
                                 onColor: const Color(0xFF003366),
@@ -493,7 +643,7 @@ class _SitsaCard extends StatelessWidget {
                               const SizedBox(height: 4),
                             if (mikail?.vendido != null)
                               _Badge(
-                                label: 'Vendido Mikail',
+                                label: context.l10n.labelVendidoMikail,
                                 value: num_.format(mikail!.vendido),
                                 color: const Color(0xFFD4F0DC),
                                 onColor: const Color(0xFF1B5E2A),
@@ -505,7 +655,7 @@ class _SitsaCard extends StatelessWidget {
                         const SizedBox(width: 8),
                       if (item.totalVentas != null)
                         _StretchBadge(
-                          label: 'Venta',
+                          label: context.l10n.labelVenta,
                           value: num_.format(item.totalVentas),
                           color: const Color(0xFFFFF0CC),
                           onColor: const Color(0xFF5C3D00),
@@ -513,7 +663,7 @@ class _SitsaCard extends StatelessWidget {
                       if (mikail != null) const SizedBox(width: 8),
                       if (mikail != null)
                         _StretchBadge(
-                          label: 'Ingreso',
+                          label: context.l10n.labelIngreso,
                           value: num_.format(mikail.ingreso),
                           color: const Color(0xFFEDD5F5),
                           onColor: const Color(0xFF4A0072),
@@ -542,7 +692,7 @@ class _SitsaCard extends StatelessWidget {
                   runSpacing: 12,
                   children: [
                     _InfoTile(
-                      label: 'Costo',
+                      label: context.l10n.labelCosto,
                       value: colones.format(sitsa.costo),
                       valueStyle: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -550,24 +700,29 @@ class _SitsaCard extends StatelessWidget {
                       ),
                     ),
                     _InfoTile(
-                      label: 'Ganancia',
+                      label: context.l10n.labelGanancia,
                       value: '${sitsa.ganancia.toStringAsFixed(0)}%',
                     ),
                     _InfoTile(
-                      label: 'Precio',
+                      label: context.l10n.labelPrecio,
                       value: colones.format(
                           sitsa.costo + sitsa.costo * sitsa.ganancia / 100),
                     ),
                     _InfoTile(
-                      label: 'FOB',
+                      label: context.l10n.labelFob,
                       value: currency.format(sitsa.fob),
                     ),
+                    if (sitsa.salida != null)
+                      _InfoTile(
+                        label: context.l10n.labelSalida,
+                        value: num_.format(sitsa.salida),
+                      ),
                   ],
                 ),
                 const Spacer(),
                 if (sitsa.disponible != null)
                   _Badge(
-                    label: 'Disponible',
+                    label: context.l10n.labelDisponible,
                     value: num_.format(sitsa.disponible),
                     color: colorScheme.primaryContainer,
                     onColor: colorScheme.onPrimaryContainer,

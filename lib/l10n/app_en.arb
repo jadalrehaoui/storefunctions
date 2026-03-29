@@ -1,13 +1,224 @@
 {
   "@@locale": "en",
   "appTitle": "Storefunctions",
+
   "navInventory": "Inventory",
   "navSearch": "Search",
   "navCollapse": "Collapse menu",
   "navExpand": "Expand menu",
+  "navPrintLabels": "Print labels",
+  "navExportInventory": "Export inventory",
+  "navReports": "Reports",
+  "navSalesReports": "Sales Reports",
+  "navCierreSitsa": "Cierre Sitsa",
+  "navCierreMikail": "Cierre Mikail",
+  "navRestockList": "Restock List",
+  "navCierres": "Closures",
+  "navUsers": "Users",
+  "navSettings": "Settings",
+
   "inventoryTitle": "Inventory",
   "inventorySearchTitle": "Search inventory",
-  "navPrintLabels": "Print labels",
   "inventoryPrintLabelsTitle": "Print labels",
-  "navExportInventory": "Export inventory"
+  "searchFieldLabel": "Code / Text",
+
+  "btnGenerate": "Generate",
+  "btnSave": "Save",
+  "btnCancel": "Cancel",
+  "btnAdd": "Add",
+  "btnDelete": "Delete",
+  "btnEdit": "Edit",
+  "btnPrint": "Print",
+  "btnRetry": "Retry",
+  "btnUpdate": "Update",
+  "btnSearch": "Search",
+  "btnAddUser": "Add User",
+  "btnCustomLabel": "Custom label",
+  "btnExportCsv": "Export CSV",
+
+  "labelDate": "Date",
+  "labelSearchHint": "Search…",
+  "labelMonto": "Amount",
+  "labelBanco": "Bank",
+  "labelTC": "Exch. Rate",
+  "labelNumDeposito": "Deposit No.",
+  "labelInventarioAnterior": "Previous Inventory",
+  "labelCostoInventarioAyer": "Yesterday's Inventory Cost (₡)",
+  "labelDepositosBancarios": "Bank Deposits",
+  "labelCobrosConTarjeta": "Card Charges",
+  "labelCostoInventarioField": "Inventory Cost (₡)",
+  "labelInventarioAnteriorField": "Previous Inventory (₡)",
+  "labelCostosInventario": "Inventory Costs",
+  "labelCreadoPor": "Created by",
+  "labelTotalDia": "Daily Total",
+  "labelRequired": "Required",
+  "labelNewUsername": "New username",
+  "labelUsername": "Username",
+  "labelPassword": "Password",
+  "labelNewPassword": "New password",
+  "labelPrivileges": "Privileges",
+  "labelCodigo": "Code",
+  "labelModelo": "Model",
+  "labelFechaInicio": "Start date",
+  "labelFechaFin": "End date",
+  "labelCodigoBarras": "Barcode",
+  "labelFilas": "Rows",
+  "labelCantidad": "Quantity",
+  "labelBarcode": "Barcode",
+  "labelArticleId": "Article ID",
+  "labelPrice": "Price",
+  "labelDescription": "Description",
+  "labelCosto": "Cost",
+  "labelGanancia": "Profit",
+  "labelPrecio": "Price",
+  "labelFob": "FOB",
+  "labelSalida": "Exit",
+  "labelDisponible": "Available",
+  "labelVendidoSitsa": "Sold Sitsa",
+  "labelVendidoMikail": "Sold Mikail",
+  "labelVenta": "Sale",
+  "labelIngreso": "Income",
+  "labelSinFiltro": "No filter",
+
+  "tileTotalFacturas": "Total Invoices",
+  "tileAnuladas": "Voided",
+  "tileBruto": "Gross",
+  "tileBonos": "Bonuses",
+  "tileDescuentos": "Discounts",
+  "tileCostoInventario": "Inventory Cost",
+  "tileVentaNeta": "Net Sales",
+  "tilePctDescuento": "% Discount",
+  "tileDiferenciaDepositar": "Difference to Deposit",
+
+  "labelRangosFacturas": "Invoice Ranges",
+  "colRangoInicio": "Range Start",
+  "colRangoFin": "Range End",
+  "colTotal": "Total",
+  "colFecha": "Date",
+  "colPor": "By",
+  "colVentaNeta": "Net Sales",
+  "colPctDesc": "% Disc.",
+  "colDifDepositar": "Diff. to Deposit",
+  "colInvAnterior": "Prev. Inventory",
+  "colNoDeposito": "Deposit No.",
+  "colMoneda": "Currency",
+  "colCodigo": "Code",
+  "colModelo": "Model",
+  "colClasificacion": "Classification",
+  "colDescripcion": "Description",
+  "colDisp": "Avail.",
+  "colReserv": "Reserved",
+  "colUsername": "Username",
+  "colPrivileges": "Privileges",
+
+  "sectionGeneral": "General",
+  "sectionCalculos": "Calculations",
+  "sectionFacturas": "Invoices",
+  "sectionDetalle": "Detail",
+
+  "cierreSitsaTitle": "Cierre Sitsa",
+  "cierreMikailTitle": "Cierre Mikail",
+  "restockListTitle": "Restock List",
+  "closuresTitle": "Closures",
+  "closureDetailTitle": "Closure Detail",
+  "editClosureTitle": "Edit Closure",
+  "usersTitle": "Users",
+  "settingsTitle": "Settings",
+
+  "labelLanguage": "Language",
+  "labelDatabaseConnections": "Database Connections",
+  "statusConnected": "Connected",
+  "statusDisconnected": "Disconnected",
+  "statusChecking": "Checking…",
+
+  "tooltipPrintPdf": "Print PDF",
+  "tooltipExportCsv": "Export CSV",
+  "tooltipRefresh": "Refresh",
+  "tooltipBack": "Back",
+  "tooltipRemove": "Remove",
+  "tooltipDownloadCsv": "Download CSV",
+  "tooltipEdit": "Edit",
+  "tooltipDelete": "Delete",
+  "tooltipCannotDeleteSelf": "Cannot delete yourself",
+  "tooltipGuardar": "Save",
+  "tooltipActualizar": "Update",
+
+  "msgSaved": "Saved",
+  "msgUpdated": "Updated",
+  "msgSelectDateGenerate": "Select a date and press Generate",
+  "msgNoItems": "No items",
+  "msgNoDepositsAdded": "No deposits added",
+  "msgNoCardChargesAdded": "No card charges added",
+  "msgNoDeposits": "No deposits",
+  "msgNoCardCharges": "No card charges",
+  "msgNoClosures": "No closures yet",
+  "msgNoUsersFound": "No users found.",
+  "msgNoChangesToSave": "No changes to save.",
+  "msgDescargandoDatos": "Downloading data...",
+  "hintLeaveBlankCurrent": "Leave blank to keep current",
+  "helperMax28Chars": "Max 28 characters",
+  "labelDifDepositar": "Diff. to Deposit",
+  "deleteUserTitle": "Delete user",
+
+  "msgVerMasModelo": "View more with model {modelo}",
+  "@msgVerMasModelo": {
+    "placeholders": {
+      "modelo": {"type": "String"}
+    }
+  },
+  "msgModeloHeader": "Model {modelo}",
+  "@msgModeloHeader": {
+    "placeholders": {
+      "modelo": {"type": "String"}
+    }
+  },
+  "msgSinResultados": "No results for \"{query}\"",
+  "@msgSinResultados": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "msgResultadosPara": "Results for \"{query}\"",
+  "@msgResultadosPara": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "msgArticulosExportados": "{count} items exported",
+  "@msgArticulosExportados": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "helperMaxRows": "Max {max}",
+  "@helperMaxRows": {
+    "placeholders": {
+      "max": {"type": "int"}
+    }
+  },
+  "deleteUserConfirm": "Delete \"{username}\"? This cannot be undone.",
+  "@deleteUserConfirm": {
+    "placeholders": {
+      "username": {"type": "String"}
+    }
+  },
+  "validatorMinOne": "Enter a number ≥ 1",
+  "msgSavedAt": "Saved: {path}",
+  "@msgSavedAt": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "msgErrorDetail": "Error: {detail}",
+  "@msgErrorDetail": {
+    "placeholders": {
+      "detail": {"type": "String"}
+    }
+  },
+  "editUserTitle": "Edit \"{username}\"",
+  "@editUserTitle": {
+    "placeholders": {
+      "username": {"type": "String"}
+    }
+  }
 }

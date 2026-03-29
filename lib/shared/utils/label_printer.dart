@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 
 import '../../models/article_result.dart';
+import '../../models/combined_item.dart';
 
 const _printerHost = '10.10.0.144';
 const _printerPort = 9100;
@@ -41,6 +42,66 @@ String _buildZpl({
       .replaceAll('{{PRICE}}', price)
       .replaceAll('{{DESCRIPTION}}', description)
       .replaceAll('{{COUNT}}', '$count');
+}
+
+Future<void> printCustomLabel({
+  required String barcode,
+  required String articleId,
+  required String price,
+  required String description,
+  required int count,
+}) async {
+  final zpl = _buildZpl(
+    barcode: barcode,
+    articleId: articleId,
+    price: price,
+    description: description.length > 28 ? description.substring(0, 28) : description,
+    count: count,
+  );
+
+  final socket = await Socket.connect(
+    _printerHost,
+    _printerPort,
+    timeout: const Duration(seconds: 5),
+  );
+
+  try {
+    socket.write(zpl);
+    await socket.flush();
+  } finally {
+    await socket.close();
+  }
+}
+
+Future<void> printCombinedLabel(CombinedItem item, int count) async {
+  final sitsa = item.sitsa;
+  final barcode = sitsa?.codigoBarras ?? '';
+  final rawPrice =
+      sitsa != null ? sitsa.costo + sitsa.costo * sitsa.ganancia / 100 : 0;
+  final price = NumberFormat('#,##0', 'en_US').format(rawPrice.round());
+  final description = sitsa?.description ?? '';
+
+  final zpl = _buildZpl(
+    barcode: barcode,
+    articleId: item.code,
+    price: price,
+    description:
+        description.length > 28 ? description.substring(0, 28) : description,
+    count: count,
+  );
+
+  final socket = await Socket.connect(
+    _printerHost,
+    _printerPort,
+    timeout: const Duration(seconds: 5),
+  );
+
+  try {
+    socket.write(zpl);
+    await socket.flush();
+  } finally {
+    await socket.close();
+  }
 }
 
 Future<void> printArticleLabels(ArticleResult article, int count) async {

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../di/service_locator.dart';
+import '../../../l10n/l10n.dart';
 import '../cubit/export_inventory_cubit.dart';
 
 class InventoryExportScreen extends StatelessWidget {
@@ -67,14 +68,14 @@ class _ExportViewState extends State<_ExportView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Exportar inventario', style: textTheme.headlineSmall),
+          Text(context.l10n.navExportInventory, style: textTheme.headlineSmall),
           const SizedBox(height: 24),
 
           // Date pickers row
           Row(
             children: [
               _DatePickerTile(
-                label: 'Fecha inicio',
+                label: context.l10n.labelFechaInicio,
                 value: _startDate != null ? _dateFmt.format(_startDate!) : null,
                 onTap: _pickStart,
                 onClear: _startDate != null
@@ -83,7 +84,7 @@ class _ExportViewState extends State<_ExportView> {
               ),
               const SizedBox(width: 16),
               _DatePickerTile(
-                label: 'Fecha fin',
+                label: context.l10n.labelFechaFin,
                 value: _endDate != null ? _dateFmt.format(_endDate!) : null,
                 onTap: _pickEnd,
                 onClear: _endDate != null
@@ -103,7 +104,7 @@ class _ExportViewState extends State<_ExportView> {
                               strokeWidth: 2, color: Colors.white),
                         )
                       : const Icon(Icons.download_outlined, size: 18),
-                  label: const Text('Exportar CSV'),
+                  label: Text(context.l10n.btnExportCsv),
                 ),
               ),
             ],
@@ -124,7 +125,7 @@ class _ExportViewState extends State<_ExportView> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2)),
                     const SizedBox(width: 12),
-                    Text('Descargando datos...',
+                    Text(context.l10n.msgDescargandoDatos,
                         style: textTheme.bodyMedium),
                   ],
                 );
@@ -147,7 +148,7 @@ class _ExportViewState extends State<_ExportView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${state.rowCount} artículos exportados',
+                              context.l10n.msgArticulosExportados(state.rowCount),
                               style: textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: const Color(0xFF1B5E2A)),
@@ -237,7 +238,7 @@ class _DatePickerTile extends StatelessWidget {
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: colorScheme.onSurfaceVariant)),
                 Text(
-                  value ?? 'Sin filtro',
+                  value ?? context.l10n.labelSinFiltro,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: value != null
                           ? colorScheme.onSurface

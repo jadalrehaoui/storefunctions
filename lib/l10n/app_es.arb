@@ -1,13 +1,224 @@
 {
   "@@locale": "es",
   "appTitle": "Storefunctions",
+
   "navInventory": "Inventario",
   "navSearch": "Buscar",
   "navCollapse": "Colapsar menú",
   "navExpand": "Expandir menú",
+  "navPrintLabels": "Imprimir etiquetas",
+  "navExportInventory": "Exportar inventario",
+  "navReports": "Reportes",
+  "navSalesReports": "Reportes de Ventas",
+  "navCierreSitsa": "Cierre Sitsa",
+  "navCierreMikail": "Cierre Mikail",
+  "navRestockList": "Lista de Restock",
+  "navCierres": "Cierres",
+  "navUsers": "Usuarios",
+  "navSettings": "Configuración",
+
   "inventoryTitle": "Inventario",
   "inventorySearchTitle": "Buscar en inventario",
-  "navPrintLabels": "Imprimir etiquetas",
   "inventoryPrintLabelsTitle": "Imprimir etiquetas",
-  "navExportInventory": "Exportar inventario"
+  "searchFieldLabel": "Código / Texto",
+
+  "btnGenerate": "Generar",
+  "btnSave": "Guardar",
+  "btnCancel": "Cancelar",
+  "btnAdd": "Agregar",
+  "btnDelete": "Eliminar",
+  "btnEdit": "Editar",
+  "btnPrint": "Imprimir",
+  "btnRetry": "Reintentar",
+  "btnUpdate": "Actualizar",
+  "btnSearch": "Buscar",
+  "btnAddUser": "Agregar Usuario",
+  "btnCustomLabel": "Etiqueta personalizada",
+  "btnExportCsv": "Exportar CSV",
+
+  "labelDate": "Fecha",
+  "labelSearchHint": "Buscar…",
+  "labelMonto": "Monto",
+  "labelBanco": "Banco",
+  "labelTC": "T/C",
+  "labelNumDeposito": "No. Depósito",
+  "labelInventarioAnterior": "Inventario Anterior",
+  "labelCostoInventarioAyer": "Costo Inventario Ayer (₡)",
+  "labelDepositosBancarios": "Depósitos Bancarios",
+  "labelCobrosConTarjeta": "Cobros con Tarjeta",
+  "labelCostoInventarioField": "Costo Inventario (₡)",
+  "labelInventarioAnteriorField": "Inventario Anterior (₡)",
+  "labelCostosInventario": "Costos de Inventario",
+  "labelCreadoPor": "Creado por",
+  "labelTotalDia": "Total del Día",
+  "labelRequired": "Requerido",
+  "labelNewUsername": "Nombre de usuario nuevo",
+  "labelUsername": "Nombre de usuario",
+  "labelPassword": "Contraseña",
+  "labelNewPassword": "Contraseña nueva",
+  "labelPrivileges": "Privilegios",
+  "labelCodigo": "Código",
+  "labelModelo": "Modelo",
+  "labelFechaInicio": "Fecha inicio",
+  "labelFechaFin": "Fecha fin",
+  "labelCodigoBarras": "Código de Barras",
+  "labelFilas": "Filas",
+  "labelCantidad": "Cantidad",
+  "labelBarcode": "Código de Barras",
+  "labelArticleId": "ID de Artículo",
+  "labelPrice": "Precio",
+  "labelDescription": "Descripción",
+  "labelCosto": "Costo",
+  "labelGanancia": "Ganancia",
+  "labelPrecio": "Precio",
+  "labelFob": "FOB",
+  "labelSalida": "Salida",
+  "labelDisponible": "Disponible",
+  "labelVendidoSitsa": "Vendido Sitsa",
+  "labelVendidoMikail": "Vendido Mikail",
+  "labelVenta": "Venta",
+  "labelIngreso": "Ingreso",
+  "labelSinFiltro": "Sin filtro",
+
+  "tileTotalFacturas": "Total Facturas",
+  "tileAnuladas": "Anuladas",
+  "tileBruto": "Bruto",
+  "tileBonos": "Bonos",
+  "tileDescuentos": "Descuentos",
+  "tileCostoInventario": "Costo Inventario",
+  "tileVentaNeta": "Venta Neta",
+  "tilePctDescuento": "% Descuento",
+  "tileDiferenciaDepositar": "Diferencia a Depositar",
+
+  "labelRangosFacturas": "Rangos de Facturas",
+  "colRangoInicio": "Rango Inicio",
+  "colRangoFin": "Rango Fin",
+  "colTotal": "Total",
+  "colFecha": "Fecha",
+  "colPor": "Por",
+  "colVentaNeta": "Venta Neta",
+  "colPctDesc": "% Desc.",
+  "colDifDepositar": "Dif. a Depositar",
+  "colInvAnterior": "Inv. Anterior",
+  "colNoDeposito": "No. Depósito",
+  "colMoneda": "Moneda",
+  "colCodigo": "Código",
+  "colModelo": "Modelo",
+  "colClasificacion": "Clasificación",
+  "colDescripcion": "Descripción",
+  "colDisp": "Disp.",
+  "colReserv": "Reserv.",
+  "colUsername": "Usuario",
+  "colPrivileges": "Privilegios",
+
+  "sectionGeneral": "General",
+  "sectionCalculos": "Cálculos",
+  "sectionFacturas": "Facturas",
+  "sectionDetalle": "Detalle",
+
+  "cierreSitsaTitle": "Cierre Sitsa",
+  "cierreMikailTitle": "Cierre Mikail",
+  "restockListTitle": "Lista de Restock",
+  "closuresTitle": "Cierres",
+  "closureDetailTitle": "Detalle de Cierre",
+  "editClosureTitle": "Editar Cierre",
+  "usersTitle": "Usuarios",
+  "settingsTitle": "Configuración",
+
+  "labelLanguage": "Idioma",
+  "labelDatabaseConnections": "Conexiones de Base de Datos",
+  "statusConnected": "Conectado",
+  "statusDisconnected": "Desconectado",
+  "statusChecking": "Verificando…",
+
+  "tooltipPrintPdf": "Imprimir PDF",
+  "tooltipExportCsv": "Exportar CSV",
+  "tooltipRefresh": "Actualizar",
+  "tooltipBack": "Atrás",
+  "tooltipRemove": "Eliminar",
+  "tooltipDownloadCsv": "Descargar CSV",
+  "tooltipEdit": "Editar",
+  "tooltipDelete": "Eliminar",
+  "tooltipCannotDeleteSelf": "No puede eliminarse a sí mismo",
+  "tooltipGuardar": "Guardar",
+  "tooltipActualizar": "Actualizar",
+
+  "msgSaved": "Guardado",
+  "msgUpdated": "Actualizado",
+  "msgSelectDateGenerate": "Seleccione una fecha y presione Generar",
+  "msgNoItems": "Sin artículos",
+  "msgNoDepositsAdded": "Sin depósitos agregados",
+  "msgNoCardChargesAdded": "Sin cobros con tarjeta",
+  "msgNoDeposits": "Sin depósitos",
+  "msgNoCardCharges": "Sin cobros con tarjeta",
+  "msgNoClosures": "Sin cierres aún",
+  "msgNoUsersFound": "No se encontraron usuarios.",
+  "msgNoChangesToSave": "Sin cambios para guardar.",
+  "msgDescargandoDatos": "Descargando datos...",
+  "hintLeaveBlankCurrent": "Dejar en blanco para mantener el actual",
+  "helperMax28Chars": "Máx 28 caracteres",
+  "labelDifDepositar": "Dif. a Depositar",
+  "deleteUserTitle": "Eliminar usuario",
+
+  "msgVerMasModelo": "Ver más con modelo {modelo}",
+  "@msgVerMasModelo": {
+    "placeholders": {
+      "modelo": {"type": "String"}
+    }
+  },
+  "msgModeloHeader": "Modelo {modelo}",
+  "@msgModeloHeader": {
+    "placeholders": {
+      "modelo": {"type": "String"}
+    }
+  },
+  "msgSinResultados": "Sin resultados para \"{query}\"",
+  "@msgSinResultados": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "msgResultadosPara": "Resultados para \"{query}\"",
+  "@msgResultadosPara": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "msgArticulosExportados": "{count} artículos exportados",
+  "@msgArticulosExportados": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "helperMaxRows": "Máx {max}",
+  "@helperMaxRows": {
+    "placeholders": {
+      "max": {"type": "int"}
+    }
+  },
+  "deleteUserConfirm": "¿Eliminar \"{username}\"? Esta acción no se puede deshacer.",
+  "@deleteUserConfirm": {
+    "placeholders": {
+      "username": {"type": "String"}
+    }
+  },
+  "validatorMinOne": "Ingrese un número ≥ 1",
+  "msgSavedAt": "Guardado: {path}",
+  "@msgSavedAt": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "msgErrorDetail": "Error: {detail}",
+  "@msgErrorDetail": {
+    "placeholders": {
+      "detail": {"type": "String"}
+    }
+  },
+  "editUserTitle": "Editar \"{username}\"",
+  "@editUserTitle": {
+    "placeholders": {
+      "username": {"type": "String"}
+    }
+  }
 }

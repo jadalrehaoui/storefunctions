@@ -33,3 +33,4 @@ jobs:
           name: storefunctions-windows
           path: storefunctions.zip
           retention-days: 30
+          compression-level: 0  # Don't re-zip, the file is already a zip
