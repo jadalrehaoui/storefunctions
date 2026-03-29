@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 class AuthService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: 'http://10.10.0.148:3000',
+      baseUrl: 'http://10.10.0.130:8081',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 15),
       contentType: 'application/json',
