@@ -16,6 +16,11 @@ class UsersFailure extends UsersState {
   UsersFailure(this.error);
 }
 
+class UsersDeleteError extends UsersState {
+  final String error;
+  UsersDeleteError(this.error);
+}
+
 class UsersCubit extends Cubit<UsersState> {
   final ApiClient _api;
 
@@ -53,21 +58,25 @@ class UsersCubit extends Cubit<UsersState> {
 
   Future<void> editUser(
     int id, {
-    String? username,
+    required String username,
     String? password,
-    List<String>? privileges,
+    required List<String> privileges,
   }) async {
     final body = <String, dynamic>{
-      if (username != null) 'username': username,
+      'username': username,
+      'privileges': privileges,
       if (password != null) 'password': password,
-      if (privileges != null) 'privileges': privileges,
     };
     await _api.put('/api/workdb/users/$id', body);
     await load();
   }
 
   Future<void> deleteUser(int id) async {
-    await _api.delete('/api/workdb/users/$id');
+    try {
+      await _api.delete('/api/workdb/users/$id');
+    } catch (e) {
+      emit(UsersDeleteError(e.toString()));
+    }
     await load();
   }
 }

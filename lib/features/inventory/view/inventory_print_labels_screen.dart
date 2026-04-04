@@ -7,6 +7,7 @@ import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/combined_item.dart';
 import '../../../shared/utils/label_printer.dart';
+import '../../../shared/utils/privilege_helpers.dart';
 import '../../../shared/widgets/barcode_display.dart';
 import '../cubit/print_labels_cubit.dart';
 
@@ -286,7 +287,7 @@ class _CombinedItemCardState extends State<_CombinedItemCard> {
                       if (sitsa != null) ...[
                         _InfoTile(
                           label: context.l10n.labelCosto,
-                          value: colones.format(sitsa.costo),
+                          value: canSeeProfitMargins(context) ? colones.format(sitsa.costo) : redacted,
                         ),
                         _InfoTile(
                           label: context.l10n.labelPrecio,

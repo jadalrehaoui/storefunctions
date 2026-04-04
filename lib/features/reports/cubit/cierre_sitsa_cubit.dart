@@ -73,8 +73,9 @@ class CierreSitsaCubit extends Cubit<CierreSitsaState> {
     DateTime date,
     List<DepositEntry> deposits,
     List<CardChargeEntry> cards,
-    String prevInventory,
-  ) async {
+    String prevInventory, {
+    bool showCosts = true,
+  }) async {
     // Columns: A=Label | B=₡ | C=Value | D=gap | E=Label | F=₡ | G=Value
     final numFmt = NumberFormat('#,##0', 'en_US');
     final pctFmt = NumberFormat('0.00');
@@ -95,11 +96,11 @@ class CierreSitsaCubit extends Cubit<CierreSitsaState> {
       ['', '', '', '', '', '', ''],
       ['', '', '', '', 'FECHA  ${dateFmt.format(date)}', '', ''],
       ['', '', '', '', '', '', ''],
-      ['VENTA BRUTA',       '₡', n(brutTotal),          '', 'TTL INVEN. ANTER.',  '₡', prevInventory.isEmpty ? '' : n((double.tryParse(prevInventory.replaceAll(',', '')) ?? 0))],
+      ['VENTA BRUTA',       '₡', n(brutTotal),          '', 'TTL INVEN. ANTER.',  '₡', showCosts ? (prevInventory.isEmpty ? '' : n((double.tryParse(prevInventory.replaceAll(',', '')) ?? 0))) : ''],
       ['DESCUENTO',         '₡', n(discount.round().toDouble()), '', 'DIF. A DEPOSITAR',   '₡', '-'],
       ['OTROS DESCUENTO',   '₡', n(bonos.round().toDouble()),    '', '% DESC',             '',  pctFmt.format(pctDesc)],
       ['VENTA NETA',        '₡', n(ventaNeta),          '', '',                   '',  ''],
-      ['TOTAL INVENTARIO',  '₡', n(data.inventoryCost), '', '',                   '',  ''],
+      ['TOTAL INVENTARIO',  '₡', showCosts ? n(data.inventoryCost) : '', '', '',                   '',  ''],
       ['', '', '', '', '', '', ''],
       ['', '', '', '', '', '', ''],
       ['RANGO INICIO', 'RANGO FIN', 'TOTAL', '', '', '', ''],

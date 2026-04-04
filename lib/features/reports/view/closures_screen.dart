@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
+import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/closures_cubit.dart';
 
 class ClosuresScreen extends StatelessWidget {
@@ -186,7 +187,7 @@ class _ClosuresTable extends StatelessWidget {
                         Expanded(
                           flex: 2,
                           child: Text(
-                            prevInv != null ? colones.format(prevInv) : '—',
+                            prevInv != null ? (canSeeProfitMargins(context) ? colones.format(prevInv) : redacted) : '—',
                             style: textTheme.bodyMedium,
                             textAlign: TextAlign.end,
                           ),

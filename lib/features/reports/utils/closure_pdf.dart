@@ -5,7 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-Future<String> generateAndOpenClosure(Map<String, dynamic> closure) async {
+Future<String> generateAndOpenClosure(Map<String, dynamic> closure, {bool showCosts = true}) async {
   final pdf = pw.Document();
 
   final colones = NumberFormat.currency(symbol: 'CRC ', decimalDigits: 2);
@@ -134,9 +134,9 @@ Future<String> generateAndOpenClosure(Map<String, dynamic> closure) async {
             pw.SizedBox(width: 250, child: kv('Bonos', c(general['TotalBonos']))),
           if (general['TotalDiscount'] != null)
             pw.SizedBox(width: 250, child: kv('Descuentos', c(general['TotalDiscount']))),
-          if (invCost != null)
+          if (invCost != null && showCosts)
             pw.SizedBox(width: 250, child: kv('Costo Inventario', colones.format(invCost))),
-          if (prevInv != null)
+          if (prevInv != null && showCosts)
             pw.SizedBox(width: 250, child: kv('Inv. Anterior', colones.format(prevInv))),
         ]),
 

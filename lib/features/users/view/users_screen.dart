@@ -7,6 +7,8 @@ import '../../../l10n/l10n.dart';
 import '../cubit/users_cubit.dart';
 
 const _validPrivileges = [
+  'see_dashboard',
+  'see_profit_margins',
   'inspect_inventory',
   'print_labels',
   'generate_inventory',
@@ -55,7 +57,21 @@ class _UsersView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          const Expanded(child: _UsersTable()),
+          Expanded(
+            child: BlocListener<UsersCubit, UsersState>(
+              listener: (context, state) {
+                if (state is UsersDeleteError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(context.l10n.msgDeleteForbidden),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                }
+              },
+              child: const _UsersTable(),
+            ),
+          ),
         ],
       ),
     );
@@ -98,6 +114,7 @@ class _UsersTable extends StatelessWidget {
         UsersLoaded(:final users) => users.isEmpty
             ? Center(child: Text(context.l10n.msgNoUsersFound))
             : _Table(users: users),
+        UsersDeleteError() => const Center(child: CircularProgressIndicator()),
       },
     );
   }
@@ -400,16 +417,17 @@ class _EditUserDialogState extends State<_EditUserDialog> {
 
   Future<void> _save() async {
     final username = _usernameCtrl.text.trim().isEmpty
-        ? null
+        ? widget.initialUsername
         : _usernameCtrl.text.trim();
     final password = _passwordCtrl.text.trim().isEmpty
         ? null
         : _passwordCtrl.text.trim();
     final privilegesChanged =
         _selectedPrivileges.toSet() != widget.initialPrivileges.toSet();
-    final privileges = privilegesChanged ? _selectedPrivileges : null;
 
-    if (username == null && password == null && privileges == null) {
+    if (username == widget.initialUsername &&
+        password == null &&
+        !privilegesChanged) {
       setState(() => _error = context.l10n.msgNoChangesToSave);
       return;
     }
@@ -420,7 +438,7 @@ class _EditUserDialogState extends State<_EditUserDialog> {
             widget.id,
             username: username,
             password: password,
-            privileges: privileges,
+            privileges: _selectedPrivileges,
           );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {

@@ -16,6 +16,7 @@ import '../features/reports/view/cierre_sitsa_screen.dart';
 import '../features/reports/view/closure_detail_screen.dart';
 import '../features/reports/view/closures_screen.dart';
 import '../features/reports/view/sales_reports_screen.dart';
+import '../features/dashboard/view/dashboard_screen.dart';
 import '../features/users/view/users_screen.dart';
 import '../shared/widgets/app_shell.dart';
 
@@ -43,7 +44,12 @@ GoRouter createRouter(AuthCubit authCubit) {
       final isLoggingIn = state.matchedLocation == '/login';
 
       if (!isAuthenticated && !isLoggingIn) return '/login';
-      if (isAuthenticated && isLoggingIn) return '/inventory/search';
+      if (isAuthenticated && isLoggingIn) {
+        final auth = authCubit.state as AuthAuthenticated;
+        return auth.hasPrivilege('see_dashboard')
+            ? '/dashboard'
+            : '/inventory/search';
+      }
       return null;
     },
     routes: [
@@ -57,6 +63,13 @@ GoRouter createRouter(AuthCubit authCubit) {
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
+          GoRoute(
+            path: '/dashboard',
+            name: 'dashboard',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: DashboardScreen(),
+            ),
+          ),
           GoRoute(
             path: '/inventory',
             name: 'inventory',

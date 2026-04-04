@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../di/service_locator.dart';
 import '../../../features/auth/cubit/auth_cubit.dart';
 import '../../../l10n/l10n.dart';
+import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/cierre_sitsa_cubit.dart';
 
 // ── Models ────────────────────────────────────────────────────────────────────
@@ -191,7 +192,7 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
     try {
       final path = await context
           .read<CierreSitsaCubit>()
-          .download(data, _date, _deposits, _cards, _prevInventoryCtrl.text);
+          .download(data, _date, _deposits, _cards, _prevInventoryCtrl.text, showCosts: canSeeProfitMargins(context));
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(context.l10n.msgSavedAt(path))));
@@ -276,9 +277,10 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        _PrevInventorySection(
-                          controller: _prevInventoryCtrl,
-                        ),
+                        if (canSeeProfitMargins(context))
+                          _PrevInventorySection(
+                            controller: _prevInventoryCtrl,
+                          ),
                         const SizedBox(height: 16),
                         _DepositsSection(
                           entries: _deposits,
@@ -854,7 +856,7 @@ class _CierreLayout extends StatelessWidget {
               ),
               _SummaryTile(
                 label: l10n.tileCostoInventario,
-                value: colones.format(data.inventoryCost),
+                value: canSeeProfitMargins(context) ? colones.format(data.inventoryCost) : redacted,
                 highlight: true,
               ),
             ],

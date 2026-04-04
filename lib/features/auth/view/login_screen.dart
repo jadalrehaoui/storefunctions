@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().login(
-            _usernameController.text.trim(),
+            _usernameController.text.trim().toLowerCase(),
             _passwordController.text,
           );
     }

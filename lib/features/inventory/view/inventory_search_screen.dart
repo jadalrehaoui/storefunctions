@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/combined_item.dart';
+import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/inventory_search_cubit.dart';
 
 class InventorySearchScreen extends StatelessWidget {
@@ -246,7 +247,7 @@ class _ModeloSection extends StatelessWidget {
                               code,
                               m['Codigo_Barras'] as String? ?? '',
                               m['Articulo_Descripcion'] as String? ?? '',
-                              fobFmt.format(m['FOB'] ?? 0),
+                              canSeeProfitMargins(context) ? fobFmt.format(m['FOB'] ?? 0) : redacted,
                               '$disp',
                               '$res',
                             ],
@@ -415,14 +416,14 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
                                 m['Codigo_Barras'] as String? ?? '',
                                 m['Articulo_Descripcion'] as String? ?? '',
                                 m['MODELO'] as String? ?? '',
-                                fobFmt.format(m['FOB'] ?? 0),
-                                costFmt.format(m['Costo'] ?? 0),
-                                '${(m['Ganancia'] as num?)?.toStringAsFixed(0) ?? '0'}%',
-                                () {
+                                canSeeProfitMargins(context) ? fobFmt.format(m['FOB'] ?? 0) : redacted,
+                                canSeeProfitMargins(context) ? costFmt.format(m['Costo'] ?? 0) : redacted,
+                                canSeeProfitMargins(context) ? '${(m['Ganancia'] as num?)?.toStringAsFixed(0) ?? '0'}%' : redacted,
+                                canSeeProfitMargins(context) ? () {
                                   final costo = (m['Costo'] as num?)?.toDouble() ?? 0;
                                   final ganancia = (m['Ganancia'] as num?)?.toDouble() ?? 0;
                                   return costFmt.format(costo + costo * ganancia / 100);
-                                }(),
+                                }() : redacted,
                                 '${m['Cantidad_Disponible'] ?? 0}',
                                 '${m['Cantidad_Reservada'] ?? 0}',
                               ],
@@ -693,7 +694,7 @@ class _SitsaCard extends StatelessWidget {
                   children: [
                     _InfoTile(
                       label: context.l10n.labelCosto,
-                      value: colones.format(sitsa.costo),
+                      value: canSeeProfitMargins(context) ? colones.format(sitsa.costo) : redacted,
                       valueStyle: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: colorScheme.primary,
@@ -701,7 +702,7 @@ class _SitsaCard extends StatelessWidget {
                     ),
                     _InfoTile(
                       label: context.l10n.labelGanancia,
-                      value: '${sitsa.ganancia.toStringAsFixed(0)}%',
+                      value: canSeeProfitMargins(context) ? '${sitsa.ganancia.toStringAsFixed(0)}%' : redacted,
                     ),
                     _InfoTile(
                       label: context.l10n.labelPrecio,
@@ -710,7 +711,7 @@ class _SitsaCard extends StatelessWidget {
                     ),
                     _InfoTile(
                       label: context.l10n.labelFob,
-                      value: currency.format(sitsa.fob),
+                      value: canSeeProfitMargins(context) ? currency.format(sitsa.fob) : redacted,
                     ),
                     if (sitsa.salida != null)
                       _InfoTile(

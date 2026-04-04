@@ -12,6 +12,48 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'Storefunctions';
 
   @override
+  String get navDashboard => 'Panel';
+
+  @override
+  String get dashboardToday => 'Hoy';
+
+  @override
+  String get dashboardTotalSales => 'Ventas Totales';
+
+  @override
+  String get dashboardTotalDiscounts => 'Descuentos Totales';
+
+  @override
+  String get dashboardTotalBonos => 'Bonos Totales';
+
+  @override
+  String get dashboardNetSales => 'Ventas Netas';
+
+  @override
+  String get dashboardInvoices => 'Facturas';
+
+  @override
+  String get dashboardNulledInvoices => 'Facturas Anuladas';
+
+  @override
+  String get dashboardClientCount => 'Clientes';
+
+  @override
+  String get dashboardAvgPerClient => 'Prom. por Cliente';
+
+  @override
+  String get dashboardCurrentYear => 'Este Año';
+
+  @override
+  String get dashboardLastYear => 'Año Anterior';
+
+  @override
+  String get dashboardMikailSales => 'Ventas Mikail';
+
+  @override
+  String get dashboardMikailItems => 'Artículos';
+
+  @override
   String get navInventory => 'Inventario';
 
   @override
@@ -433,6 +475,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get msgNoUsersFound => 'No se encontraron usuarios.';
+
+  @override
+  String get msgDeleteForbidden =>
+      'No tienes permiso para eliminar este usuario.';
 
   @override
   String get msgNoChangesToSave => 'Sin cambios para guardar.';

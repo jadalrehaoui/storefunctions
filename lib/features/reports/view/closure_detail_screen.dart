@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../di/service_locator.dart';
 import '../../../features/auth/cubit/auth_cubit.dart';
 import '../../../l10n/l10n.dart';
+import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/closure_detail_cubit.dart';
 import '../utils/closure_pdf.dart' as closure_pdf;
 
@@ -71,7 +72,7 @@ class _ClosureDetailView extends StatelessWidget {
                             onPressed: () async {
                           try {
                             final path = await closure_pdf
-                                .generateAndOpenClosure(state.closure);
+                                .generateAndOpenClosure(state.closure, showCosts: canSeeProfitMargins(context));
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(context.l10n.msgSavedAt(path))),
@@ -164,9 +165,9 @@ class _ClosureDetailBody extends StatelessWidget {
               _Tile(label: l10n.colFecha, value: date),
               _Tile(label: l10n.labelCreadoPor, value: createdBy),
               if (prevInv != null)
-                _Tile(label: l10n.colInvAnterior, value: colones.format(prevInv)),
+                _Tile(label: l10n.colInvAnterior, value: canSeeProfitMargins(context) ? colones.format(prevInv) : redacted),
               if (invCost != null)
-                _Tile(label: l10n.tileCostoInventario, value: colones.format(invCost), highlight: true),
+                _Tile(label: l10n.tileCostoInventario, value: canSeeProfitMargins(context) ? colones.format(invCost) : redacted, highlight: true),
             ],
           ),
           const SizedBox(height: 20),

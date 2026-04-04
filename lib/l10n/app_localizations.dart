@@ -104,6 +104,90 @@ abstract class AppLocalizations {
   /// **'Storefunctions'**
   String get appTitle;
 
+  /// No description provided for @navDashboard.
+  ///
+  /// In es, this message translates to:
+  /// **'Panel'**
+  String get navDashboard;
+
+  /// No description provided for @dashboardToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get dashboardToday;
+
+  /// No description provided for @dashboardTotalSales.
+  ///
+  /// In es, this message translates to:
+  /// **'Ventas Totales'**
+  String get dashboardTotalSales;
+
+  /// No description provided for @dashboardTotalDiscounts.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuentos Totales'**
+  String get dashboardTotalDiscounts;
+
+  /// No description provided for @dashboardTotalBonos.
+  ///
+  /// In es, this message translates to:
+  /// **'Bonos Totales'**
+  String get dashboardTotalBonos;
+
+  /// No description provided for @dashboardNetSales.
+  ///
+  /// In es, this message translates to:
+  /// **'Ventas Netas'**
+  String get dashboardNetSales;
+
+  /// No description provided for @dashboardInvoices.
+  ///
+  /// In es, this message translates to:
+  /// **'Facturas'**
+  String get dashboardInvoices;
+
+  /// No description provided for @dashboardNulledInvoices.
+  ///
+  /// In es, this message translates to:
+  /// **'Facturas Anuladas'**
+  String get dashboardNulledInvoices;
+
+  /// No description provided for @dashboardClientCount.
+  ///
+  /// In es, this message translates to:
+  /// **'Clientes'**
+  String get dashboardClientCount;
+
+  /// No description provided for @dashboardAvgPerClient.
+  ///
+  /// In es, this message translates to:
+  /// **'Prom. por Cliente'**
+  String get dashboardAvgPerClient;
+
+  /// No description provided for @dashboardCurrentYear.
+  ///
+  /// In es, this message translates to:
+  /// **'Este Año'**
+  String get dashboardCurrentYear;
+
+  /// No description provided for @dashboardLastYear.
+  ///
+  /// In es, this message translates to:
+  /// **'Año Anterior'**
+  String get dashboardLastYear;
+
+  /// No description provided for @dashboardMikailSales.
+  ///
+  /// In es, this message translates to:
+  /// **'Ventas Mikail'**
+  String get dashboardMikailSales;
+
+  /// No description provided for @dashboardMikailItems.
+  ///
+  /// In es, this message translates to:
+  /// **'Artículos'**
+  String get dashboardMikailItems;
+
   /// No description provided for @navInventory.
   ///
   /// In es, this message translates to:
@@ -949,6 +1033,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se encontraron usuarios.'**
   String get msgNoUsersFound;
+
+  /// No description provided for @msgDeleteForbidden.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes permiso para eliminar este usuario.'**
+  String get msgDeleteForbidden;
 
   /// No description provided for @msgNoChangesToSave.
   ///

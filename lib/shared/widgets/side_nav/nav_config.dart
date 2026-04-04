@@ -37,6 +37,13 @@ class NavItemConfig {
 
 final navItems = <NavItemConfig>[
   NavItemConfig(
+    id: 'dashboard',
+    icon: Icons.dashboard_outlined,
+    label: (l10n) => l10n.navDashboard,
+    route: '/dashboard',
+    privilege: 'see_dashboard',
+  ),
+  NavItemConfig(
     id: 'inventory',
     icon: Icons.inventory_2_outlined,
     label: (l10n) => l10n.navInventory,
