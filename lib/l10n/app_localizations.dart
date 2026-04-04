@@ -176,6 +176,12 @@ abstract class AppLocalizations {
   /// **'Año Anterior'**
   String get dashboardLastYear;
 
+  /// No description provided for @dashboardTwoYearsAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'Hace 2 Años'**
+  String get dashboardTwoYearsAgo;
+
   /// No description provided for @dashboardMikailSales.
   ///
   /// In es, this message translates to:

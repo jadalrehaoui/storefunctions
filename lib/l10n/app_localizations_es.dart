@@ -48,6 +48,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dashboardLastYear => 'Año Anterior';
 
   @override
+  String get dashboardTwoYearsAgo => 'Hace 2 Años';
+
+  @override
   String get dashboardMikailSales => 'Ventas Mikail';
 
   @override

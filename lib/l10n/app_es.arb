@@ -14,6 +14,7 @@
   "dashboardAvgPerClient": "Prom. por Cliente",
   "dashboardCurrentYear": "Este Año",
   "dashboardLastYear": "Año Anterior",
+  "dashboardTwoYearsAgo": "Hace 2 Años",
   "dashboardMikailSales": "Ventas Mikail",
   "dashboardMikailItems": "Artículos",
   "navInventory": "Inventario",

@@ -124,7 +124,7 @@ class _SalesSection extends StatelessWidget {
                   ],
                 ),
               ),
-            DashboardSalesLoaded(:final current, :final lastYear, :final mikail) =>
+            DashboardSalesLoaded(:final current, :final lastYear, :final twoYearsAgo, :final mikail) =>
               SizedBox(
                 height: 380,
                 child: Row(
@@ -134,7 +134,9 @@ class _SalesSection extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _ComparisonChart(
-                          current: current, lastYear: lastYear),
+                          current: current,
+                          lastYear: lastYear,
+                          twoYearsAgo: twoYearsAgo),
                     ),
                   ],
                 ),
@@ -266,40 +268,38 @@ class _SalesCard extends StatelessWidget {
 class _ComparisonChart extends StatelessWidget {
   final DashboardSalesData current;
   final DashboardSalesData lastYear;
+  final DashboardSalesData twoYearsAgo;
 
-  const _ComparisonChart({required this.current, required this.lastYear});
+  const _ComparisonChart({
+    required this.current,
+    required this.lastYear,
+    required this.twoYearsAgo,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-
-    final labels = [
-      l10n.dashboardTotalSales,
-      l10n.dashboardTotalDiscounts,
-      l10n.dashboardTotalBonos,
-      l10n.dashboardNetSales,
-    ];
-    final currentValues = [
-      current.brutTotal,
-      current.totalDiscount,
-      current.totalBonos,
-      current.netSales,
-    ];
-    final lastYearValues = [
-      lastYear.brutTotal,
-      lastYear.totalDiscount,
-      lastYear.totalBonos,
-      lastYear.netSales,
-    ];
-
-    final maxValue = [...currentValues, ...lastYearValues]
-        .fold<double>(0, (a, b) => a > b ? a : b);
-    final interval = maxValue > 0 ? (maxValue / 4).ceilToDouble() : 1.0;
+    final colones = NumberFormat.currency(symbol: '\u20a1', decimalDigits: 0);
 
     final currentColor = colorScheme.primary;
-    final lastYearColor = colorScheme.primary.withValues(alpha: 0.35);
+    final lastYearColor = colorScheme.primary.withValues(alpha: 0.5);
+    final twoYearsColor = colorScheme.primary.withValues(alpha: 0.2);
+
+    final yearLabels = [
+      l10n.dashboardCurrentYear,
+      l10n.dashboardLastYear,
+      l10n.dashboardTwoYearsAgo,
+    ];
+    final values = [
+      current.brutTotal,
+      lastYear.brutTotal,
+      twoYearsAgo.brutTotal,
+    ];
+    final colors = [currentColor, lastYearColor, twoYearsColor];
+
+    final maxValue = values.fold<double>(0, (a, b) => a > b ? a : b);
 
     return Card(
       elevation: 0,
@@ -314,122 +314,83 @@ class _ComparisonChart extends StatelessWidget {
           children: [
             Row(
               children: [
-                _LegendDot(
-                      color: currentColor,
-                      label: l10n.dashboardCurrentYear),
-                  const SizedBox(width: 16),
-                  _LegendDot(
-                      color: lastYearColor,
-                      label: l10n.dashboardLastYear),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    maxY: maxValue > 0 ? maxValue * 1.15 : 10,
-                    barTouchData: BarTouchData(
-                      touchTooltipData: BarTouchTooltipData(
-                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                          final colones = NumberFormat.currency(
-                              symbol: '\u20a1', decimalDigits: 0);
-                          final label = rodIndex == 0
-                              ? l10n.dashboardCurrentYear
-                              : l10n.dashboardLastYear;
-                          return BarTooltipItem(
-                            '$label\n${colones.format(rod.toY)}',
-                            textTheme.bodySmall!.copyWith(
-                              color: colorScheme.onInverseSurface,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 60,
-                          interval: interval,
-                          getTitlesWidget: (value, meta) {
-                            final fmt = NumberFormat.compact();
-                            return SideTitleWidget(
-                              meta: meta,
-                              child: Text(
-                                fmt.format(value),
-                                style: textTheme.labelSmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            final idx = value.toInt();
-                            if (idx < 0 || idx >= labels.length) {
-                              return const SizedBox.shrink();
-                            }
-                            return SideTitleWidget(
-                              meta: meta,
-                              child: Text(
-                                labels[idx],
-                                style: textTheme.labelSmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    gridData: FlGridData(
-                      drawVerticalLine: false,
-                      horizontalInterval: interval,
-                      getDrawingHorizontalLine: (value) => FlLine(
-                        color: colorScheme.outlineVariant
-                            .withValues(alpha: 0.5),
-                        strokeWidth: 1,
-                      ),
-                    ),
-                    barGroups: List.generate(labels.length, (i) {
-                      return BarChartGroupData(
-                        x: i,
-                        barRods: [
-                          BarChartRodData(
-                            toY: currentValues[i],
-                            color: currentColor,
-                            width: 18,
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4)),
-                          ),
-                          BarChartRodData(
-                            toY: lastYearValues[i],
-                            color: lastYearColor,
-                            width: 18,
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4)),
-                          ),
-                        ],
-                      );
-                    }),
+                Text(
+                  l10n.dashboardTotalSales,
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () =>
+                      context.read<DashboardSalesCubit>().load(),
+                  icon: Icon(Icons.refresh,
+                      size: 18, color: colorScheme.onSurfaceVariant),
+                  tooltip: l10n.btnRetry,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(values.length, (i) {
+                  final fraction = maxValue > 0 ? values[i] / maxValue : 0.0;
+                  return Padding(
+                    padding: EdgeInsets.only(
+                        bottom: i < values.length - 1 ? 16 : 0),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 80,
+                          child: Text(
+                            yearLabels[i],
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Align(
+                                alignment: Alignment.centerLeft,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 400),
+                                  height: 40,
+                                  width: constraints.maxWidth * fraction,
+                                  decoration: BoxDecoration(
+                                    color: colors[i],
+                                    borderRadius: const BorderRadius.horizontal(
+                                      right: Radius.circular(4),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          colones.format(values[i]),
+                          style: textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
   }
 }
 

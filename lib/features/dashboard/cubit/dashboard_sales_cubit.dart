@@ -61,10 +61,14 @@ class DashboardSalesLoading extends DashboardSalesState {}
 class DashboardSalesLoaded extends DashboardSalesState {
   final DashboardSalesData current;
   final DashboardSalesData lastYear;
+  final DashboardSalesData twoYearsAgo;
   final MikailSalesData mikail;
   final DateTimeRange range;
   DashboardSalesLoaded(this.current,
-      {required this.lastYear, required this.mikail, required this.range});
+      {required this.lastYear,
+      required this.twoYearsAgo,
+      required this.mikail,
+      required this.range});
 }
 
 class DashboardSalesFailure extends DashboardSalesState {
@@ -120,34 +124,38 @@ class DashboardSalesCubit extends Cubit<DashboardSalesState> {
       final endDate = _selectedRange.end.toIso8601String().substring(0, 10);
       final isToday = startDate == today && endDate == today;
 
-      final lastYearStart = DateTime(
-        _selectedRange.start.year - 1,
-        _selectedRange.start.month,
-        _selectedRange.start.day,
-      );
-      final lastYearEnd = DateTime(
-        _selectedRange.end.year - 1,
-        _selectedRange.end.month,
-        _selectedRange.end.day,
-      );
+      Map<String, dynamic> _yearBody(int yearsBack) {
+        final s = DateTime(
+          _selectedRange.start.year - yearsBack,
+          _selectedRange.start.month,
+          _selectedRange.start.day,
+        );
+        final e = DateTime(
+          _selectedRange.end.year - yearsBack,
+          _selectedRange.end.month,
+          _selectedRange.end.day,
+        );
+        return {
+          'startDate': s.toIso8601String().substring(0, 10),
+          'endDate': e.toIso8601String().substring(0, 10),
+        };
+      }
 
       final currentBody =
           isToday ? <String, dynamic>{} : {'startDate': startDate, 'endDate': endDate};
-      final lastYearBody = <String, dynamic>{
-        'startDate': lastYearStart.toIso8601String().substring(0, 10),
-        'endDate': lastYearEnd.toIso8601String().substring(0, 10),
-      };
 
       final results = await (
         _fetchSitsa(currentBody),
-        _fetchSitsa(lastYearBody),
+        _fetchSitsa(_yearBody(1)),
+        _fetchSitsa(_yearBody(2)),
         _fetchMikail(currentBody),
       ).wait;
 
       emit(DashboardSalesLoaded(
         results.$1,
         lastYear: results.$2,
-        mikail: results.$3,
+        twoYearsAgo: results.$3,
+        mikail: results.$4,
         range: _selectedRange,
       ));
     } catch (e) {
