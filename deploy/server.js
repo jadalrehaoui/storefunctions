@@ -8,6 +8,7 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.zip':  'application/zip',
+  '.apk':  'application/vnd.android.package-archive',
   '.css':  'text/css',
   '.js':   'application/javascript',
 };
@@ -34,7 +35,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, {
       'Content-Type': contentType,
       'Content-Length': stat.size,
-      'Content-Disposition': ext === '.zip'
+      'Content-Disposition': (ext === '.zip' || ext === '.apk')
         ? `attachment; filename="${path.basename(filePath)}"` : '',
     });
 
