@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../shared/constants.dart';
 import '../cubit/auth_cubit.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,6 +17,29 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  late final Future<bool> _isOutdatedFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _isOutdatedFuture = _checkVersion();
+  }
+
+  Future<bool> _checkVersion() async {
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: 'http://10.10.0.130:8081',
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 5),
+      ));
+      final response = await dio.get<dynamic>('/api/workdb/current-version');
+      final data = response.data;
+      if (data is Map && data['version'] != null) {
+        return data['version'] != appVersion;
+      }
+    } catch (_) {}
+    return false;
+  }
 
   @override
   void dispose() {
@@ -70,7 +95,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 4),
+                      FutureBuilder<bool>(
+                        future: _isOutdatedFuture,
+                        builder: (context, snapshot) {
+                          final isOutdated = snapshot.data ?? false;
+                          return Center(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'v$appVersion',
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                                ),
+                                if (isOutdated) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.update, size: 14, color: colorScheme.error),
+                                ],
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 28),
                       TextFormField(
                         controller: _usernameController,
                         enabled: !isLoading,
