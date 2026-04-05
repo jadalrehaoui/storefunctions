@@ -225,6 +225,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelFechaFin => 'Fecha fin';
 
   @override
+  String get labelClasificacion => 'Clasificación';
+
+  @override
+  String get labelTodas => 'Todas';
+
+  @override
   String get labelCodigoBarras => 'Código de Barras';
 
   @override
@@ -294,7 +300,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tileDescuentos => 'Descuentos';
 
   @override
-  String get tileCostoInventario => 'Costo Inventario';
+  String get tileCostoInventario => 'Inventario Actual';
 
   @override
   String get tileVentaNeta => 'Venta Neta';
@@ -304,6 +310,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tileDiferenciaDepositar => 'Diferencia a Depositar';
+
+  @override
+  String get tileTipoCambio => 'T/C Venta USD';
+
+  @override
+  String get tileInventarioUsd => 'Inventario Actual (\$)';
+
+  @override
+  String get colColones => 'Colones';
 
   @override
   String get labelRangosFacturas => 'Rangos de Facturas';

@@ -530,6 +530,18 @@ abstract class AppLocalizations {
   /// **'Fecha fin'**
   String get labelFechaFin;
 
+  /// No description provided for @labelClasificacion.
+  ///
+  /// In es, this message translates to:
+  /// **'Clasificación'**
+  String get labelClasificacion;
+
+  /// No description provided for @labelTodas.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas'**
+  String get labelTodas;
+
   /// No description provided for @labelCodigoBarras.
   ///
   /// In es, this message translates to:
@@ -671,7 +683,7 @@ abstract class AppLocalizations {
   /// No description provided for @tileCostoInventario.
   ///
   /// In es, this message translates to:
-  /// **'Costo Inventario'**
+  /// **'Inventario Actual'**
   String get tileCostoInventario;
 
   /// No description provided for @tileVentaNeta.
@@ -691,6 +703,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Diferencia a Depositar'**
   String get tileDiferenciaDepositar;
+
+  /// No description provided for @tileTipoCambio.
+  ///
+  /// In es, this message translates to:
+  /// **'T/C Venta USD'**
+  String get tileTipoCambio;
+
+  /// No description provided for @tileInventarioUsd.
+  ///
+  /// In es, this message translates to:
+  /// **'Inventario Actual (\$)'**
+  String get tileInventarioUsd;
+
+  /// No description provided for @colColones.
+  ///
+  /// In es, this message translates to:
+  /// **'Colones'**
+  String get colColones;
 
   /// No description provided for @labelRangosFacturas.
   ///

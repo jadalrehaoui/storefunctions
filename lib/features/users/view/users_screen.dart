@@ -19,7 +19,7 @@ const _validPrivileges = [
   'generate_closure',
   'edit_closure',
   'inspect_closures',
-  'delete_closures',
+  'delete_closure',
   'generate_restock_list',
 ];
 

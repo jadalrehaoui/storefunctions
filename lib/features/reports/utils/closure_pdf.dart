@@ -32,6 +32,11 @@ Future<String> generateAndOpenClosure(Map<String, dynamic> closure, {bool showCo
       .toList();
   final prevInv = num.tryParse('${closure['prev_inventory_cost'] ?? ''}')?.toDouble();
   final invCost = num.tryParse('${closure['inventory_cost'] ?? ''}')?.toDouble();
+  final rawTc = closure['bccrtc'];
+  final tcVenta = rawTc is num
+      ? rawTc.toDouble()
+      : double.tryParse(rawTc?.toString() ?? '');
+  final usdFmt = NumberFormat.currency(symbol: '\$ ', decimalDigits: 2);
 
   final bold = pw.Font.helveticaBold();
   final regular = pw.Font.helvetica();
@@ -135,9 +140,13 @@ Future<String> generateAndOpenClosure(Map<String, dynamic> closure, {bool showCo
           if (general['TotalDiscount'] != null)
             pw.SizedBox(width: 250, child: kv('Descuentos', c(general['TotalDiscount']))),
           if (invCost != null && showCosts)
-            pw.SizedBox(width: 250, child: kv('Costo Inventario', colones.format(invCost))),
+            pw.SizedBox(width: 250, child: kv('Inventario Actual', colones.format(invCost))),
           if (prevInv != null && showCosts)
-            pw.SizedBox(width: 250, child: kv('Inv. Anterior', colones.format(prevInv))),
+            pw.SizedBox(width: 250, child: kv('Inventario Anterior', colones.format(prevInv))),
+          if (invCost != null && tcVenta != null && tcVenta > 0 && showCosts)
+            pw.SizedBox(width: 250, child: kv('Inventario Actual (\$)', usdFmt.format(invCost / tcVenta), highlight: true)),
+          if (tcVenta != null)
+            pw.SizedBox(width: 250, child: kv('T/C Venta USD', 'CRC ${tcVenta.toStringAsFixed(2)}')),
         ]),
 
         // Calculations
@@ -158,14 +167,25 @@ Future<String> generateAndOpenClosure(Map<String, dynamic> closure, {bool showCo
             colones.format(deposits.fold(0.0, (s, d) => s + n(d['amount']))),
           ),
           table(
-            ['No. Deposito', 'Banco', 'Moneda', 'T/C', 'Monto'],
-            deposits.map((d) => [
-              '${d['depositNo'] ?? '—'}',
-              '${d['bank'] ?? '—'}',
-              '${d['currency'] ?? '—'}',
-              d['exchangeRate'] != null ? '${d['exchangeRate']}' : '—',
-              d['amount'] != null ? c(d['amount']) : '—',
-            ]).toList(),
+            ['No. Deposito', 'Banco', 'Moneda', 'T/C', 'Monto', 'Colones'],
+            deposits.map((d) {
+              final amount = n(d['amount']);
+              final rate = n(d['exchangeRate']);
+              final currency = d['currency'] as String? ?? 'CRC';
+              final colonesVal = currency == 'USD' && rate > 0
+                  ? colones.format(amount * rate)
+                  : colones.format(amount);
+              return [
+                '${d['depositNo'] ?? '—'}',
+                '${d['bank'] ?? '—'}',
+                currency,
+                rate > 0 ? '${d['exchangeRate']}' : '—',
+                amount > 0
+                    ? (currency == 'USD' ? usdFmt.format(amount) : c(d['amount']))
+                    : '—',
+                colonesVal,
+              ];
+            }).toList(),
           ),
         ],
 

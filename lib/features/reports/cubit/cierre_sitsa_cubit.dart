@@ -7,15 +7,26 @@ import 'package:intl/intl.dart';
 import '../../../services/api_client.dart';
 import '../view/cierre_sitsa_screen.dart';
 
+class TipoCambio {
+  final double ventaUsd;
+  final String date;
+
+  const TipoCambio({required this.ventaUsd, required this.date});
+}
+
 class CierreSitsaData {
   final List<Map<String, dynamic>> invoices;
   final Map<String, dynamic> general;
   final double inventoryCost;
+  final double prevInventoryCost;
+  final TipoCambio? tipoCambio;
 
   const CierreSitsaData({
     required this.invoices,
     required this.general,
     required this.inventoryCost,
+    required this.prevInventoryCost,
+    this.tipoCambio,
   });
 }
 
@@ -41,12 +52,56 @@ class CierreSitsaCubit extends Cubit<CierreSitsaState> {
 
   CierreSitsaCubit(this._api) : super(CierreSitsaInitial());
 
+  Future<TipoCambio?> _fetchTipoCambio() async {
+    try {
+      final dio = Dio();
+      final response = await dio.get<Map<String, dynamic>>(
+        'https://api.hacienda.go.cr/indicadores/tc',
+      );
+      final data = response.data!;
+      final venta = data['dolar']['venta'];
+      final valor = (venta['valor'] as num).toDouble();
+      final fecha = venta['fecha'] as String; // yyyy-MM-dd
+      return TipoCambio(ventaUsd: valor, date: fecha);
+    } catch (e) {
+      print('[CierreSitsa] exchange rate fetch error: $e');
+    }
+    return null;
+  }
+
+  Future<double> _fetchPrevFromLatestClosure() async {
+    try {
+      final res = await _api.get('/api/workdb/closures');
+      final list = res is List
+          ? res
+          : (res['closures'] ?? res['data'] ?? []) as List;
+      if (list.isEmpty) return 0.0;
+      final closures = list
+          .cast<Map<String, dynamic>>()
+          ..sort((a, b) => (b['date'] as String).compareTo(a['date'] as String));
+      final latest = closures.first;
+      final invCost = latest['inventory_cost'];
+      if (invCost is num) return invCost.toDouble();
+      if (invCost is Map) {
+        final total = invCost['Total_Costo_Inventario'];
+        if (total is num) return total.toDouble();
+      }
+      return double.tryParse(invCost?.toString() ?? '') ?? 0.0;
+    } catch (e) {
+      print('[CierreSitsa] fallback prev inventory error: $e');
+      return 0.0;
+    }
+  }
+
   Future<void> load(DateTime date) async {
     emit(CierreSitsaLoading());
     try {
-      final data = await _api.post('/api/sitsa/get-daily-report', {
-        'date': _fmt.format(date),
-      });
+      final results = await Future.wait([
+        _api.post('/api/sitsa/get-daily-report', {'date': _fmt.format(date)}),
+        _fetchTipoCambio(),
+      ]);
+      final data = results[0];
+      final tipoCambio = results[1] as TipoCambio?;
 
       print('[CierreSitsa] raw response: $data');
 
@@ -57,11 +112,21 @@ class CierreSitsaCubit extends Cubit<CierreSitsaState> {
       print('[CierreSitsa] general: $general');
       final inventoryCost =
           (data['inventory_cost']['Total_Costo_Inventario'] as num).toDouble();
+      final rawPrev = data['prev_inventory_cost'];
+      var prevInventoryCost = rawPrev is num
+          ? rawPrev.toDouble()
+          : double.tryParse(rawPrev?.toString() ?? '') ?? 0.0;
+
+      if (prevInventoryCost == 0) {
+        prevInventoryCost = await _fetchPrevFromLatestClosure();
+      }
 
       emit(CierreSitsaLoaded(CierreSitsaData(
         invoices: invoices,
         general: general,
         inventoryCost: inventoryCost,
+        prevInventoryCost: prevInventoryCost,
+        tipoCambio: tipoCambio,
       )));
     } catch (e) {
       emit(CierreSitsaFailure(e.toString()));
@@ -72,8 +137,7 @@ class CierreSitsaCubit extends Cubit<CierreSitsaState> {
     CierreSitsaData data,
     DateTime date,
     List<DepositEntry> deposits,
-    List<CardChargeEntry> cards,
-    String prevInventory, {
+    List<CardChargeEntry> cards, {
     bool showCosts = true,
   }) async {
     // Columns: A=Label | B=₡ | C=Value | D=gap | E=Label | F=₡ | G=Value
@@ -96,7 +160,7 @@ class CierreSitsaCubit extends Cubit<CierreSitsaState> {
       ['', '', '', '', '', '', ''],
       ['', '', '', '', 'FECHA  ${dateFmt.format(date)}', '', ''],
       ['', '', '', '', '', '', ''],
-      ['VENTA BRUTA',       '₡', n(brutTotal),          '', 'TTL INVEN. ANTER.',  '₡', showCosts ? (prevInventory.isEmpty ? '' : n((double.tryParse(prevInventory.replaceAll(',', '')) ?? 0))) : ''],
+      ['VENTA BRUTA',       '₡', n(brutTotal),          '', 'TTL INVEN. ANTER.',  '₡', showCosts ? (data.prevInventoryCost > 0 ? n(data.prevInventoryCost) : '') : ''],
       ['DESCUENTO',         '₡', n(discount.round().toDouble()), '', 'DIF. A DEPOSITAR',   '₡', '-'],
       ['OTROS DESCUENTO',   '₡', n(bonos.round().toDouble()),    '', '% DESC',             '',  pctFmt.format(pctDesc)],
       ['VENTA NETA',        '₡', n(ventaNeta),          '', '',                   '',  ''],

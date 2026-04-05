@@ -100,6 +100,7 @@ class _ClosuresTable extends StatelessWidget {
                 children: [
                   _HeaderCell(context.l10n.colFecha, flex: 2, textTheme: textTheme, colorScheme: colorScheme),
                   _HeaderCell(context.l10n.colPor, flex: 2, textTheme: textTheme, colorScheme: colorScheme),
+                  _HeaderCell(context.l10n.tileBruto, flex: 2, textTheme: textTheme, colorScheme: colorScheme, align: TextAlign.end),
                   _HeaderCell(context.l10n.colVentaNeta, flex: 2, textTheme: textTheme, colorScheme: colorScheme, align: TextAlign.end),
                   _HeaderCell(context.l10n.colPctDesc, flex: 1, textTheme: textTheme, colorScheme: colorScheme, align: TextAlign.end),
                   _HeaderCell(context.l10n.colDifDepositar, flex: 2, textTheme: textTheme, colorScheme: colorScheme, align: TextAlign.end),
@@ -121,6 +122,8 @@ class _ClosuresTable extends StatelessWidget {
                   final date = dateRaw != null
                       ? dateFmt.format(DateTime.parse(dateRaw))
                       : '—';
+                  final general = c['general'] as Map? ?? {};
+                  final brutTotal = (general['BrutTotal'] as num?)?.toDouble();
                   final calc = c['calculations'] as Map? ?? {};
                   final ventaNeta = (calc['ventaNeta'] as num?)?.toDouble();
                   final pct = (calc['discountPct'] as num?)?.toDouble();
@@ -150,6 +153,16 @@ class _ClosuresTable extends StatelessWidget {
                           child: Text(
                             c['created_by'] as String? ?? '—',
                             style: textTheme.bodyMedium,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            brutTotal != null
+                                ? colones.format(brutTotal)
+                                : '—',
+                            style: textTheme.bodyMedium,
+                            textAlign: TextAlign.end,
                           ),
                         ),
                         Expanded(

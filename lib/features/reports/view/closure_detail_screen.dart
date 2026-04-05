@@ -147,6 +147,11 @@ class _ClosureDetailBody extends StatelessWidget {
     final cards = _list(closure['card_charges']);
     final prevInv = num.tryParse('${closure['prev_inventory_cost'] ?? ''}')?.toDouble();
     final invCost = num.tryParse('${closure['inventory_cost'] ?? ''}')?.toDouble();
+    final rawTc = closure['bccrtc'];
+    final tcVenta = rawTc is num
+        ? rawTc.toDouble()
+        : double.tryParse(rawTc?.toString() ?? '');
+    final usdFmt = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
 
     final ventaNeta = (calc['ventaNeta'] as num?)?.toDouble();
     final pct = (calc['discountPct'] as num?)?.toDouble();
@@ -168,6 +173,10 @@ class _ClosureDetailBody extends StatelessWidget {
                 _Tile(label: l10n.colInvAnterior, value: canSeeProfitMargins(context) ? colones.format(prevInv) : redacted),
               if (invCost != null)
                 _Tile(label: l10n.tileCostoInventario, value: canSeeProfitMargins(context) ? colones.format(invCost) : redacted, highlight: true),
+              if (invCost != null && tcVenta != null && tcVenta > 0)
+                _Tile(label: l10n.tileInventarioUsd, value: canSeeProfitMargins(context) ? usdFmt.format(invCost / tcVenta) : redacted, highlight: true),
+              if (tcVenta != null)
+                _Tile(label: l10n.tileTipoCambio, value: '₡${tcVenta.toStringAsFixed(2)}'),
             ],
           ),
           const SizedBox(height: 20),
@@ -220,16 +229,25 @@ class _ClosureDetailBody extends StatelessWidget {
             _SectionTitle(l10n.labelDepositosBancarios),
             const SizedBox(height: 12),
             _SimpleTable(
-              columns: [l10n.colNoDeposito, l10n.labelBanco, l10n.colMoneda, l10n.labelTC, l10n.labelMonto],
-              rows: deposits.map((d) => [
-                '${d['depositNo'] ?? '—'}',
-                '${d['bank'] ?? '—'}',
-                '${d['currency'] ?? '—'}',
-                d['exchangeRate'] != null ? '${d['exchangeRate']}' : '—',
-                d['amount'] != null
-                    ? colones.format((d['amount'] as num).toDouble())
-                    : '—',
-              ]).toList(),
+              columns: [l10n.colNoDeposito, l10n.labelBanco, l10n.colMoneda, l10n.labelTC, l10n.labelMonto, l10n.colColones],
+              rows: deposits.map((d) {
+                final amount = (d['amount'] as num?)?.toDouble() ?? 0;
+                final rate = (d['exchangeRate'] as num?)?.toDouble() ?? 0;
+                final currency = d['currency'] as String? ?? 'CRC';
+                final colonesValue = currency == 'USD' && rate > 0
+                    ? colones.format(amount * rate)
+                    : colones.format(amount);
+                return [
+                  '${d['depositNo'] ?? '—'}',
+                  '${d['bank'] ?? '—'}',
+                  currency,
+                  rate > 0 ? '$rate' : '—',
+                  d['amount'] != null
+                      ? (currency == 'USD' ? usdFmt.format(amount) : colones.format(amount))
+                      : '—',
+                  colonesValue,
+                ];
+              }).toList(),
             ),
           ],
 

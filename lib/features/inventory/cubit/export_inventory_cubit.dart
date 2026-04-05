@@ -11,16 +11,36 @@ export 'export_inventory_state.dart';
 
 class ExportInventoryCubit extends Cubit<ExportInventoryState> {
   final InventoryService _inventoryService;
+  List<Map<String, dynamic>> clasificaciones = [];
 
   ExportInventoryCubit(this._inventoryService) : super(ExportInventoryInitial());
 
-  Future<void> export({DateTime? startingDate, DateTime? endingDate}) async {
+  Future<void> loadClasificaciones() async {
+    try {
+      final data = await _inventoryService.getClasificaciones();
+      final list = data is List
+          ? data
+          : (data is Map ? (data['data'] ?? []) as List : []);
+      clasificaciones = list
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    } catch (e) {
+      print('[ExportInventory] clasificaciones error: $e');
+    }
+  }
+
+  Future<void> export({
+    DateTime? startingDate,
+    DateTime? endingDate,
+    String? clasificacion,
+  }) async {
     emit(ExportInventoryLoading());
     try {
       final fmt = DateFormat('yyyy-MM-dd');
       final data = await _inventoryService.getInventory(
         startingDate: startingDate != null ? fmt.format(startingDate) : null,
         endingDate: endingDate != null ? fmt.format(endingDate) : null,
+        clasificacion: clasificacion,
       );
 
       final items = (data is Map && data['data'] is List)

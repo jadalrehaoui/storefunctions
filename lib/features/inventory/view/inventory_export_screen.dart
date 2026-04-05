@@ -12,7 +12,7 @@ class InventoryExportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ExportInventoryCubit(sl()),
+      create: (_) => ExportInventoryCubit(sl())..loadClasificaciones(),
       child: const _ExportView(),
     );
   }
@@ -28,6 +28,7 @@ class _ExportView extends StatefulWidget {
 class _ExportViewState extends State<_ExportView> {
   DateTime? _startDate;
   DateTime? _endDate;
+  String? _clasificacion;
 
   final _dateFmt = DateFormat('dd/MM/yyyy');
 
@@ -55,6 +56,7 @@ class _ExportViewState extends State<_ExportView> {
     context.read<ExportInventoryCubit>().export(
           startingDate: _startDate,
           endingDate: _endDate,
+          clasificacion: _clasificacion,
         );
   }
 
@@ -90,6 +92,41 @@ class _ExportViewState extends State<_ExportView> {
                 onClear: _endDate != null
                     ? () => setState(() => _endDate = null)
                     : null,
+              ),
+              const SizedBox(width: 16),
+              Builder(
+                builder: (context) {
+                  final cubit = context.read<ExportInventoryCubit>();
+                  final items = cubit.clasificaciones;
+                  return ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 250),
+                    child: DropdownButtonFormField<String?>(
+                      isExpanded: true,
+                      value: _clasificacion,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.labelClasificacion,
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                      ),
+                      items: [
+                        DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text(context.l10n.labelTodas),
+                        ),
+                        ...items.map((c) => DropdownMenuItem<String?>(
+                              value: c['PK_Clasificacion']?.toString(),
+                              child: Text(
+                                c['Descripcion']?.toString() ?? '',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            )),
+                      ],
+                      onChanged: (v) => setState(() => _clasificacion = v),
+                    ),
+                  );
+                },
               ),
               const SizedBox(width: 24),
               BlocBuilder<ExportInventoryCubit, ExportInventoryState>(

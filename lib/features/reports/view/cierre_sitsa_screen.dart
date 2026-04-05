@@ -84,7 +84,6 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
 
   final _deposits = <DepositEntry>[];
   final _cards = <CardChargeEntry>[];
-  final _prevInventoryCtrl = TextEditingController();
   String? _closureId;
 
 
@@ -113,7 +112,7 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
 
     final payload = {
       'date': DateFormat('yyyy-MM-dd').format(_date),
-      'prev_inventory_cost': _parse(_prevInventoryCtrl.text),
+      'prev_inventory_cost': data?.prevInventoryCost ?? 0.0,
       'general': data?.general,
       'inventory_cost': data?.inventoryCost,
       'invoices': data?.invoices,
@@ -133,6 +132,7 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
         'bank': c.bankName,
         'amount': _parse(c.amount.text),
       }).toList(),
+      if (data?.tipoCambio != null) 'bccrtc': data!.tipoCambio!.ventaUsd,
     };
 
     try {
@@ -160,7 +160,6 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
   void dispose() {
     for (final d in _deposits) d.dispose();
     for (final c in _cards) c.dispose();
-    _prevInventoryCtrl.dispose();
     super.dispose();
   }
 
@@ -174,7 +173,9 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
     if (picked != null) setState(() => _date = picked);
   }
 
-  void _generate() => context.read<CierreSitsaCubit>().load(_date);
+  void _generate() {
+    context.read<CierreSitsaCubit>().load(_date);
+  }
 
   void _addDeposit() => setState(() => _deposits.add(DepositEntry()));
   void _removeDeposit(int i) => setState(() {
@@ -192,7 +193,7 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
     try {
       final path = await context
           .read<CierreSitsaCubit>()
-          .download(data, _date, _deposits, _cards, _prevInventoryCtrl.text, showCosts: canSeeProfitMargins(context));
+          .download(data, _date, _deposits, _cards, showCosts: canSeeProfitMargins(context));
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(context.l10n.msgSavedAt(path))));
@@ -264,8 +265,15 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
                                       .error))),
                       CierreSitsaLoaded(:final data) => _CierreLayout(
                           data: data,
-                          deposits: _deposits,
-                          cards: _cards,
+                          totalCards: _cards.fold(0.0, (s, c) => s + _parse(c.amount.text)),
+                          totalDeposits: _deposits.fold(0.0, (s, d) {
+                            final amount = _parse(d.amount.text);
+                            if (d.currency == 'USD') {
+                              final rate = _parse(d.exchangeRate.text);
+                              return s + (rate > 0 ? amount * rate : amount);
+                            }
+                            return s + amount;
+                          }),
                         ),
                     },
                   ),
@@ -277,11 +285,6 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        if (canSeeProfitMargins(context))
-                          _PrevInventorySection(
-                            controller: _prevInventoryCtrl,
-                          ),
-                        const SizedBox(height: 16),
                         _DepositsSection(
                           entries: _deposits,
                           onAdd: _addDeposit,
@@ -312,51 +315,6 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Previous inventory section ────────────────────────────────────────────────
-
-class _PrevInventorySection extends StatelessWidget {
-  final TextEditingController controller;
-
-  const _PrevInventorySection({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(10)),
-            ),
-            child: Text(context.l10n.labelInventarioAnterior,
-                style: textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w600)),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: _Field(
-              label: context.l10n.labelCostoInventarioAyer,
-              controller: controller,
-              numeric: true,
             ),
           ),
         ],
@@ -452,7 +410,6 @@ class _DepositRowState extends State<_DepositRow> {
                 child: _Field(
                   label: context.l10n.labelNumDeposito,
                   controller: e.depositNo,
-                  onChanged: (_) => widget.onChanged(),
                 ),
               ),
               const SizedBox(width: 8),
@@ -461,7 +418,7 @@ class _DepositRowState extends State<_DepositRow> {
                   label: context.l10n.labelMonto,
                   controller: e.amount,
                   numeric: true,
-                  onChanged: (_) => widget.onChanged(),
+                  onFocusLost: widget.onChanged,
                 ),
               ),
               const SizedBox(width: 4),
@@ -489,7 +446,6 @@ class _DepositRowState extends State<_DepositRow> {
                   child: _Field(
                     label: context.l10n.labelBanco,
                     controller: e.customBank,
-                    onChanged: (_) => widget.onChanged(),
                   ),
                 ),
               ],
@@ -509,7 +465,7 @@ class _DepositRowState extends State<_DepositRow> {
                     label: context.l10n.labelTC,
                     controller: e.exchangeRate,
                     numeric: true,
-                    onChanged: (_) => widget.onChanged(),
+                    onFocusLost: widget.onChanged,
                   ),
                 ),
               ],
@@ -612,7 +568,6 @@ class _CardChargeRowState extends State<_CardChargeRow> {
               child: _Field(
                 label: context.l10n.labelBanco,
                 controller: e.customBank,
-                onChanged: (_) => widget.onChanged(),
               ),
             ),
           ],
@@ -622,7 +577,7 @@ class _CardChargeRowState extends State<_CardChargeRow> {
               label: context.l10n.labelMonto,
               controller: e.amount,
               numeric: true,
-              onChanged: (_) => widget.onChanged(),
+              onFocusLost: widget.onChanged,
             ),
           ),
           const SizedBox(width: 4),
@@ -758,32 +713,59 @@ class _SegmentedPicker extends StatelessWidget {
   }
 }
 
-class _Field extends StatelessWidget {
+class _Field extends StatefulWidget {
   final String label;
   final TextEditingController controller;
   final bool numeric;
   final void Function(String)? onChanged;
+  final VoidCallback? onFocusLost;
 
   const _Field({
     required this.label,
     required this.controller,
     this.numeric = false,
     this.onChanged,
+    this.onFocusLost,
   });
+
+  @override
+  State<_Field> createState() => _FieldState();
+}
+
+class _FieldState extends State<_Field> {
+  late final FocusNode _focus;
+
+  @override
+  void initState() {
+    super.initState();
+    _focus = FocusNode();
+    if (widget.onFocusLost != null) {
+      _focus.addListener(() {
+        if (!_focus.hasFocus) widget.onFocusLost!();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      keyboardType: numeric
+      controller: widget.controller,
+      focusNode: _focus,
+      onChanged: widget.onChanged,
+      keyboardType: widget.numeric
           ? const TextInputType.numberWithOptions(decimal: true)
           : TextInputType.text,
-      inputFormatters: numeric
+      inputFormatters: widget.numeric
           ? [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))]
           : null,
       decoration: InputDecoration(
-        labelText: label,
+        labelText: widget.label,
         border: const OutlineInputBorder(),
         isDense: true,
         contentPadding:
@@ -797,22 +779,18 @@ class _Field extends StatelessWidget {
 
 class _CierreLayout extends StatelessWidget {
   final CierreSitsaData data;
-  final List<DepositEntry> deposits;
-  final List<CardChargeEntry> cards;
+  final double totalCards;
+  final double totalDeposits;
 
   const _CierreLayout({
     required this.data,
-    required this.deposits,
-    required this.cards,
+    required this.totalCards,
+    required this.totalDeposits,
   });
-
-  double _parse(String text) =>
-      double.tryParse(text.replaceAll(',', '')) ?? 0.0;
 
   @override
   Widget build(BuildContext context) {
     final colones = NumberFormat.currency(symbol: '₡', decimalDigits: 2);
-    final numFmt = NumberFormat.decimalPattern();
     final pctFmt = NumberFormat('0.00');
 
     final bruto = (data.general['BrutTotal'] as num?)?.toDouble() ?? 0.0;
@@ -821,16 +799,6 @@ class _CierreLayout extends StatelessWidget {
 
     final ventaNeta = bruto - bonos - discount;
     final pctDesc = bruto > 0 ? (bonos + discount) / bruto * 100 : 0.0;
-
-    final totalCards = cards.fold(0.0, (sum, c) => sum + _parse(c.amount.text));
-    final totalDeposits = deposits.fold(0.0, (sum, d) {
-      final amount = _parse(d.amount.text);
-      if (d.currency == 'USD') {
-        final rate = _parse(d.exchangeRate.text);
-        return sum + (rate > 0 ? amount * rate : amount);
-      }
-      return sum + amount;
-    });
     final diferencia = ventaNeta - totalCards - totalDeposits;
 
     final l10n = context.l10n;
@@ -859,6 +827,11 @@ class _CierreLayout extends StatelessWidget {
                 value: canSeeProfitMargins(context) ? colones.format(data.inventoryCost) : redacted,
                 highlight: true,
               ),
+              _SummaryTile(
+                label: l10n.labelInventarioAnterior,
+                value: canSeeProfitMargins(context) ? colones.format(data.prevInventoryCost) : redacted,
+                highlight: true,
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -882,6 +855,11 @@ class _CierreLayout extends StatelessWidget {
                 value: colones.format(diferencia),
                 highlight: diferencia == 0,
               ),
+              if (data.tipoCambio != null)
+                _SummaryTile(
+                  label: '${l10n.tileTipoCambio} (${data.tipoCambio!.date})',
+                  value: '₡${data.tipoCambio!.ventaUsd.toStringAsFixed(2)}',
+                ),
             ],
           ),
           const SizedBox(height: 24),
