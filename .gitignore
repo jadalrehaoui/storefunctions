@@ -1,3 +1,10 @@
+# Deploy server secrets and runtime
+deploy/.env
+deploy/node_modules/
+deploy/.artifact-state.json
+deploy/public/*.apk
+deploy/public/*.zip
+
 # Miscellaneous
 *.class
 *.log

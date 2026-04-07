@@ -1,9 +1,23 @@
+import 'dart:io' show Platform;
+
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/l10n.dart';
+import '../../../services/api_client.dart';
+import '../../../shared/constants.dart';
 import '../../../shared/cubit/health_cubit.dart';
 import '../../../shared/cubit/locale_cubit.dart';
+
+const int _deployPort = 8080;
+
+String _deployBaseUrl() {
+  final uri = Uri.parse(ApiClient.currentBaseUrl);
+  return 'http://${uri.host}:$_deployPort';
+}
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -39,6 +53,137 @@ class SettingsScreen extends StatelessWidget {
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           _DatabaseStatus(),
+          const SizedBox(height: 32),
+          Divider(color: colorScheme.outlineVariant),
+          const SizedBox(height: 24),
+
+          // ── Updates ────────────────────────────────────────────────────
+          Text('Actualizaciones',
+              style: textTheme.titleSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+          const _UpdateSection(),
+        ],
+      ),
+    );
+  }
+}
+
+class _UpdateSection extends StatefulWidget {
+  const _UpdateSection();
+
+  @override
+  State<_UpdateSection> createState() => _UpdateSectionState();
+}
+
+class _UpdateSectionState extends State<_UpdateSection> {
+  bool _checking = false;
+
+  Future<void> _checkForUpdate() async {
+    setState(() => _checking = true);
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: _deployBaseUrl(),
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ));
+      final response = await dio.get<dynamic>('/api/version');
+      final data = response.data;
+      if (data is! Map || data['version'] == null) {
+        throw 'Respuesta inesperada del servidor';
+      }
+      final remoteVersion = data['version'] as String;
+      final windowsPath = (data['windows'] as String?) ?? '/storefunctions-windows.zip';
+      final androidPath = (data['android'] as String?) ?? '/app-release.apk';
+
+      if (!mounted) return;
+      if (remoteVersion == appVersion) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ya tienes la última versión (v$appVersion)')),
+        );
+        return;
+      }
+
+      final isAndroid = !kIsWeb && Platform.isAndroid;
+      final downloadPath = isAndroid ? androidPath : windowsPath;
+      final downloadUrl = '${_deployBaseUrl()}$downloadPath';
+
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Actualización disponible'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Versión actual: v$appVersion'),
+              Text('Nueva versión: v$remoteVersion'),
+              const SizedBox(height: 12),
+              Text(
+                isAndroid
+                    ? 'Se descargará el APK. Instálalo manualmente.'
+                    : 'Se descargará el instalador (.zip).',
+                style: Theme.of(ctx).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Descargar')),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        await launchUrl(Uri.parse(downloadUrl), mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.system_update, color: colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Versión actual',
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: colorScheme.onSurfaceVariant)),
+                Text('v$appVersion',
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          FilledButton.tonal(
+            onPressed: _checking ? null : _checkForUpdate,
+            child: _checking
+                ? const SizedBox(
+                    width: 16, height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Buscar actualización'),
+          ),
         ],
       ),
     );

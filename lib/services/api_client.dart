@@ -1,17 +1,26 @@
 import 'package:dio/dio.dart';
 
 class ApiClient {
+  static const String remoteBaseUrl = 'http://100.113.65.42:8081';
+  static const String localBaseUrl = 'http://10.10.0.130:8081';
+  static String currentBaseUrl = remoteBaseUrl;
+
   final Dio _dio;
 
   ApiClient()
       : _dio = Dio(
           BaseOptions(
-            baseUrl: 'http://10.10.0.130:8081',
+            baseUrl: currentBaseUrl,
             connectTimeout: const Duration(seconds: 10),
             receiveTimeout: const Duration(seconds: 30),
             contentType: 'application/json',
           ),
         );
+
+  void setBaseUrl(String url) {
+    currentBaseUrl = url;
+    _dio.options.baseUrl = url;
+  }
 
   void setToken(String token) {
     _dio.options.headers['Authorization'] = 'Bearer $token';

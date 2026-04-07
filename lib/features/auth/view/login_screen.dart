@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../di/service_locator.dart';
+import '../../../services/api_client.dart';
 import '../../../shared/constants.dart';
 import '../cubit/auth_cubit.dart';
 
@@ -17,7 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  late final Future<bool> _isOutdatedFuture;
+  bool _isRemote = ApiClient.currentBaseUrl == ApiClient.remoteBaseUrl;
+  late Future<bool> _isOutdatedFuture;
 
   @override
   void initState() {
@@ -28,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<bool> _checkVersion() async {
     try {
       final dio = Dio(BaseOptions(
-        baseUrl: 'http://10.10.0.130:8081',
+        baseUrl: ApiClient.currentBaseUrl,
         connectTimeout: const Duration(seconds: 5),
         receiveTimeout: const Duration(seconds: 5),
       ));
@@ -69,7 +72,33 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Container(
             width: 360,
             padding: const EdgeInsets.all(32),
-            child: BlocConsumer<AuthCubit, AuthState>(
+            child: Stack(
+              children: [
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Switch(
+                    value: _isRemote,
+                    onChanged: (v) {
+                      setState(() {
+                        _isRemote = v;
+                        sl<ApiClient>().setBaseUrl(v
+                            ? ApiClient.remoteBaseUrl
+                            : ApiClient.localBaseUrl);
+                        _isOutdatedFuture = _checkVersion();
+                      });
+                    },
+                    thumbIcon: WidgetStateProperty.resolveWith(
+                      (states) => Icon(
+                        states.contains(WidgetState.selected)
+                            ? Icons.public
+                            : Icons.storefront,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                BlocConsumer<AuthCubit, AuthState>(
               listener: (context, state) {
                 // Navigation is handled by the router redirect.
                 // Nothing to do here.
@@ -175,10 +204,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               )
                             : const Text('Iniciar sesión'),
                       ),
+                      const SizedBox(height: 48),
                     ],
                   ),
                 );
               },
+            ),
+              ],
             ),
           ),
         ),

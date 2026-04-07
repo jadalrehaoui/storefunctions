@@ -1,14 +1,16 @@
 import 'package:dio/dio.dart';
 
+import '../../../services/api_client.dart';
+
 class AuthService {
-  final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: 'http://10.10.0.130:8081',
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 15),
-      contentType: 'application/json',
-    ),
-  );
+  Dio get _dio => Dio(
+        BaseOptions(
+          baseUrl: ApiClient.currentBaseUrl,
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 15),
+          contentType: 'application/json',
+        ),
+      );
 
   /// Returns token and privileges on success. Throws a [String] error message on failure.
   Future<({String token, List<String> privileges})> login(
