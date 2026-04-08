@@ -83,7 +83,10 @@ class _InvoiceFormView extends StatelessWidget {
             );
             final printer = sl<ReceiptPrinterService>();
             final printed = await printer.printPdf(bytes, name: 'invoice_$id');
-            if (!printed) {
+            if (printed) {
+              // Second copy.
+              await printer.printPdf(bytes, name: 'invoice_${id}_copy');
+            } else {
               await receipt_pdf.openReceiptPdf(bytes, id);
             }
           } catch (e) {

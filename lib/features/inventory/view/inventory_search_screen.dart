@@ -629,9 +629,13 @@ class _SitsaCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (sitsa.vendido != null || mikail?.vendido != null)
-                        Column(
+                      if (sitsa.vendido != null ||
+                          mikail?.vendido != null ||
+                          (item.workdbVendido ?? 0) > 0)
+                        IntrinsicWidth(
+                          child: Column(
                           mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             if (sitsa.vendido != null)
                               _Badge(
@@ -649,9 +653,23 @@ class _SitsaCard extends StatelessWidget {
                                 color: const Color(0xFFD4F0DC),
                                 onColor: const Color(0xFF1B5E2A),
                               ),
+                            if ((item.workdbVendido ?? 0) > 0 &&
+                                (sitsa.vendido != null ||
+                                    mikail?.vendido != null))
+                              const SizedBox(height: 4),
+                            if ((item.workdbVendido ?? 0) > 0)
+                              _Badge(
+                                label: context.l10n.labelVendidoWorkdb,
+                                value: num_.format(item.workdbVendido),
+                                color: const Color(0xFFFFE0B2),
+                                onColor: const Color(0xFF6B3A00),
+                              ),
                           ],
                         ),
-                      if ((sitsa.vendido != null || mikail?.vendido != null) &&
+                        ),
+                      if ((sitsa.vendido != null ||
+                              mikail?.vendido != null ||
+                              item.workdbVendido != null) &&
                           item.totalVentas != null)
                         const SizedBox(width: 8),
                       if (item.totalVentas != null)

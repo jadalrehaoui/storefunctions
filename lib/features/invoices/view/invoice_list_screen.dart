@@ -367,11 +367,12 @@ class _RowActions extends StatelessWidget {
           onPressed: () => context.go('/invoices/${invoice.id}'),
           child: Text(l10n.invoiceView),
         ),
-        IconButton(
-          icon: const Icon(Icons.print_outlined, size: 18),
-          tooltip: 'Reimprimir',
-          onPressed: () => _reprint(context),
-        ),
+        if (canReprintInvoice(context))
+          IconButton(
+            icon: const Icon(Icons.print_outlined, size: 18),
+            tooltip: 'Reimprimir',
+            onPressed: () => _reprint(context),
+          ),
         if (invoice.isActive && canEditInvoice(context))
           TextButton(
             onPressed: () => context.go('/invoices/${invoice.id}/edit'),

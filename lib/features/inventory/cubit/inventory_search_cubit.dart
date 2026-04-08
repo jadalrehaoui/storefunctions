@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -45,6 +46,9 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
     emit(InventorySearchLoading());
     try {
       final data = await _inventoryService.getItemCombined(code);
+      print('==== COMBINED GET-ITEM RAW RESPONSE ($code) ====');
+      print(data);
+      print('================================================');
       final item = CombinedItem.fromJson(data);
       emit(InventorySearchSuccess(item));
 

@@ -941,14 +941,20 @@ abstract class AppLocalizations {
   /// No description provided for @labelVendidoSitsa.
   ///
   /// In es, this message translates to:
-  /// **'Vendido Sitsa'**
+  /// **'V. Sitsa'**
   String get labelVendidoSitsa;
 
   /// No description provided for @labelVendidoMikail.
   ///
   /// In es, this message translates to:
-  /// **'Vendido Mikail'**
+  /// **'V. Mikail'**
   String get labelVendidoMikail;
+
+  /// No description provided for @labelVendidoWorkdb.
+  ///
+  /// In es, this message translates to:
+  /// **'V. WorkDB'**
+  String get labelVendidoWorkdb;
 
   /// No description provided for @labelVenta.
   ///

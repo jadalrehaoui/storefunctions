@@ -25,6 +25,7 @@ const _validPrivileges = [
   'view_invoices',
   'edit_invoice',
   'void_invoice',
+  'reprint_invoice',
   'approve_discount',
 ];
 

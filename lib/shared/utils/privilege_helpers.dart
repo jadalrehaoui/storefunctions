@@ -23,5 +23,7 @@ bool canEditInvoice(BuildContext context) =>
     _hasPrivilege(context, 'edit_invoice');
 bool canVoidInvoice(BuildContext context) =>
     _hasPrivilege(context, 'void_invoice');
+bool canReprintInvoice(BuildContext context) =>
+    _hasPrivilege(context, 'reprint_invoice');
 bool canApproveDiscount(BuildContext context) =>
     _hasPrivilege(context, 'approve_discount');

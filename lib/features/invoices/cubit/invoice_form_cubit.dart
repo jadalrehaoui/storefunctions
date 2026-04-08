@@ -54,6 +54,13 @@ class InvoiceFormCubit extends Cubit<InvoiceFormState> {
     ));
     try {
       final data = await _service.lookupItem(c);
+
+      // Reject explicit failure responses.
+      if (data is Map && data['success'] == false) {
+        emit(state.copyWith(lookupLoading: false, lookupError: 'not_found'));
+        return;
+      }
+
       // Server may wrap or return raw map. Accept both.
       final map = (data is Map && data['data'] is Map)
           ? data['data'] as Map
@@ -65,12 +72,21 @@ class InvoiceFormCubit extends Cubit<InvoiceFormState> {
         ));
         return;
       }
+
+      // Require an actual item identity — otherwise treat as not found.
+      final pk = map['PK_Articulo']?.toString();
+      final desc = map['Descripcion'] as String?;
+      if ((pk == null || pk.isEmpty) && (desc == null || desc.isEmpty)) {
+        emit(state.copyWith(lookupLoading: false, lookupError: 'not_found'));
+        return;
+      }
+
       final costo = (map['Costo'] as num?)?.toDouble() ?? 0;
       final ganancia = (map['Ganancia'] as num?)?.toDouble() ?? 0;
       final unitPrice = costo + costo * ganancia / 100;
-      final sitsaCode = map['PK_Articulo']?.toString() ?? c;
+      final sitsaCode = pk ?? c;
       final barcode = map['Codigo_Barras'] as String?;
-      final description = map['Descripcion'] as String? ?? '';
+      final description = desc ?? '';
       final tica = map['tica'] as String?;
 
       // Merge into existing line if same item code, otherwise append.

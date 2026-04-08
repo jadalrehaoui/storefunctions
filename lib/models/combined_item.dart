@@ -82,6 +82,7 @@ class CombinedItem {
   final String code;
   final SitsaItem? sitsa;
   final MikailItem? mikail;
+  final double? workdbVendido;
   final dynamic raw;
   final String? tica;
 
@@ -90,14 +91,16 @@ class CombinedItem {
     required this.raw,
     this.sitsa,
     this.mikail,
+    this.workdbVendido,
     this.tica,
   });
 
   double? get totalVentas {
     final s = sitsa?.vendido;
     final m = mikail?.vendido;
-    if (s == null && m == null) return null;
-    return (s ?? 0) + (m ?? 0);
+    final w = workdbVendido;
+    if (s == null && m == null && w == null) return null;
+    return (s ?? 0) + (m ?? 0) + (w ?? 0);
   }
 
   factory CombinedItem.fromJson(dynamic json) {
@@ -105,6 +108,7 @@ class CombinedItem {
 
     SitsaItem? sitsa;
     MikailItem? mikail;
+    double? workdbVendido;
 
     if (json['sitsa'] is Map<String, dynamic>) {
       sitsa = SitsaItem.fromJson(json['sitsa'] as Map<String, dynamic>);
@@ -112,11 +116,21 @@ class CombinedItem {
     if (json['mikail'] is Map<String, dynamic>) {
       mikail = MikailItem.fromJson(json['mikail'] as Map<String, dynamic>);
     }
+    if (json['workdb'] is Map) {
+      final w = json['workdb'] as Map;
+      final raw = w['VendidoEnWorkdb'];
+      if (raw is num) {
+        workdbVendido = raw.toDouble();
+      } else if (raw != null) {
+        workdbVendido = double.tryParse(raw.toString());
+      }
+    }
 
     return CombinedItem(
       code: json['code'] as String? ?? '',
       sitsa: sitsa,
       mikail: mikail,
+      workdbVendido: workdbVendido,
       raw: json,
     );
   }
@@ -126,6 +140,7 @@ class CombinedItem {
       code: code,
       sitsa: sitsa,
       mikail: mikail,
+      workdbVendido: workdbVendido,
       raw: raw,
       tica: ticaValue,
     );

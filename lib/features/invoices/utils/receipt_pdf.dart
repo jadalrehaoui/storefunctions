@@ -38,9 +38,12 @@ Future<Uint8List> buildReceiptPdf({
   pdf.addPage(
     pw.Page(
       pageFormat: PdfPageFormat(
-        80 * PdfPageFormat.mm,
+        76 * PdfPageFormat.mm,
         double.infinity,
-        marginAll: 6 * PdfPageFormat.mm,
+        marginLeft: 3 * PdfPageFormat.mm,
+        marginRight: 3 * PdfPageFormat.mm,
+        marginTop: 6 * PdfPageFormat.mm,
+        marginBottom: 6 * PdfPageFormat.mm,
       ),
       build: (ctx) => pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.stretch,
