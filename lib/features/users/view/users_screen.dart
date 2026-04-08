@@ -21,6 +21,11 @@ const _validPrivileges = [
   'inspect_closures',
   'delete_closure',
   'generate_restock_list',
+  'create_invoice',
+  'view_invoices',
+  'edit_invoice',
+  'void_invoice',
+  'approve_discount',
 ];
 
 class UsersScreen extends StatelessWidget {

@@ -254,6 +254,12 @@ abstract class AppLocalizations {
   /// **'Cierre Mikail'**
   String get navCierreMikail;
 
+  /// No description provided for @navCierreParallel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cierre Parallel'**
+  String get navCierreParallel;
+
   /// No description provided for @navRestockList.
   ///
   /// In es, this message translates to:
@@ -266,11 +272,323 @@ abstract class AppLocalizations {
   /// **'Cierres'**
   String get navCierres;
 
+  /// No description provided for @navBilling.
+  ///
+  /// In es, this message translates to:
+  /// **'Facturación'**
+  String get navBilling;
+
+  /// No description provided for @navInvoice.
+  ///
+  /// In es, this message translates to:
+  /// **'Facturar'**
+  String get navInvoice;
+
+  /// No description provided for @navInvoiceList.
+  ///
+  /// In es, this message translates to:
+  /// **'Facturas'**
+  String get navInvoiceList;
+
+  /// No description provided for @navCierreCaja.
+  ///
+  /// In es, this message translates to:
+  /// **'Cierre Caja'**
+  String get navCierreCaja;
+
+  /// No description provided for @navCierreCajaSitsa.
+  ///
+  /// In es, this message translates to:
+  /// **'Cierre Caja Sitsa'**
+  String get navCierreCajaSitsa;
+
   /// No description provided for @navUsers.
   ///
   /// In es, this message translates to:
   /// **'Usuarios'**
   String get navUsers;
+
+  /// No description provided for @invoiceCreateTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear Factura'**
+  String get invoiceCreateTitle;
+
+  /// No description provided for @invoiceListTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Facturas'**
+  String get invoiceListTitle;
+
+  /// No description provided for @invoiceDetailTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Factura'**
+  String get invoiceDetailTitle;
+
+  /// No description provided for @invoiceItemLookupLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Código / Código de Barras'**
+  String get invoiceItemLookupLabel;
+
+  /// No description provided for @invoiceAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar'**
+  String get invoiceAdd;
+
+  /// No description provided for @invoiceItemNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Artículo no encontrado'**
+  String get invoiceItemNotFound;
+
+  /// No description provided for @invoiceDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción'**
+  String get invoiceDescription;
+
+  /// No description provided for @invoiceCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código'**
+  String get invoiceCode;
+
+  /// No description provided for @invoiceBarcode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código de Barras'**
+  String get invoiceBarcode;
+
+  /// No description provided for @invoiceQty.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad'**
+  String get invoiceQty;
+
+  /// No description provided for @invoiceUnitPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio Unitario'**
+  String get invoiceUnitPrice;
+
+  /// No description provided for @invoiceDiscountPct.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuento %'**
+  String get invoiceDiscountPct;
+
+  /// No description provided for @invoiceLineTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Total Línea'**
+  String get invoiceLineTotal;
+
+  /// No description provided for @invoiceAddToInvoice.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar a Factura'**
+  String get invoiceAddToInvoice;
+
+  /// No description provided for @invoiceClientName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre del Cliente'**
+  String get invoiceClientName;
+
+  /// No description provided for @invoiceClientId.
+  ///
+  /// In es, this message translates to:
+  /// **'Cédula'**
+  String get invoiceClientId;
+
+  /// No description provided for @invoiceDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha'**
+  String get invoiceDate;
+
+  /// No description provided for @invoiceNotes.
+  ///
+  /// In es, this message translates to:
+  /// **'Notas'**
+  String get invoiceNotes;
+
+  /// No description provided for @invoiceSubtotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Subtotal'**
+  String get invoiceSubtotal;
+
+  /// No description provided for @invoiceDiscount.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuento'**
+  String get invoiceDiscount;
+
+  /// No description provided for @invoiceTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Total'**
+  String get invoiceTotal;
+
+  /// No description provided for @invoiceCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Procesar e Imprimir'**
+  String get invoiceCreate;
+
+  /// No description provided for @invoiceCreated.
+  ///
+  /// In es, this message translates to:
+  /// **'Factura creada'**
+  String get invoiceCreated;
+
+  /// No description provided for @invoiceManagerAuthTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Autorización de Gerente Requerida'**
+  String get invoiceManagerAuthTitle;
+
+  /// No description provided for @invoiceManagerAuthBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Un descuento mayor al 15% requiere aprobación de gerente.'**
+  String get invoiceManagerAuthBody;
+
+  /// No description provided for @invoiceManagerUsername.
+  ///
+  /// In es, this message translates to:
+  /// **'Usuario del Gerente'**
+  String get invoiceManagerUsername;
+
+  /// No description provided for @invoiceManagerPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña del Gerente'**
+  String get invoiceManagerPassword;
+
+  /// No description provided for @invoiceAuthorize.
+  ///
+  /// In es, this message translates to:
+  /// **'Autorizar'**
+  String get invoiceAuthorize;
+
+  /// No description provided for @invoiceAuthError.
+  ///
+  /// In es, this message translates to:
+  /// **'Credenciales inválidas o privilegios insuficientes'**
+  String get invoiceAuthError;
+
+  /// No description provided for @invoiceColInvoiceId.
+  ///
+  /// In es, this message translates to:
+  /// **'Factura #'**
+  String get invoiceColInvoiceId;
+
+  /// No description provided for @invoiceColClient.
+  ///
+  /// In es, this message translates to:
+  /// **'Cliente'**
+  String get invoiceColClient;
+
+  /// No description provided for @invoiceColTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Total'**
+  String get invoiceColTotal;
+
+  /// No description provided for @invoiceColStatus.
+  ///
+  /// In es, this message translates to:
+  /// **'Estado'**
+  String get invoiceColStatus;
+
+  /// No description provided for @invoiceColActions.
+  ///
+  /// In es, this message translates to:
+  /// **'Acciones'**
+  String get invoiceColActions;
+
+  /// No description provided for @invoiceStatusActive.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa'**
+  String get invoiceStatusActive;
+
+  /// No description provided for @invoiceStatusVoided.
+  ///
+  /// In es, this message translates to:
+  /// **'Anulada'**
+  String get invoiceStatusVoided;
+
+  /// No description provided for @invoiceView.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver'**
+  String get invoiceView;
+
+  /// No description provided for @invoiceEdit.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar'**
+  String get invoiceEdit;
+
+  /// No description provided for @invoiceVoid.
+  ///
+  /// In es, this message translates to:
+  /// **'Anular'**
+  String get invoiceVoid;
+
+  /// No description provided for @invoiceVoidConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Anular factura'**
+  String get invoiceVoidConfirmTitle;
+
+  /// No description provided for @invoiceVoidConfirmBody.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Está seguro de anular esta factura? Esta acción no se puede deshacer.'**
+  String get invoiceVoidConfirmBody;
+
+  /// No description provided for @invoiceFilterDateRange.
+  ///
+  /// In es, this message translates to:
+  /// **'Rango de fechas'**
+  String get invoiceFilterDateRange;
+
+  /// No description provided for @invoiceFilterClient.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar cliente'**
+  String get invoiceFilterClient;
+
+  /// No description provided for @invoiceCreatedBy.
+  ///
+  /// In es, this message translates to:
+  /// **'Creada por'**
+  String get invoiceCreatedBy;
+
+  /// No description provided for @invoiceCreatedAt.
+  ///
+  /// In es, this message translates to:
+  /// **'Creada el'**
+  String get invoiceCreatedAt;
+
+  /// No description provided for @invoiceNoItems.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin artículos'**
+  String get invoiceNoItems;
+
+  /// No description provided for @invoiceSave.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get invoiceSave;
 
   /// No description provided for @navSettings.
   ///

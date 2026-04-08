@@ -1,4 +1,5 @@
 # Deploy server secrets and runtime
+/node_modules/
 deploy/.env
 deploy/node_modules/
 deploy/.artifact-state.json

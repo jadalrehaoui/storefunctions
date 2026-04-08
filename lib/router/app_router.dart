@@ -10,13 +10,20 @@ import '../features/inventory/view/inventory_screen.dart';
 import '../features/inventory/view/inventory_search_screen.dart';
 import '../features/inventory/view/inventory_print_labels_screen.dart';
 import '../features/reports/view/cierre_mikail_screen.dart';
+import '../features/reports/view/cierre_parallel_screen.dart';
 import '../features/reports/view/restock_list_screen.dart';
 import '../features/settings/view/settings_screen.dart';
 import '../features/reports/view/cierre_sitsa_screen.dart';
 import '../features/reports/view/closure_detail_screen.dart';
 import '../features/reports/view/closures_screen.dart';
 import '../features/reports/view/sales_reports_screen.dart';
+import '../features/billing/view/cierre_caja_screen.dart';
+import '../features/billing/view/cierre_caja_sitsa_screen.dart';
+import '../features/billing/view/invoice_screen.dart';
 import '../features/dashboard/view/dashboard_screen.dart';
+import '../features/invoices/view/invoice_detail_screen.dart';
+import '../features/invoices/view/invoice_form_screen.dart';
+import '../features/invoices/view/invoice_list_screen.dart';
 import '../features/users/view/users_screen.dart';
 import '../shared/widgets/app_shell.dart';
 
@@ -122,6 +129,13 @@ GoRouter createRouter(AuthCubit authCubit) {
             ),
           ),
           GoRoute(
+            path: '/reports/cierre-parallel',
+            name: 'reports-cierre-parallel',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: CierreParallelScreen(),
+            ),
+          ),
+          GoRoute(
             path: '/reports/restock-list',
             name: 'reports-restock-list',
             pageBuilder: (context, state) => const NoTransitionPage(
@@ -141,6 +155,59 @@ GoRouter createRouter(AuthCubit authCubit) {
             pageBuilder: (context, state) => NoTransitionPage(
               child: ClosureDetailScreen(
                 closureId: state.pathParameters['id']!,
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/billing/invoice',
+            name: 'billing-invoice',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: InvoiceScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/billing/cierre-caja',
+            name: 'billing-cierre-caja',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: CierreCajaScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/billing/cierre-caja-sitsa',
+            name: 'billing-cierre-caja-sitsa',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: CierreCajaSitsaScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/invoices',
+            name: 'invoices',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: InvoiceListScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/invoices/new',
+            name: 'invoice-new',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: InvoiceFormScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/invoices/:id',
+            name: 'invoice-detail',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: InvoiceDetailScreen(
+                invoiceId: state.pathParameters['id']!,
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/invoices/:id/edit',
+            name: 'invoice-edit',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: InvoiceFormScreen(
+                editingInvoiceId: state.pathParameters['id']!,
               ),
             ),
           ),

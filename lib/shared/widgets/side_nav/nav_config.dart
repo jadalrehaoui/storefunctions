@@ -37,6 +37,34 @@ class NavItemConfig {
 
 final navItems = <NavItemConfig>[
   NavItemConfig(
+    id: 'billing',
+    icon: Icons.receipt_outlined,
+    label: (l10n) => l10n.navBilling,
+    subItems: [
+      NavSubConfig(
+        id: 'billing-invoice-new',
+        icon: Icons.point_of_sale_outlined,
+        label: (l10n) => l10n.navInvoice,
+        route: '/invoices/new',
+        privilege: 'create_invoice',
+      ),
+      NavSubConfig(
+        id: 'billing-invoice-list',
+        icon: Icons.receipt_long_outlined,
+        label: (l10n) => l10n.navInvoiceList,
+        route: '/invoices',
+        privilege: 'view_invoices',
+      ),
+      NavSubConfig(
+        id: 'billing-cierre-caja',
+        icon: Icons.account_balance_wallet_outlined,
+        label: (l10n) => l10n.navCierreCaja,
+        route: '/billing/cierre-caja',
+        privilege: 'view_invoices',
+      ),
+    ],
+  ),
+  NavItemConfig(
     id: 'dashboard',
     icon: Icons.dashboard_outlined,
     label: (l10n) => l10n.navDashboard,
@@ -95,6 +123,13 @@ final navItems = <NavItemConfig>[
         icon: Icons.storefront_outlined,
         label: (l10n) => l10n.navCierreMikail,
         route: '/reports/cierre-mikail',
+        privilege: 'generate_closure',
+      ),
+      NavSubConfig(
+        id: 'reports-cierre-parallel',
+        icon: Icons.compare_arrows_outlined,
+        label: (l10n) => l10n.navCierreParallel,
+        route: '/reports/cierre-parallel',
         privilege: 'generate_closure',
       ),
       NavSubConfig(

@@ -87,13 +87,175 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navCierreMikail => 'Cierre Mikail';
 
   @override
+  String get navCierreParallel => 'Cierre Parallel';
+
+  @override
   String get navRestockList => 'Lista de Restock';
 
   @override
   String get navCierres => 'Cierres';
 
   @override
+  String get navBilling => 'Facturación';
+
+  @override
+  String get navInvoice => 'Facturar';
+
+  @override
+  String get navInvoiceList => 'Facturas';
+
+  @override
+  String get navCierreCaja => 'Cierre Caja';
+
+  @override
+  String get navCierreCajaSitsa => 'Cierre Caja Sitsa';
+
+  @override
   String get navUsers => 'Usuarios';
+
+  @override
+  String get invoiceCreateTitle => 'Crear Factura';
+
+  @override
+  String get invoiceListTitle => 'Facturas';
+
+  @override
+  String get invoiceDetailTitle => 'Factura';
+
+  @override
+  String get invoiceItemLookupLabel => 'Código / Código de Barras';
+
+  @override
+  String get invoiceAdd => 'Agregar';
+
+  @override
+  String get invoiceItemNotFound => 'Artículo no encontrado';
+
+  @override
+  String get invoiceDescription => 'Descripción';
+
+  @override
+  String get invoiceCode => 'Código';
+
+  @override
+  String get invoiceBarcode => 'Código de Barras';
+
+  @override
+  String get invoiceQty => 'Cantidad';
+
+  @override
+  String get invoiceUnitPrice => 'Precio Unitario';
+
+  @override
+  String get invoiceDiscountPct => 'Descuento %';
+
+  @override
+  String get invoiceLineTotal => 'Total Línea';
+
+  @override
+  String get invoiceAddToInvoice => 'Agregar a Factura';
+
+  @override
+  String get invoiceClientName => 'Nombre del Cliente';
+
+  @override
+  String get invoiceClientId => 'Cédula';
+
+  @override
+  String get invoiceDate => 'Fecha';
+
+  @override
+  String get invoiceNotes => 'Notas';
+
+  @override
+  String get invoiceSubtotal => 'Subtotal';
+
+  @override
+  String get invoiceDiscount => 'Descuento';
+
+  @override
+  String get invoiceTotal => 'Total';
+
+  @override
+  String get invoiceCreate => 'Procesar e Imprimir';
+
+  @override
+  String get invoiceCreated => 'Factura creada';
+
+  @override
+  String get invoiceManagerAuthTitle => 'Autorización de Gerente Requerida';
+
+  @override
+  String get invoiceManagerAuthBody =>
+      'Un descuento mayor al 15% requiere aprobación de gerente.';
+
+  @override
+  String get invoiceManagerUsername => 'Usuario del Gerente';
+
+  @override
+  String get invoiceManagerPassword => 'Contraseña del Gerente';
+
+  @override
+  String get invoiceAuthorize => 'Autorizar';
+
+  @override
+  String get invoiceAuthError =>
+      'Credenciales inválidas o privilegios insuficientes';
+
+  @override
+  String get invoiceColInvoiceId => 'Factura #';
+
+  @override
+  String get invoiceColClient => 'Cliente';
+
+  @override
+  String get invoiceColTotal => 'Total';
+
+  @override
+  String get invoiceColStatus => 'Estado';
+
+  @override
+  String get invoiceColActions => 'Acciones';
+
+  @override
+  String get invoiceStatusActive => 'Activa';
+
+  @override
+  String get invoiceStatusVoided => 'Anulada';
+
+  @override
+  String get invoiceView => 'Ver';
+
+  @override
+  String get invoiceEdit => 'Editar';
+
+  @override
+  String get invoiceVoid => 'Anular';
+
+  @override
+  String get invoiceVoidConfirmTitle => 'Anular factura';
+
+  @override
+  String get invoiceVoidConfirmBody =>
+      '¿Está seguro de anular esta factura? Esta acción no se puede deshacer.';
+
+  @override
+  String get invoiceFilterDateRange => 'Rango de fechas';
+
+  @override
+  String get invoiceFilterClient => 'Buscar cliente';
+
+  @override
+  String get invoiceCreatedBy => 'Creada por';
+
+  @override
+  String get invoiceCreatedAt => 'Creada el';
+
+  @override
+  String get invoiceNoItems => 'Sin artículos';
+
+  @override
+  String get invoiceSave => 'Guardar';
 
   @override
   String get navSettings => 'Configuración';

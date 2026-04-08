@@ -87,13 +87,175 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navCierreMikail => 'Cierre Mikail';
 
   @override
+  String get navCierreParallel => 'Cierre Parallel';
+
+  @override
   String get navRestockList => 'Restock List';
 
   @override
   String get navCierres => 'Closures';
 
   @override
+  String get navBilling => 'Billing';
+
+  @override
+  String get navInvoice => 'New Invoice';
+
+  @override
+  String get navInvoiceList => 'Invoices';
+
+  @override
+  String get navCierreCaja => 'Cash Closure';
+
+  @override
+  String get navCierreCajaSitsa => 'Sitsa Cash Closure';
+
+  @override
   String get navUsers => 'Users';
+
+  @override
+  String get invoiceCreateTitle => 'Create Invoice';
+
+  @override
+  String get invoiceListTitle => 'Invoices';
+
+  @override
+  String get invoiceDetailTitle => 'Invoice';
+
+  @override
+  String get invoiceItemLookupLabel => 'Item Code / Barcode';
+
+  @override
+  String get invoiceAdd => 'Add';
+
+  @override
+  String get invoiceItemNotFound => 'Item not found';
+
+  @override
+  String get invoiceDescription => 'Description';
+
+  @override
+  String get invoiceCode => 'Code';
+
+  @override
+  String get invoiceBarcode => 'Barcode';
+
+  @override
+  String get invoiceQty => 'Qty';
+
+  @override
+  String get invoiceUnitPrice => 'Unit Price';
+
+  @override
+  String get invoiceDiscountPct => 'Discount %';
+
+  @override
+  String get invoiceLineTotal => 'Line Total';
+
+  @override
+  String get invoiceAddToInvoice => 'Add to Invoice';
+
+  @override
+  String get invoiceClientName => 'Client Name';
+
+  @override
+  String get invoiceClientId => 'Client ID';
+
+  @override
+  String get invoiceDate => 'Date';
+
+  @override
+  String get invoiceNotes => 'Notes';
+
+  @override
+  String get invoiceSubtotal => 'Subtotal';
+
+  @override
+  String get invoiceDiscount => 'Discount';
+
+  @override
+  String get invoiceTotal => 'Total';
+
+  @override
+  String get invoiceCreate => 'Process and Print';
+
+  @override
+  String get invoiceCreated => 'Invoice created';
+
+  @override
+  String get invoiceManagerAuthTitle => 'Manager Authorization Required';
+
+  @override
+  String get invoiceManagerAuthBody =>
+      'A discount above 15% requires manager approval.';
+
+  @override
+  String get invoiceManagerUsername => 'Manager Username';
+
+  @override
+  String get invoiceManagerPassword => 'Manager Password';
+
+  @override
+  String get invoiceAuthorize => 'Authorize';
+
+  @override
+  String get invoiceAuthError =>
+      'Invalid credentials or insufficient privileges';
+
+  @override
+  String get invoiceColInvoiceId => 'Invoice #';
+
+  @override
+  String get invoiceColClient => 'Client';
+
+  @override
+  String get invoiceColTotal => 'Total';
+
+  @override
+  String get invoiceColStatus => 'Status';
+
+  @override
+  String get invoiceColActions => 'Actions';
+
+  @override
+  String get invoiceStatusActive => 'Active';
+
+  @override
+  String get invoiceStatusVoided => 'Voided';
+
+  @override
+  String get invoiceView => 'View';
+
+  @override
+  String get invoiceEdit => 'Edit';
+
+  @override
+  String get invoiceVoid => 'Void';
+
+  @override
+  String get invoiceVoidConfirmTitle => 'Void invoice';
+
+  @override
+  String get invoiceVoidConfirmBody =>
+      'Are you sure you want to void this invoice? This cannot be undone.';
+
+  @override
+  String get invoiceFilterDateRange => 'Date range';
+
+  @override
+  String get invoiceFilterClient => 'Search client';
+
+  @override
+  String get invoiceCreatedBy => 'Created by';
+
+  @override
+  String get invoiceCreatedAt => 'Created at';
+
+  @override
+  String get invoiceNoItems => 'No items';
+
+  @override
+  String get invoiceSave => 'Save';
 
   @override
   String get navSettings => 'Settings';

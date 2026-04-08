@@ -4,20 +4,18 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:printing/printing.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
 import '../../../services/api_client.dart';
+import '../../../services/receipt_printer_service.dart';
 import '../../../shared/constants.dart';
 import '../../../shared/cubit/health_cubit.dart';
 import '../../../shared/cubit/locale_cubit.dart';
 
-const int _deployPort = 8080;
-
-String _deployBaseUrl() {
-  final uri = Uri.parse(ApiClient.currentBaseUrl);
-  return 'http://${uri.host}:$_deployPort';
-}
+const String _deployBaseUrl = 'http://100.113.65.42:8080';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -57,6 +55,17 @@ class SettingsScreen extends StatelessWidget {
           Divider(color: colorScheme.outlineVariant),
           const SizedBox(height: 24),
 
+          // ── Receipt printer ────────────────────────────────────────────
+          Text('Impresora de Recibos',
+              style: textTheme.titleSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+          const _ReceiptPrinterSection(),
+          const SizedBox(height: 32),
+          Divider(color: colorScheme.outlineVariant),
+          const SizedBox(height: 24),
+
           // ── Updates ────────────────────────────────────────────────────
           Text('Actualizaciones',
               style: textTheme.titleSmall?.copyWith(
@@ -84,7 +93,7 @@ class _UpdateSectionState extends State<_UpdateSection> {
     setState(() => _checking = true);
     try {
       final dio = Dio(BaseOptions(
-        baseUrl: _deployBaseUrl(),
+        baseUrl: _deployBaseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ));
@@ -107,7 +116,7 @@ class _UpdateSectionState extends State<_UpdateSection> {
 
       final isAndroid = !kIsWeb && Platform.isAndroid;
       final downloadPath = isAndroid ? androidPath : windowsPath;
-      final downloadUrl = '${_deployBaseUrl()}$downloadPath';
+      final downloadUrl = '$_deployBaseUrl$downloadPath';
 
       final confirm = await showDialog<bool>(
         context: context,
@@ -186,6 +195,130 @@ class _UpdateSectionState extends State<_UpdateSection> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ReceiptPrinterSection extends StatefulWidget {
+  const _ReceiptPrinterSection();
+
+  @override
+  State<_ReceiptPrinterSection> createState() => _ReceiptPrinterSectionState();
+}
+
+class _ReceiptPrinterSectionState extends State<_ReceiptPrinterSection> {
+  final _service = sl<ReceiptPrinterService>();
+  List<Printer>? _printers;
+  String? _selectedUrl;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrinters();
+  }
+
+  Future<void> _loadPrinters() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final printers = await _service.listPrinters();
+      final saved = await _service.getSavedPrinterUrl();
+      if (!mounted) return;
+      setState(() {
+        _printers = printers;
+        _selectedUrl = saved;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    if (_selectedUrl == null || _printers == null) return;
+    final printer = _printers!.firstWhere((p) => p.url == _selectedUrl);
+    await _service.savePrinter(printer);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Impresora guardada: ${printer.name}')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: _loading
+          ? const SizedBox(
+              height: 40,
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          : _error != null
+              ? Row(
+                  children: [
+                    Icon(Icons.error_outline, color: colorScheme.error),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(_error!)),
+                    TextButton(
+                        onPressed: _loadPrinters, child: const Text('Reintentar')),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Icon(Icons.print_outlined, color: colorScheme.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: _selectedUrl,
+                        hint: const Text('Selecciona una impresora'),
+                        items: [
+                          for (final p in _printers!)
+                            DropdownMenuItem(
+                              value: p.url,
+                              child: Text(
+                                '${p.name}${p.isDefault ? '  (predeterminada)' : ''}',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                        onChanged: (v) => setState(() => _selectedUrl = v),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.refresh, size: 18),
+                      tooltip: 'Recargar',
+                      onPressed: _loadPrinters,
+                    ),
+                    const SizedBox(width: 4),
+                    FilledButton(
+                      onPressed: _selectedUrl == null ? null : _save,
+                      child: const Text('Guardar'),
+                    ),
+                  ],
+                ),
     );
   }
 }

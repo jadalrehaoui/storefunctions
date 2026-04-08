@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 
 class ApiClient {
-  static const String remoteBaseUrl = 'http://100.113.65.42:8081';
+  static const String remoteBaseUrl = 'https://jads-mac-mini.tail2ce668.ts.net';
   static const String localBaseUrl = 'http://10.10.0.130:8081';
-  static String currentBaseUrl = remoteBaseUrl;
+  static String currentBaseUrl = localBaseUrl;
 
   final Dio _dio;
 
