@@ -95,9 +95,10 @@ class CierreParallelFailure extends CierreParallelState {
 
 class CierreParallelCubit extends Cubit<CierreParallelState> {
   final InvoiceService _service;
+  final String? username;
   DateTime _date;
 
-  CierreParallelCubit(this._service)
+  CierreParallelCubit(this._service, {this.username})
       : _date = DateTime(
             DateTime.now().year, DateTime.now().month, DateTime.now().day),
         super(CierreParallelInitial());
@@ -111,7 +112,7 @@ class CierreParallelCubit extends Cubit<CierreParallelState> {
   Future<void> generate() async {
     emit(CierreParallelLoading());
     try {
-      final data = await _service.dailySummary(_date);
+      final data = await _service.dailySummary(_date, user: username);
       final map = (data is Map && data['data'] is Map)
           ? data['data'] as Map<String, dynamic>
           : (data as Map<String, dynamic>);

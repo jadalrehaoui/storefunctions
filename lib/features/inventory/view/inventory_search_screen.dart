@@ -7,6 +7,7 @@ import '../../../l10n/l10n.dart';
 import '../../../models/combined_item.dart';
 import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/inventory_search_cubit.dart';
+import '../utils/inventory_search_pdf.dart';
 
 class InventorySearchScreen extends StatelessWidget {
   const InventorySearchScreen({super.key});
@@ -76,6 +77,23 @@ class _InventorySearchViewState extends State<_InventorySearchView> {
                 onPressed: _submit,
                 icon: const Icon(Icons.search, size: 18),
                 label: Text(context.l10n.btnSearch),
+              ),
+              const SizedBox(width: 12),
+              BlocBuilder<InventorySearchCubit, InventorySearchState>(
+                buildWhen: (_, __) => true,
+                builder: (context, _) {
+                  final cubit = context.read<InventorySearchCubit>();
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Incluir 0s'),
+                      Switch(
+                        value: cubit.includeZero,
+                        onChanged: (v) => cubit.setIncludeZero(v),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -363,6 +381,18 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
               child: Text('${items.length}',
                   style: textTheme.labelSmall
                       ?.copyWith(color: colorScheme.onSecondaryContainer)),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: items.isEmpty
+                  ? null
+                  : () => generateAndOpenInventorySearch(
+                        query: widget.state.query,
+                        items: items,
+                        showProfit: canSeeProfitMargins(context),
+                      ),
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: const Text('Imprimir'),
             ),
           ],
         ),

@@ -796,6 +796,8 @@ class _CierreLayout extends StatelessWidget {
     final bruto = (data.general['BrutTotal'] as num?)?.toDouble() ?? 0.0;
     final bonos = (data.general['TotalBonos'] as num?)?.toDouble() ?? 0.0;
     final discount = (data.general['TotalDiscount'] as num?)?.toDouble() ?? 0.0;
+    final ventaLicor = (data.general['Venta_Licor'] as num?)?.toDouble() ?? 0.0;
+    final totalVoided = (data.general['TotalVoided'] as num?)?.toInt() ?? 0;
 
     final ventaNeta = bruto - bonos - discount;
     final pctDesc = bruto > 0 ? (bonos + discount) / bruto * 100 : 0.0;
@@ -821,6 +823,14 @@ class _CierreLayout extends StatelessWidget {
               _SummaryTile(
                 label: l10n.tileDescuentos,
                 value: colones.format(discount),
+              ),
+              _SummaryTile(
+                label: 'Venta Licor',
+                value: colones.format(ventaLicor),
+              ),
+              _SummaryTile(
+                label: 'Facturas Anuladas',
+                value: '$totalVoided',
               ),
               _SummaryTile(
                 label: l10n.tileCostoInventario,

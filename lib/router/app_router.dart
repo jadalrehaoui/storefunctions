@@ -16,6 +16,8 @@ import '../features/settings/view/settings_screen.dart';
 import '../features/reports/view/cierre_sitsa_screen.dart';
 import '../features/reports/view/closure_detail_screen.dart';
 import '../features/reports/view/closures_screen.dart';
+import '../features/reports/view/cierres_personales_screen.dart';
+import '../features/reports/view/cierre_personal_detail_screen.dart';
 import '../features/reports/view/sales_reports_screen.dart';
 import '../features/billing/view/cierre_caja_screen.dart';
 import '../features/billing/view/cierre_caja_sitsa_screen.dart';
@@ -147,6 +149,22 @@ GoRouter createRouter(AuthCubit authCubit) {
             name: 'reports-closures',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: ClosuresScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/reports/cierres-personales',
+            name: 'reports-cierres-personales',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: CierresPersonalesScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/reports/cierres-personales/:id',
+            name: 'reports-cierre-personal-detail',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: CierrePersonalDetailScreen(
+                id: state.pathParameters['id']!,
+              ),
             ),
           ),
           GoRoute(

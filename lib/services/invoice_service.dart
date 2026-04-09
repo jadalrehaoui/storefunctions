@@ -54,9 +54,10 @@ class InvoiceService {
     return _client.post('/api/workdb/invoices/$id/void', {});
   }
 
-  Future<dynamic> dailySummary(DateTime date) {
+  Future<dynamic> dailySummary(DateTime date, {String? user}) {
     final d =
         '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    return _client.get('/api/workdb/invoices/daily-summary?date=$d');
+    final qp = 'date=$d${user != null && user.isNotEmpty ? '&user=${Uri.encodeQueryComponent(user)}' : ''}';
+    return _client.get('/api/workdb/invoices/daily-summary?$qp');
   }
 }

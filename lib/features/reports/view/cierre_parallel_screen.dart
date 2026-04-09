@@ -4,23 +4,42 @@ import 'package:intl/intl.dart';
 
 import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
+import '../../../services/receipt_printer_service.dart';
+import '../../auth/cubit/auth_cubit.dart';
 import '../cubit/cierre_parallel_cubit.dart';
 import '../utils/parallel_pdf.dart' as parallel_pdf;
 
 class CierreParallelScreen extends StatelessWidget {
-  const CierreParallelScreen({super.key});
+  final String? titleOverride;
+  final bool personalOnly;
+  const CierreParallelScreen({
+    super.key,
+    this.titleOverride,
+    this.personalOnly = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => CierreParallelCubit(sl())..generate(),
-      child: const _CierreParallelView(),
+      create: (ctx) {
+        final auth = ctx.read<AuthCubit>().state;
+        final username =
+            personalOnly && auth is AuthAuthenticated ? auth.username : null;
+        return CierreParallelCubit(sl(), username: username)..generate();
+      },
+      child: _CierreParallelView(
+        titleOverride: titleOverride,
+        personalOnly: personalOnly,
+      ),
     );
   }
 }
 
 class _CierreParallelView extends StatefulWidget {
-  const _CierreParallelView();
+  final String? titleOverride;
+  final bool personalOnly;
+  const _CierreParallelView(
+      {this.titleOverride, this.personalOnly = false});
 
   @override
   State<_CierreParallelView> createState() => _CierreParallelViewState();
@@ -31,6 +50,26 @@ class _CierreParallelViewState extends State<_CierreParallelView> {
 
   Future<void> _print(ParallelDailySummary summary) async {
     try {
+      if (widget.personalOnly) {
+        final auth = context.read<AuthCubit>().state;
+        final cashier = auth is AuthAuthenticated ? auth.username : null;
+        final bytes = await parallel_pdf.buildParallelReceiptPdf(
+            summary, summary.date,
+            cashier: cashier);
+        final printer = sl<ReceiptPrinterService>();
+        final printed = await printer.printPdf(bytes,
+            name:
+                'cierre_parallel_personal_${DateFormat('yyyyMMdd').format(summary.date)}');
+        if (!printed) {
+          final path = await parallel_pdf.openParallelReceiptPdf(
+              bytes, summary.date);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(context.l10n.msgSavedAt(path))));
+          }
+        }
+        return;
+      }
       final path =
           await parallel_pdf.generateAndOpenParallel(summary, summary.date);
       if (mounted && path != 'printed') {
@@ -67,7 +106,7 @@ class _CierreParallelViewState extends State<_CierreParallelView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.navCierreParallel,
+          Text(widget.titleOverride ?? l10n.navCierreParallel,
               style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 24),
           BlocBuilder<CierreParallelCubit, CierreParallelState>(

@@ -25,7 +25,7 @@ class SettingsScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,7 +61,16 @@ class SettingsScreen extends StatelessWidget {
                   color: colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
-          const _ReceiptPrinterSection(),
+          const _PrinterPickerSection(kind: PrinterKind.receipt),
+          const SizedBox(height: 24),
+
+          // ── Report printer ─────────────────────────────────────────────
+          Text('Impresora de Reportes',
+              style: textTheme.titleSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+          const _PrinterPickerSection(kind: PrinterKind.report),
           const SizedBox(height: 32),
           Divider(color: colorScheme.outlineVariant),
           const SizedBox(height: 24),
@@ -199,14 +208,15 @@ class _UpdateSectionState extends State<_UpdateSection> {
   }
 }
 
-class _ReceiptPrinterSection extends StatefulWidget {
-  const _ReceiptPrinterSection();
+class _PrinterPickerSection extends StatefulWidget {
+  final PrinterKind kind;
+  const _PrinterPickerSection({required this.kind});
 
   @override
-  State<_ReceiptPrinterSection> createState() => _ReceiptPrinterSectionState();
+  State<_PrinterPickerSection> createState() => _PrinterPickerSectionState();
 }
 
-class _ReceiptPrinterSectionState extends State<_ReceiptPrinterSection> {
+class _PrinterPickerSectionState extends State<_PrinterPickerSection> {
   final _service = sl<ReceiptPrinterService>();
   List<Printer>? _printers;
   String? _selectedUrl;
@@ -226,7 +236,7 @@ class _ReceiptPrinterSectionState extends State<_ReceiptPrinterSection> {
     });
     try {
       final printers = await _service.listPrinters();
-      final saved = await _service.getSavedPrinterUrl();
+      final saved = await _service.getSavedPrinterUrl(widget.kind);
       if (!mounted) return;
       setState(() {
         _printers = printers;
@@ -245,7 +255,7 @@ class _ReceiptPrinterSectionState extends State<_ReceiptPrinterSection> {
   Future<void> _save() async {
     if (_selectedUrl == null || _printers == null) return;
     final printer = _printers!.firstWhere((p) => p.url == _selectedUrl);
-    await _service.savePrinter(printer);
+    await _service.savePrinter(widget.kind, printer);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Impresora guardada: ${printer.name}')),

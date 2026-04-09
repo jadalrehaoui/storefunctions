@@ -146,6 +146,13 @@ final navItems = <NavItemConfig>[
         route: '/reports/closures',
         privilege: 'inspect_closures',
       ),
+      NavSubConfig(
+        id: 'reports-cierres-personales',
+        icon: Icons.person_outline,
+        label: (l10n) => 'Cierres Personales',
+        route: '/reports/cierres-personales',
+        privilege: 'inspect_own_cierre_personal',
+      ),
     ],
   ),
   NavItemConfig(

@@ -11,7 +11,8 @@ import '../cubit/invoice_form_cubit.dart';
 import '../model/invoice_models.dart';
 import '../utils/receipt_pdf.dart' as receipt_pdf;
 
-final _money = NumberFormat.currency(symbol: '₡', decimalDigits: 2);
+final _money = NumberFormat.currency(symbol: '₡', decimalDigits: 0);
+String _ceilMoney(double v) => _money.format(v.ceilToDouble());
 
 class InvoiceFormScreen extends StatelessWidget {
   /// If non-null, edits the existing invoice; otherwise creates a new one.
@@ -419,17 +420,12 @@ class _LineItemsTable extends StatelessWidget {
                 onChanged: (v) =>
                     context.read<InvoiceFormCubit>().updateLineQty(i, v),
               )),
-              DataCell(_NumberCell(
-                value: items[i].unitPrice,
-                onChanged: (v) => context
-                    .read<InvoiceFormCubit>()
-                    .updateLineUnitPrice(i, v),
-              )),
+              DataCell(Text(_ceilMoney(items[i].unitPrice))),
               DataCell(_DiscountCell(
                 index: i,
                 value: items[i].discountPct,
               )),
-              DataCell(Text(_money.format(items[i].lineTotal))),
+              DataCell(Text(_ceilMoney(items[i].lineTotal))),
               DataCell(IconButton(
                 icon: const Icon(Icons.close, size: 18),
                 onPressed: () =>
@@ -598,10 +594,10 @@ class _TotalsBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          _row(l10n.invoiceSubtotal, _money.format(subtotal), ts.bodyMedium!),
-          _row(l10n.invoiceDiscount, _money.format(discount), ts.bodyMedium!),
+          _row(l10n.invoiceSubtotal, _ceilMoney(subtotal), ts.bodyMedium!),
+          _row(l10n.invoiceDiscount, _ceilMoney(discount), ts.bodyMedium!),
           const Divider(),
-          _row(l10n.invoiceTotal, _money.format(total),
+          _row(l10n.invoiceTotal, _ceilMoney(total),
               ts.titleMedium!.copyWith(fontWeight: FontWeight.bold)),
         ],
       ),

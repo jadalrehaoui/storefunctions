@@ -196,6 +196,10 @@ class _ClosureDetailBody extends StatelessWidget {
                 _Tile(label: l10n.tileBonos, value: colones.format((general['TotalBonos'] as num).toDouble())),
               if (general['TotalDiscount'] != null)
                 _Tile(label: l10n.tileDescuentos, value: colones.format((general['TotalDiscount'] as num).toDouble())),
+              if (general['Venta_Licor'] != null)
+                _Tile(label: 'Venta Licor', value: colones.format((general['Venta_Licor'] as num).toDouble())),
+              if (general['TotalVoided'] != null)
+                _Tile(label: 'Facturas Anuladas', value: '${(general['TotalVoided'] as num).toInt()}'),
             ],
           ),
           const SizedBox(height: 20),

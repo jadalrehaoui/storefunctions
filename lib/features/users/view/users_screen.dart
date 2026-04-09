@@ -20,6 +20,8 @@ const _validPrivileges = [
   'edit_closure',
   'inspect_closures',
   'delete_closure',
+  'inspect_own_cierre_personal',
+  'inspect_all_cierres_personal',
   'generate_restock_list',
   'create_invoice',
   'view_invoices',

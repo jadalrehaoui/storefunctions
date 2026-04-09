@@ -14,6 +14,21 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
   InventorySearchCubit(this._inventoryService)
       : super(InventorySearchInitial());
 
+  bool _includeZero = false;
+  bool get includeZero => _includeZero;
+
+  Future<void> setIncludeZero(bool value) async {
+    if (_includeZero == value) return;
+    _includeZero = value;
+    final s = state;
+    if (s is InventorySearchDescriptionResults) {
+      await _searchByDescription(s.query);
+    } else if (s is InventorySearchSuccess && s.modeloItems != null) {
+      final modelo = s.item.sitsa?.model;
+      if (modelo != null) await loadModeloItems(modelo);
+    }
+  }
+
   Future<void> search(String input) async {
     final c = input.trim();
     if (c.isEmpty) return;
@@ -29,7 +44,8 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
   Future<void> _searchByDescription(String description) async {
     emit(InventorySearchLoading());
     try {
-      final data = await _inventoryService.searchByDescripcion(description);
+      final data = await _inventoryService.searchByDescripcion(description,
+          includeZero: _includeZero);
       final items = (data is Map && data['data'] is List)
           ? data['data'] as List<dynamic>
           : <dynamic>[];
@@ -76,7 +92,8 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
 
     emit(current.copyWith(modeloLoading: true, clearModeloItems: true));
     try {
-      final data = await _inventoryService.getItemsByModelo(modelo);
+      final data = await _inventoryService.getItemsByModelo(modelo,
+          includeZero: _includeZero);
       final items = (data is Map && data['data'] is List)
           ? data['data'] as List<dynamic>
           : <dynamic>[];

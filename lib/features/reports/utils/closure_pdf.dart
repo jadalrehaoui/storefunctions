@@ -139,6 +139,10 @@ Future<String> generateAndOpenClosure(Map<String, dynamic> closure, {bool showCo
             pw.SizedBox(width: 250, child: kv('Bonos', c(general['TotalBonos']))),
           if (general['TotalDiscount'] != null)
             pw.SizedBox(width: 250, child: kv('Descuentos', c(general['TotalDiscount']))),
+          if (general['Venta_Licor'] != null)
+            pw.SizedBox(width: 250, child: kv('Venta Licor', c(general['Venta_Licor']))),
+          if (general['TotalVoided'] != null)
+            pw.SizedBox(width: 250, child: kv('Facturas Anuladas', '${(general['TotalVoided'] as num).toInt()}')),
           if (invCost != null && showCosts)
             pw.SizedBox(width: 250, child: kv('Inventario Actual', colones.format(invCost))),
           if (prevInv != null && showCosts)
