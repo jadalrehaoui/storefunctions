@@ -9,6 +9,8 @@ class CardChargesSection extends StatelessWidget {
   final VoidCallback onAdd;
   final void Function(int) onRemove;
   final VoidCallback onChanged;
+  final String? titleOverride;
+  final String? bankLabelOverride;
 
   const CardChargesSection({
     super.key,
@@ -16,6 +18,8 @@ class CardChargesSection extends StatelessWidget {
     required this.onAdd,
     required this.onRemove,
     required this.onChanged,
+    this.titleOverride,
+    this.bankLabelOverride,
   });
 
   @override
@@ -23,7 +27,7 @@ class CardChargesSection extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     return _SectionCard(
-      title: l10n.labelCobrosConTarjeta,
+      title: titleOverride ?? l10n.labelCobrosConTarjeta,
       onAdd: onAdd,
       child: entries.isEmpty
           ? Padding(
@@ -42,6 +46,7 @@ class CardChargesSection extends StatelessWidget {
                   entry: entries[i],
                   onRemove: () => onRemove(i),
                   onChanged: onChanged,
+                  bankLabel: bankLabelOverride,
                 ),
               ),
             ),
@@ -53,11 +58,13 @@ class _CardChargeRow extends StatefulWidget {
   final CardChargeEntry entry;
   final VoidCallback onRemove;
   final VoidCallback onChanged;
+  final String? bankLabel;
 
   const _CardChargeRow({
     required this.entry,
     required this.onRemove,
     required this.onChanged,
+    this.bankLabel,
     super.key,
   });
 
@@ -91,7 +98,7 @@ class _CardChargeRowState extends State<_CardChargeRow> {
             SizedBox(
               width: 110,
               child: _Field(
-                label: context.l10n.labelBanco,
+                label: widget.bankLabel ?? context.l10n.labelBanco,
                 controller: e.customBank,
               ),
             ),

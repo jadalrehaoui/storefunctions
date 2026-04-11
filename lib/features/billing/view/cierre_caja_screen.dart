@@ -383,13 +383,16 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
     final colones = NumberFormat.currency(symbol: '₡', decimalDigits: 2);
     double n(String k) => (g[k] as num?)?.toDouble() ?? 0.0;
     final totalAPagar = n('SUM_TOTAL_A_PAGAR');
-    final diferencia = totalAPagar - _cardsTotal;
+    final diferencia = totalAPagar - _cardsTotal + n('APARTADOS_COBRADOS') - n('APARTADOS_FACTURADOS_POR_OTRO_USUARIO');
     final tiles = <(String, String)>[
       ('Venta Bruta', colones.format(n('BrutTotal'))),
       ('Bonos', colones.format(n('TotalBonos'))),
       ('Descuentos', colones.format(n('TotalDiscount'))),
       ('Total a Pagar', colones.format(totalAPagar)),
       ('Facturas Anuladas', '${(g['TotalVoided'] as num?)?.toInt() ?? 0}'),
+      ('Venta Licor', colones.format(n('Venta_Licor'))),
+      ('Apartados Facturados por Otro', colones.format(n('APARTADOS_FACTURADOS_POR_OTRO_USUARIO'))),
+      ('Apartados Cobrados', colones.format(n('APARTADOS_COBRADOS'))),
     ];
     return SingleChildScrollView(
       child: Column(
@@ -410,6 +413,8 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
             onAdd: _addCard,
             onRemove: _removeCard,
             onChanged: () => setState(() {}),
+            titleOverride: 'Cobros por Tarjeta / Gastos',
+            bankLabelOverride: 'Banco/Gasto',
           ),
           const SizedBox(height: 16),
           Row(
