@@ -45,8 +45,8 @@ Future<Uint8List> buildCierrePersonalReceiptPdf({
       pageFormat: PdfPageFormat(
         76 * PdfPageFormat.mm,
         double.infinity,
-        marginLeft: 3 * PdfPageFormat.mm,
-        marginRight: 3 * PdfPageFormat.mm,
+        marginLeft: 0.5 * PdfPageFormat.mm,
+        marginRight: 5.5 * PdfPageFormat.mm,
         marginTop: 6 * PdfPageFormat.mm,
         marginBottom: 6 * PdfPageFormat.mm,
       ),

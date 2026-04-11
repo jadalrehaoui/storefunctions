@@ -8,7 +8,7 @@
 
 set -e
 
-COMMIT_MESSAGE="Add invoices, Cierre Parallel, receipt printer, V. WorkDB badge"
+COMMIT_MESSAGE="Corrected Cierre personal de caja, tried fixing receipt printer where content is shiftet to the right."
 
 if [ "$COMMIT_MESSAGE" = "<edit me>" ]; then
   echo "✗ Edit COMMIT_MESSAGE in scripts/push.sh first."
