@@ -8,7 +8,7 @@
 
 set -e
 
-COMMIT_MESSAGE="Corrected Cierre personal de caja, tried fixing receipt printer where content is shiftet to the right."
+COMMIT_MESSAGE="Inspecting items now allow to go back to list, and inspecting 1 item now allow to print label. Corrected the cierre sitsa where the print says a different amount of the screen, now more consistent. Dashboard totals was off, now it's good."
 
 if [ "$COMMIT_MESSAGE" = "<edit me>" ]; then
   echo "✗ Edit COMMIT_MESSAGE in scripts/push.sh first."
