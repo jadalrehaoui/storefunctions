@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/combined_item.dart';
+import '../../../shared/utils/label_printer.dart';
 import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/inventory_search_cubit.dart';
 import '../utils/inventory_search_pdf.dart';
@@ -47,7 +48,16 @@ class _InventorySearchViewState extends State<_InventorySearchView> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return BlocListener<InventorySearchCubit, InventorySearchState>(
+      listenWhen: (prev, curr) =>
+          curr is InventorySearchDescriptionResults &&
+          prev is! InventorySearchDescriptionResults,
+      listener: (context, state) {
+        if (state is InventorySearchDescriptionResults) {
+          _controller.text = state.query;
+        }
+      },
+      child: Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,6 +111,7 @@ class _InventorySearchViewState extends State<_InventorySearchView> {
           Expanded(child: _ResultView(onCodeSelected: _selectCode)),
         ],
       ),
+      ),
     );
   }
 }
@@ -143,16 +154,101 @@ class _ItemLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final item = state.item;
+    final cubit = context.read<InventorySearchCubit>();
+    final sitsa = item.sitsa;
+    final canPrint = sitsa != null &&
+        (sitsa.codigoBarras ?? '').isNotEmpty &&
+        canPrintLabels(context);
+    final hasBack = cubit.hasPreviousResults;
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (hasBack || canPrint)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  if (hasBack)
+                    TextButton.icon(
+                      onPressed: cubit.backToResults,
+                      icon: const Icon(Icons.arrow_back, size: 16),
+                      label: Text('Volver a "${cubit.previousQuery ?? ''}"'),
+                    ),
+                  const Spacer(),
+                  if (canPrint)
+                    FilledButton.tonalIcon(
+                      onPressed: () => _promptAndPrintLabels(context, item),
+                      icon: const Icon(Icons.label_outline, size: 18),
+                      label: const Text('Imprimir etiquetas'),
+                    ),
+                ],
+              ),
+            ),
           if (item.sitsa != null) _SitsaCard(item: item),
           if (item.sitsa != null) const SizedBox(height: 8),
           if (item.sitsa != null)
             _ModeloSection(state: state, onCodeSelected: onCodeSelected),
         ],
       ),
+    );
+  }
+}
+
+Future<void> _promptAndPrintLabels(
+    BuildContext context, CombinedItem item) async {
+  final disp = item.sitsa?.disponible?.toInt() ??
+      item.mikail?.existencia.toInt() ??
+      0;
+  final defaultRows = (disp / 2).ceil().clamp(1, 9999);
+  final controller = TextEditingController(text: '$defaultRows');
+  final messenger = ScaffoldMessenger.of(context);
+
+  final count = await showDialog<int>(
+    context: context,
+    builder: (ctx) {
+      void submit() {
+        final v = int.tryParse(controller.text.trim());
+        if (v != null && v > 0) Navigator.of(ctx).pop(v);
+      }
+
+      return AlertDialog(
+        title: const Text('Imprimir etiquetas'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Cantidad de filas (2 etiquetas por fila)',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (_) => submit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: submit,
+            child: const Text('Imprimir'),
+          ),
+        ],
+      );
+    },
+  );
+
+  controller.dispose();
+  if (count == null) return;
+
+  try {
+    await printCombinedLabel(item, count);
+    messenger.showSnackBar(
+      SnackBar(content: Text('Enviado: $count fila(s) de etiquetas')),
+    );
+  } catch (e) {
+    messenger.showSnackBar(
+      SnackBar(content: Text('Error al imprimir: $e')),
     );
   }
 }

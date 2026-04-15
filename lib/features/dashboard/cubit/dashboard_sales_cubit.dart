@@ -1,13 +1,23 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../../../services/api_client.dart';
 
+double _toDouble(dynamic v) {
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v) ?? 0.0;
+  return 0.0;
+}
+
+int _toInt(dynamic v) {
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v) ?? (double.tryParse(v)?.toInt() ?? 0);
+  return 0;
+}
+
 class DashboardSalesData {
-  final int totalCount;
-  final int totalNulled;
   final double brutTotal;
   final double totalBonos;
   final double totalDiscount;
@@ -15,8 +25,6 @@ class DashboardSalesData {
   final double averageSpentPerClient;
 
   const DashboardSalesData({
-    required this.totalCount,
-    required this.totalNulled,
     required this.brutTotal,
     required this.totalBonos,
     required this.totalDiscount,
@@ -26,18 +34,66 @@ class DashboardSalesData {
 
   double get netSales => brutTotal - totalBonos - totalDiscount;
 
-  factory DashboardSalesData.fromJson(Map<String, dynamic> json) {
+  factory DashboardSalesData.fromResponse(Map<String, dynamic> data) {
+    final general = data['general'] is Map
+        ? Map<String, dynamic>.from(data['general'] as Map)
+        : <String, dynamic>{};
+    final clients = data['clients'] is Map
+        ? Map<String, dynamic>.from(data['clients'] as Map)
+        : <String, dynamic>{};
     return DashboardSalesData(
-      totalCount: (json['TotalCount'] as num?)?.toInt() ?? 0,
-      totalNulled: (json['TotalNulled'] as num?)?.toInt() ?? 0,
-      brutTotal: (json['BrutTotal'] as num?)?.toDouble() ?? 0.0,
-      totalBonos: (json['TotalBonos'] as num?)?.toDouble() ?? 0.0,
-      totalDiscount: (json['TotalDiscount'] as num?)?.toDouble() ?? 0.0,
-      clientCount: (json['ClientCount'] as num?)?.toInt() ?? 0,
-      averageSpentPerClient:
-          (json['AverageSpentPerClient'] as num?)?.toDouble() ?? 0.0,
+      brutTotal: _toDouble(general['BrutTotal']),
+      totalBonos: _toDouble(general['TotalBonos']),
+      totalDiscount: _toDouble(general['TotalDiscount']),
+      clientCount: _toInt(clients['ClientCount']),
+      averageSpentPerClient: _toDouble(clients['AverageSpentPerClient']),
     );
   }
+
+  static const empty = DashboardSalesData(
+    brutTotal: 0,
+    totalBonos: 0,
+    totalDiscount: 0,
+    clientCount: 0,
+    averageSpentPerClient: 0,
+  );
+}
+
+class WorkdbSalesData {
+  final double total;
+  final double totalDiscount;
+  final double netTotal;
+  final int itemsCount;
+  final int invoiceCount;
+
+  const WorkdbSalesData({
+    required this.total,
+    required this.totalDiscount,
+    required this.netTotal,
+    required this.itemsCount,
+    required this.invoiceCount,
+  });
+
+  factory WorkdbSalesData.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] is Map
+        ? Map<String, dynamic>.from(json['data'] as Map)
+        : <String, dynamic>{};
+    return WorkdbSalesData(
+      total: _toDouble(data['total']),
+      totalDiscount: _toDouble(data['total_discount']),
+      netTotal: _toDouble(data['net_total']),
+      itemsCount: _toInt(data['items_count']),
+      invoiceCount: _toInt(data['invoice_count']),
+    );
+  }
+
+  static const empty = WorkdbSalesData(
+    total: 0,
+    totalDiscount: 0,
+    netTotal: 0,
+    itemsCount: 0,
+    invoiceCount: 0,
+  );
 }
 
 class MikailSalesData {
@@ -47,11 +103,14 @@ class MikailSalesData {
   const MikailSalesData({required this.total, required this.totalItems});
 
   factory MikailSalesData.fromJson(Map<String, dynamic> json) {
-    return MikailSalesData(
-      total: (json['Total'] as num?)?.toDouble() ?? 0.0,
-      totalItems: (json['TotalItems'] as num?)?.toInt() ?? 0,
-    );
+    final total = _toDouble(json['total']);
+    final detail = (json['detail'] as List?) ?? const [];
+    final items = detail.fold<double>(
+        0, (acc, e) => acc + _toDouble((e as Map)['Cantidad']));
+    return MikailSalesData(total: total, totalItems: items.round());
   }
+
+  static const empty = MikailSalesData(total: 0, totalItems: 0);
 }
 
 sealed class DashboardSalesState {}
@@ -63,92 +122,107 @@ class DashboardSalesLoaded extends DashboardSalesState {
   final DashboardSalesData lastYear;
   final DashboardSalesData twoYearsAgo;
   final MikailSalesData mikail;
-  final DateTimeRange range;
-  DashboardSalesLoaded(this.current,
-      {required this.lastYear,
-      required this.twoYearsAgo,
-      required this.mikail,
-      required this.range});
+  final WorkdbSalesData workdb;
+  final DateTime startDate;
+  final DateTime endDate;
+  DashboardSalesLoaded(
+    this.current, {
+    required this.lastYear,
+    required this.twoYearsAgo,
+    required this.mikail,
+    required this.workdb,
+    required this.startDate,
+    required this.endDate,
+  });
 }
 
 class DashboardSalesFailure extends DashboardSalesState {
   final String error;
-  final DateTimeRange range;
-  DashboardSalesFailure(this.error, {required this.range});
+  final DateTime startDate;
+  final DateTime endDate;
+  DashboardSalesFailure(this.error,
+      {required this.startDate, required this.endDate});
 }
 
 class DashboardSalesCubit extends Cubit<DashboardSalesState> {
   final ApiClient _api;
+  static final _fmt = DateFormat('yyyy-MM-dd');
   Timer? _timer;
-  late DateTimeRange _selectedRange;
+  late DateTime _startDate;
+  late DateTime _endDate;
 
   DashboardSalesCubit(this._api) : super(DashboardSalesLoading()) {
     final today = DateTime.now();
-    _selectedRange = DateTimeRange(start: today, end: today);
+    _startDate = today;
+    _endDate = today;
   }
 
-  DateTimeRange get selectedRange => _selectedRange;
+  DateTime get startDate => _startDate;
+  DateTime get endDate => _endDate;
 
   void start() {
     load();
     _timer = Timer.periodic(const Duration(minutes: 10), (_) => load());
   }
 
-  void selectRange(DateTimeRange range) {
-    _selectedRange = range;
+  void selectRange(DateTime start, DateTime end) {
+    _startDate = start;
+    _endDate = end;
     load();
   }
 
-  Future<DashboardSalesData> _fetchSitsa(Map<String, dynamic> body) async {
-    final data = await _api.post('/api/sitsa/get-dashboard-sales', body);
-    final map = (data is Map && data['data'] is Map)
-        ? Map<String, dynamic>.from(data['data'] as Map)
+  Map<String, String> _rangeBody(DateTime start, DateTime end) => {
+        'startDate': _fmt.format(start),
+        'endDate': _fmt.format(end),
+      };
+
+  Future<DashboardSalesData> _fetchSitsa(DateTime start, DateTime end) async {
+    final data = await _api.post(
+        '/api/sitsa/get-daily-report', _rangeBody(start, end));
+    final map = data is Map
+        ? Map<String, dynamic>.from(data)
         : <String, dynamic>{};
-    return DashboardSalesData.fromJson(map);
+    return DashboardSalesData.fromResponse(map);
   }
 
-  Future<MikailSalesData> _fetchMikail(Map<String, dynamic> body) async {
-    final data = await _api.post('/api/mikail/get-dashboard-sales', body);
-    final map = (data is Map && data['data'] is Map)
-        ? Map<String, dynamic>.from(data['data'] as Map)
+  Future<MikailSalesData> _fetchMikail(DateTime start, DateTime end) async {
+    final data = await _api.post(
+        '/api/mikail/get-daily-report', _rangeBody(start, end));
+    final map = data is Map
+        ? Map<String, dynamic>.from(data)
         : <String, dynamic>{};
     return MikailSalesData.fromJson(map);
   }
 
+  Future<WorkdbSalesData> _fetchWorkdb(DateTime start, DateTime end) async {
+    final qs =
+        'start_date=${_fmt.format(start)}&end_date=${_fmt.format(end)}';
+    final data = await _api.get('/api/workdb/invoices/totals?$qs');
+    final map = data is Map
+        ? Map<String, dynamic>.from(data)
+        : <String, dynamic>{};
+    return WorkdbSalesData.fromJson(map);
+  }
+
+  DateTime _shiftYears(DateTime d, int years) =>
+      DateTime(d.year - years, d.month, d.day);
+
   Future<void> load() async {
     emit(DashboardSalesLoading());
     try {
-      final today = DateTime.now().toIso8601String().substring(0, 10);
-      final startDate =
-          _selectedRange.start.toIso8601String().substring(0, 10);
-      final endDate = _selectedRange.end.toIso8601String().substring(0, 10);
-      final isToday = startDate == today && endDate == today;
-
-      Map<String, dynamic> _yearBody(int yearsBack) {
-        final s = DateTime(
-          _selectedRange.start.year - yearsBack,
-          _selectedRange.start.month,
-          _selectedRange.start.day,
-        );
-        final e = DateTime(
-          _selectedRange.end.year - yearsBack,
-          _selectedRange.end.month,
-          _selectedRange.end.day,
-        );
-        return {
-          'startDate': s.toIso8601String().substring(0, 10),
-          'endDate': e.toIso8601String().substring(0, 10),
-        };
-      }
-
-      final currentBody =
-          isToday ? <String, dynamic>{} : {'startDate': startDate, 'endDate': endDate};
+      final start = _startDate;
+      final end = _endDate;
+      final lastYearStart = _shiftYears(start, 1);
+      final lastYearEnd = _shiftYears(end, 1);
+      final twoYearsStart = _shiftYears(start, 2);
+      final twoYearsEnd = _shiftYears(end, 2);
 
       final results = await (
-        _fetchSitsa(currentBody),
-        _fetchSitsa(_yearBody(1)),
-        _fetchSitsa(_yearBody(2)),
-        _fetchMikail(currentBody),
+        _fetchSitsa(start, end),
+        _fetchSitsa(lastYearStart, lastYearEnd),
+        _fetchSitsa(twoYearsStart, twoYearsEnd),
+        _fetchMikail(start, end),
+        _fetchWorkdb(start, end),
       ).wait;
 
       emit(DashboardSalesLoaded(
@@ -156,10 +230,13 @@ class DashboardSalesCubit extends Cubit<DashboardSalesState> {
         lastYear: results.$2,
         twoYearsAgo: results.$3,
         mikail: results.$4,
-        range: _selectedRange,
+        workdb: results.$5,
+        startDate: start,
+        endDate: end,
       ));
     } catch (e) {
-      emit(DashboardSalesFailure(e.toString(), range: _selectedRange));
+      emit(DashboardSalesFailure(e.toString(),
+          startDate: _startDate, endDate: _endDate));
     }
   }
 

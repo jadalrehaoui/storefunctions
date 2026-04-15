@@ -17,6 +17,10 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
   bool _includeZero = false;
   bool get includeZero => _includeZero;
 
+  InventorySearchDescriptionResults? _previousResults;
+  bool get hasPreviousResults => _previousResults != null;
+  String? get previousQuery => _previousResults?.query;
+
   Future<void> setIncludeZero(bool value) async {
     if (_includeZero == value) return;
     _includeZero = value;
@@ -27,6 +31,13 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
       final modelo = s.item.sitsa?.model;
       if (modelo != null) await loadModeloItems(modelo);
     }
+  }
+
+  void backToResults() {
+    final prev = _previousResults;
+    if (prev == null) return;
+    _previousResults = null;
+    emit(prev);
   }
 
   Future<void> search(String input) async {
@@ -42,6 +53,7 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
   }
 
   Future<void> _searchByDescription(String description) async {
+    _previousResults = null;
     emit(InventorySearchLoading());
     try {
       final data = await _inventoryService.searchByDescripcion(description,
@@ -59,6 +71,10 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
   }
 
   Future<void> _searchByCode(String code) async {
+    final prior = state;
+    if (prior is InventorySearchDescriptionResults) {
+      _previousResults = prior;
+    }
     emit(InventorySearchLoading());
     try {
       final data = await _inventoryService.getItemCombined(code);

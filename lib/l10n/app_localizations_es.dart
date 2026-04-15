@@ -57,6 +57,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dashboardMikailItems => 'Artículos';
 
   @override
+  String get dashboardWorkdbSales => 'Ventas WorkDB';
+
+  @override
+  String get dashboardWorkdbDiscount => 'Descuento WorkDB';
+
+  @override
+  String get dashboardWorkdbNet => 'Neto WorkDB';
+
+  @override
+  String get dashboardWorkdbItems => 'Artículos WorkDB';
+
+  @override
+  String get dashboardWorkdbInvoices => 'Facturas WorkDB';
+
+  @override
   String get navInventory => 'Inventario';
 
   @override

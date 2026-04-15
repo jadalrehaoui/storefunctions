@@ -16,7 +16,7 @@ Future<Uint8List> buildCierrePersonalReceiptPdf({
   required List<CardChargeEntry> cards,
 }) async {
   final pdf = pw.Document();
-  final colones = NumberFormat.currency(symbol: '', decimalDigits: 2);
+  final colones = NumberFormat.currency(symbol: '', decimalDigits: 0);
   final dateFmt = DateFormat('yyyy-MM-dd HH:mm');
   final dayFmt = DateFormat('yyyy-MM-dd');
 
@@ -43,10 +43,10 @@ Future<Uint8List> buildCierrePersonalReceiptPdf({
   pdf.addPage(
     pw.Page(
       pageFormat: PdfPageFormat(
-        76 * PdfPageFormat.mm,
+        72 * PdfPageFormat.mm,
         double.infinity,
         marginLeft: 0.5 * PdfPageFormat.mm,
-        marginRight: 5.5 * PdfPageFormat.mm,
+        marginRight: 10 * PdfPageFormat.mm,
         marginTop: 6 * PdfPageFormat.mm,
         marginBottom: 6 * PdfPageFormat.mm,
       ),
@@ -85,6 +85,13 @@ Future<Uint8List> buildCierrePersonalReceiptPdf({
           pw.Divider(thickness: 0.5),
           _kv('Diferencia a Depositar', colones.format(diferencia), s,
               bold: true, size: 11),
+          pw.SizedBox(height: 8),
+          pw.Divider(thickness: 0.5),
+          _blankLine('Faltante', s),
+          pw.SizedBox(height: 6),
+          _blankLine('Sobrante', s),
+          pw.SizedBox(height: 14),
+          _blankLine('Firma', s, lineWidth: 160),
           pw.SizedBox(height: 10),
           pw.Center(child: pw.Text('— Fin del cierre —', style: s(size: 7))),
         ],
@@ -103,6 +110,27 @@ pw.Widget _kv(
     children: [
       pw.Text(k, style: s(b: bold, size: size)),
       pw.Text(v, style: s(b: bold, size: size)),
+    ],
+  );
+}
+
+pw.Widget _blankLine(
+    String label, pw.TextStyle Function({bool b, double size}) s,
+    {double lineWidth = 110}) {
+  return pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.end,
+    children: [
+      pw.Text('$label:', style: s(b: true)),
+      pw.SizedBox(width: 4),
+      pw.Container(
+        width: lineWidth,
+        decoration: const pw.BoxDecoration(
+          border: pw.Border(
+            bottom: pw.BorderSide(width: 0.6),
+          ),
+        ),
+        height: 12,
+      ),
     ],
   );
 }

@@ -1,4 +1,3 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -44,25 +43,28 @@ class _DashboardView extends StatelessWidget {
 class _SalesSection extends StatelessWidget {
   const _SalesSection();
 
-  Future<void> _pickDateRange(BuildContext context) async {
+  Future<void> _pickRange(BuildContext context) async {
     final cubit = context.read<DashboardSalesCubit>();
+    final now = DateTime.now();
     final picked = await showDateRangePicker(
       context: context,
-      initialDateRange: cubit.selectedRange,
+      initialDateRange:
+          DateTimeRange(start: cubit.startDate, end: cubit.endDate),
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      lastDate: now,
     );
     if (picked != null) {
-      cubit.selectRange(picked);
+      cubit.selectRange(picked.start, picked.end);
     }
   }
 
-  String _formatRange(DateTimeRange range, DateFormat fmt) {
-    if (range.start.toIso8601String().substring(0, 10) ==
-        range.end.toIso8601String().substring(0, 10)) {
-      return fmt.format(range.start);
+  String _formatRange(DateTime start, DateTime end, DateFormat fmt) {
+    if (start.year == end.year &&
+        start.month == end.month &&
+        start.day == end.day) {
+      return fmt.format(start);
     }
-    return '${fmt.format(range.start)} – ${fmt.format(range.end)}';
+    return '${fmt.format(start)} – ${fmt.format(end)}';
   }
 
   @override
@@ -89,16 +91,14 @@ class _SalesSection extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             BlocBuilder<DashboardSalesCubit, DashboardSalesState>(
-              buildWhen: (prev, curr) =>
-                  _rangeOf(prev) != _rangeOf(curr),
+              buildWhen: (prev, curr) => _rangeOf(prev) != _rangeOf(curr),
               builder: (context, state) {
-                final range = context
-                    .read<DashboardSalesCubit>()
-                    .selectedRange;
+                final cubit = context.read<DashboardSalesCubit>();
                 return ActionChip(
                   avatar: const Icon(Icons.date_range, size: 16),
-                  label: Text(_formatRange(range, dateFmt)),
-                  onPressed: () => _pickDateRange(context),
+                  label: Text(
+                      _formatRange(cubit.startDate, cubit.endDate, dateFmt)),
+                  onPressed: () => _pickRange(context),
                 );
               },
             ),
@@ -124,13 +124,13 @@ class _SalesSection extends StatelessWidget {
                   ],
                 ),
               ),
-            DashboardSalesLoaded(:final current, :final lastYear, :final twoYearsAgo, :final mikail) =>
+            DashboardSalesLoaded(:final current, :final lastYear, :final twoYearsAgo, :final mikail, :final workdb) =>
               SizedBox(
-                height: 380,
+                height: 520,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _SalesCard(data: current, mikail: mikail),
+                    _SalesCard(data: current, mikail: mikail, workdb: workdb),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _ComparisonChart(
@@ -147,9 +147,11 @@ class _SalesSection extends StatelessWidget {
     );
   }
 
-  DateTimeRange? _rangeOf(DashboardSalesState state) {
-    if (state is DashboardSalesLoaded) return state.range;
-    if (state is DashboardSalesFailure) return state.range;
+  (DateTime, DateTime)? _rangeOf(DashboardSalesState state) {
+    if (state is DashboardSalesLoaded) return (state.startDate, state.endDate);
+    if (state is DashboardSalesFailure) {
+      return (state.startDate, state.endDate);
+    }
     return null;
   }
 }
@@ -157,13 +159,14 @@ class _SalesSection extends StatelessWidget {
 class _SalesCard extends StatelessWidget {
   final DashboardSalesData data;
   final MikailSalesData mikail;
-  const _SalesCard({required this.data, required this.mikail});
+  final WorkdbSalesData workdb;
+  const _SalesCard(
+      {required this.data, required this.mikail, required this.workdb});
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
     final colones = NumberFormat.currency(symbol: '\u20a1', decimalDigits: 2);
     final numFmt = NumberFormat.decimalPattern();
 
@@ -207,26 +210,6 @@ class _SalesCard extends StatelessWidget {
                 icon: Icons.trending_up_outlined,
                 bold: true,
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _InfoChip(
-                    icon: Icons.receipt_outlined,
-                    label: l10n.dashboardInvoices,
-                    value: numFmt.format(data.totalCount),
-                    textTheme: textTheme,
-                    colorScheme: colorScheme,
-                  ),
-                  const SizedBox(width: 16),
-                  _InfoChip(
-                    icon: Icons.cancel_outlined,
-                    label: l10n.dashboardNulledInvoices,
-                    value: numFmt.format(data.totalNulled),
-                    textTheme: textTheme,
-                    colorScheme: colorScheme,
-                  ),
-                ],
-              ),
               Divider(
                 height: 24,
                 color: colorScheme.outlineVariant,
@@ -234,13 +217,13 @@ class _SalesCard extends StatelessWidget {
               _Row(
                 label: l10n.dashboardClientCount,
                 value: numFmt.format(data.clientCount),
-                icon: Icons.people_outlined,
+                icon: Icons.people_outline,
               ),
               const SizedBox(height: 12),
               _Row(
                 label: l10n.dashboardAvgPerClient,
                 value: colones.format(data.averageSpentPerClient),
-                icon: Icons.person_outlined,
+                icon: Icons.person_outline,
               ),
               Divider(
                 height: 24,
@@ -255,6 +238,39 @@ class _SalesCard extends StatelessWidget {
               _Row(
                 label: l10n.dashboardMikailItems,
                 value: numFmt.format(mikail.totalItems),
+                icon: Icons.inventory_2_outlined,
+              ),
+              Divider(
+                height: 24,
+                color: colorScheme.outlineVariant,
+              ),
+              _Row(
+                label: l10n.dashboardWorkdbSales,
+                value: colones.format(workdb.total),
+                icon: Icons.receipt_long_outlined,
+              ),
+              const SizedBox(height: 12),
+              _Row(
+                label: l10n.dashboardWorkdbDiscount,
+                value: colones.format(workdb.totalDiscount),
+                icon: Icons.discount_outlined,
+              ),
+              const SizedBox(height: 12),
+              _Row(
+                label: l10n.dashboardWorkdbNet,
+                value: colones.format(workdb.netTotal),
+                icon: Icons.trending_up_outlined,
+              ),
+              const SizedBox(height: 12),
+              _Row(
+                label: l10n.dashboardWorkdbInvoices,
+                value: numFmt.format(workdb.invoiceCount),
+                icon: Icons.receipt_outlined,
+              ),
+              const SizedBox(height: 12),
+              _Row(
+                label: l10n.dashboardWorkdbItems,
+                value: numFmt.format(workdb.itemsCount),
                 icon: Icons.inventory_2_outlined,
               ),
             ],
@@ -394,35 +410,6 @@ class _ComparisonChart extends StatelessWidget {
   }
 }
 
-class _LegendDot extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendDot({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
-    );
-  }
-}
-
 class _Row extends StatelessWidget {
   final String label;
   final String value;
@@ -464,41 +451,3 @@ class _Row extends StatelessWidget {
   }
 }
 
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final TextTheme textTheme;
-  final ColorScheme colorScheme;
-
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.textTheme,
-    required this.colorScheme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: colorScheme.onSurfaceVariant),
-        const SizedBox(width: 6),
-        Text(
-          '$label: ',
-          style: textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-        Text(
-          value,
-          style: textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}

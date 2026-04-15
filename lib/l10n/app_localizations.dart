@@ -194,6 +194,36 @@ abstract class AppLocalizations {
   /// **'Artículos'**
   String get dashboardMikailItems;
 
+  /// No description provided for @dashboardWorkdbSales.
+  ///
+  /// In es, this message translates to:
+  /// **'Ventas WorkDB'**
+  String get dashboardWorkdbSales;
+
+  /// No description provided for @dashboardWorkdbDiscount.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuento WorkDB'**
+  String get dashboardWorkdbDiscount;
+
+  /// No description provided for @dashboardWorkdbNet.
+  ///
+  /// In es, this message translates to:
+  /// **'Neto WorkDB'**
+  String get dashboardWorkdbNet;
+
+  /// No description provided for @dashboardWorkdbItems.
+  ///
+  /// In es, this message translates to:
+  /// **'Artículos WorkDB'**
+  String get dashboardWorkdbItems;
+
+  /// No description provided for @dashboardWorkdbInvoices.
+  ///
+  /// In es, this message translates to:
+  /// **'Facturas WorkDB'**
+  String get dashboardWorkdbInvoices;
+
   /// No description provided for @navInventory.
   ///
   /// In es, this message translates to:

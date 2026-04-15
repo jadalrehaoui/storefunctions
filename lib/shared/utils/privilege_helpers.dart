@@ -27,3 +27,5 @@ bool canReprintInvoice(BuildContext context) =>
     _hasPrivilege(context, 'reprint_invoice');
 bool canApproveDiscount(BuildContext context) =>
     _hasPrivilege(context, 'approve_discount');
+bool canPrintLabels(BuildContext context) =>
+    _hasPrivilege(context, 'print_labels');
