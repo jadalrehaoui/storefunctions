@@ -544,11 +544,15 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
                                 m['MODELO'] as String? ?? '',
                                 canSeeProfitMargins(context) ? fobFmt.format(m['FOB'] ?? 0) : redacted,
                                 canSeeProfitMargins(context) ? costFmt.format(m['Costo'] ?? 0) : redacted,
-                                canSeeProfitMargins(context) ? '${(m['Ganancia'] as num?)?.toStringAsFixed(0) ?? '0'}%' : redacted,
+                                canSeeProfitMargins(context)
+                                    ? '${((m['UTILIDAD'] ?? m['Ganancia']) as num?)?.toStringAsFixed(0) ?? '0'}%'
+                                    : redacted,
                                 canSeeProfitMargins(context) ? () {
+                                  final precio = (m['Precio'] as num?)?.toDouble();
+                                  if (precio != null) return costFmt.format(precio);
                                   final costo = (m['Costo'] as num?)?.toDouble() ?? 0;
-                                  final ganancia = (m['Ganancia'] as num?)?.toDouble() ?? 0;
-                                  return costFmt.format(costo + costo * ganancia / 100);
+                                  final util = ((m['UTILIDAD'] ?? m['Ganancia']) as num?)?.toDouble() ?? 0;
+                                  return costFmt.format(costo + costo * util / 100);
                                 }() : redacted,
                                 '${m['Cantidad_Disponible'] ?? 0}',
                                 '${m['Cantidad_Reservada'] ?? 0}',
@@ -846,12 +850,11 @@ class _SitsaCard extends StatelessWidget {
                     ),
                     _InfoTile(
                       label: context.l10n.labelGanancia,
-                      value: canSeeProfitMargins(context) ? '${sitsa.ganancia.toStringAsFixed(0)}%' : redacted,
+                      value: canSeeProfitMargins(context) ? '${sitsa.utilidad.toStringAsFixed(0)}%' : redacted,
                     ),
                     _InfoTile(
                       label: context.l10n.labelPrecio,
-                      value: colones.format(
-                          sitsa.costo + sitsa.costo * sitsa.ganancia / 100),
+                      value: colones.format(sitsa.precio),
                     ),
                     _InfoTile(
                       label: context.l10n.labelFob,

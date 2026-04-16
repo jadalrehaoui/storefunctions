@@ -45,8 +45,22 @@
     .subtitle {
       color: #666;
       font-size: 15px;
-      margin-bottom: 32px;
+      margin-bottom: 12px;
     }
+
+    .version {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a73e8;
+      background: #e8f0fe;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 28px;
+      letter-spacing: 0.3px;
+    }
+
+    .version.loading { color: #999; background: #f0f0f0; }
 
     .btn {
       display: inline-flex;
@@ -103,6 +117,7 @@
     <img class="icon" src="/icon.png" alt="Storefunctions" />
     <h1>Storefunctions</h1>
     <p class="subtitle">Aplicación de gestión de inventario</p>
+    <div class="version loading" id="version">Cargando versión…</div>
 
     <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
       <a class="btn" href="/storefunctions-windows.zip" download>
@@ -135,5 +150,20 @@
       </ol>
     </div>
   </div>
+  <script>
+    fetch('/api/version')
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((d) => {
+        const el = document.getElementById('version');
+        const v = d && (d.version || d.value);
+        if (!v) throw new Error('no version');
+        el.classList.remove('loading');
+        el.textContent = 'v' + v;
+      })
+      .catch(() => {
+        const el = document.getElementById('version');
+        el.textContent = 'Versión no disponible';
+      });
+  </script>
 </body>
 </html>

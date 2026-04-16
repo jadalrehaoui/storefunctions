@@ -76,8 +76,7 @@ Future<void> printCustomLabel({
 Future<void> printCombinedLabel(CombinedItem item, int count) async {
   final sitsa = item.sitsa;
   final barcode = sitsa?.codigoBarras ?? '';
-  final rawPrice =
-      sitsa != null ? sitsa.costo + sitsa.costo * sitsa.ganancia / 100 : 0;
+  final rawPrice = sitsa?.precio ?? 0;
   final price = NumberFormat('#,##0', 'en_US').format(rawPrice.round());
   final description = sitsa?.description ?? '';
 

@@ -82,8 +82,11 @@ class InvoiceFormCubit extends Cubit<InvoiceFormState> {
       }
 
       final costo = (map['Costo'] as num?)?.toDouble() ?? 0;
-      final ganancia = (map['Ganancia'] as num?)?.toDouble() ?? 0;
-      final unitPrice = costo + costo * ganancia / 100;
+      final utilidad = (map['UTILIDAD'] as num?)?.toDouble() ??
+          (map['Ganancia'] as num?)?.toDouble() ??
+          0;
+      final unitPrice = (map['Precio'] as num?)?.toDouble() ??
+          costo + costo * utilidad / 100;
       final sitsaCode = pk ?? c;
       final barcode = map['Codigo_Barras'] as String?;
       final description = desc ?? '';

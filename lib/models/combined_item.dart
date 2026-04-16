@@ -4,7 +4,8 @@ class SitsaItem {
   final String classification;
   final double fob;
   final double costo;
-  final double ganancia;
+  final double utilidad;
+  final double precio;
   final DateTime? fechaCreacion;
   final double? vendido;
   final String? codigoBarras;
@@ -18,7 +19,8 @@ class SitsaItem {
     required this.classification,
     required this.fob,
     required this.costo,
-    required this.ganancia,
+    required this.utilidad,
+    required this.precio,
     this.fechaCreacion,
     this.vendido,
     this.codigoBarras,
@@ -32,13 +34,23 @@ class SitsaItem {
     final fechaRaw = json['Fecha_Creacion'] as String?;
     if (fechaRaw != null) fecha = DateTime.tryParse(fechaRaw);
 
+    final costo = (json['Costo'] as num?)?.toDouble() ?? 0;
+    // UTILIDAD is the new profit %; fall back to legacy Ganancia if absent.
+    final utilidad = (json['UTILIDAD'] as num?)?.toDouble() ??
+        (json['Ganancia'] as num?)?.toDouble() ??
+        0;
+    // Use Precio directly; fall back to computed price if the price join missed.
+    final precio = (json['Precio'] as num?)?.toDouble() ??
+        costo + costo * utilidad / 100;
+
     return SitsaItem(
       description: json['Descripcion'] as String? ?? '',
       model: json['MODELO'] as String? ?? '',
       classification: json['Clasificacion_Descripcion'] as String? ?? '',
       fob: (json['FOB'] as num?)?.toDouble() ?? 0,
-      costo: (json['Costo'] as num?)?.toDouble() ?? 0,
-      ganancia: (json['Ganancia'] as num?)?.toDouble() ?? 0,
+      costo: costo,
+      utilidad: utilidad,
+      precio: precio,
       fechaCreacion: fecha,
       vendido: (json['VendidoEnSitsa'] as num?)?.toDouble(),
       codigoBarras: json['Codigo_Barras'] as String?,

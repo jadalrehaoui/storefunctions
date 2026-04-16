@@ -33,20 +33,23 @@ Future<Uint8List> buildCierrePersonalReceiptPdf({
   final bonos = n('TotalBonos');
   final desc = n('TotalDiscount');
   final totalAPagar = n('SUM_TOTAL_A_PAGAR');
+  final apartadosCobrados = n('APARTADOS_COBRADOS');
+  final apartadosOtro = n('APARTADOS_FACTURADOS_POR_OTRO_USUARIO');
   final voided = (general['TotalVoided'] as num?)?.toInt() ?? 0;
   final cardsTotal = cards.fold<double>(
       0.0,
       (sum, c) =>
           sum + (double.tryParse(c.amount.text.replaceAll(',', '')) ?? 0.0));
-  final diferencia = totalAPagar - cardsTotal;
+  final diferencia =
+      totalAPagar - cardsTotal + apartadosCobrados - apartadosOtro;
 
   pdf.addPage(
     pw.Page(
       pageFormat: PdfPageFormat(
-        72 * PdfPageFormat.mm,
+        74 * PdfPageFormat.mm,
         double.infinity,
-        marginLeft: 0.5 * PdfPageFormat.mm,
-        marginRight: 10 * PdfPageFormat.mm,
+        marginLeft: 4 * PdfPageFormat.mm,
+        marginRight: 8 * PdfPageFormat.mm,
         marginTop: 6 * PdfPageFormat.mm,
         marginBottom: 6 * PdfPageFormat.mm,
       ),
@@ -82,6 +85,9 @@ Future<Uint8List> buildCierrePersonalReceiptPdf({
               ),
           pw.SizedBox(height: 2),
           _kv('Total Tarjetas', colones.format(cardsTotal), s, bold: true),
+          pw.Divider(thickness: 0.5),
+          _kv('Apartados Cobrados', colones.format(apartadosCobrados), s),
+          _kv('Apartados Fact. Otro', colones.format(apartadosOtro), s),
           pw.Divider(thickness: 0.5),
           _kv('Diferencia a Depositar', colones.format(diferencia), s,
               bold: true, size: 11),

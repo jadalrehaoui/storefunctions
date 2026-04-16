@@ -8,7 +8,7 @@
 
 set -e
 
-COMMIT_MESSAGE="Inspecting items now allow to go back to list, and inspecting 1 item now allow to print label. Corrected the cierre sitsa where the print says a different amount of the screen, now more consistent. Dashboard totals was off, now it's good."
+COMMIT_MESSAGE="Item price been updated not to be calculated but queried."
 
 if [ "$COMMIT_MESSAGE" = "<edit me>" ]; then
   echo "✗ Edit COMMIT_MESSAGE in scripts/push.sh first."

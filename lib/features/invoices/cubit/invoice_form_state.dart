@@ -5,7 +5,7 @@ class InvoiceItemPreview {
   final String sitsaCode;
   final String? barcode;
   final String description;
-  final double unitPrice; // Costo + Ganancia
+  final double unitPrice;
 
   const InvoiceItemPreview({
     required this.sitsaCode,

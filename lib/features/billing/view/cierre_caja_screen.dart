@@ -89,8 +89,12 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
     final dateStr = DateFormat('yyyy-MM-dd').format(_date);
 
     final cardsTotal = _cardsTotal;
-    final totalAPagar = (g['SUM_TOTAL_A_PAGAR'] as num?)?.toDouble() ?? 0.0;
-    final diferencia = totalAPagar - cardsTotal;
+    double gn(String k) => (g[k] as num?)?.toDouble() ?? 0.0;
+    final totalAPagar = gn('SUM_TOTAL_A_PAGAR');
+    final apartadosCobrados = gn('APARTADOS_COBRADOS');
+    final apartadosOtro = gn('APARTADOS_FACTURADOS_POR_OTRO_USUARIO');
+    final diferencia =
+        totalAPagar - cardsTotal + apartadosCobrados - apartadosOtro;
 
     final payload = {
       'date': dateStr,

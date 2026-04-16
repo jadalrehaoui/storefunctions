@@ -215,8 +215,7 @@ class _CombinedItemCardState extends State<_CombinedItemCard> {
     final textTheme = Theme.of(context).textTheme;
     final colones = NumberFormat.currency(symbol: '₡', decimalDigits: 2);
 
-    final sitsaPrice =
-        sitsa != null ? sitsa.costo + sitsa.costo * sitsa.ganancia / 100 : 0.0;
+    final sitsaPrice = sitsa?.precio ?? 0.0;
     final barcode = sitsa?.codigoBarras ?? '';
     final canPrint = barcode.isNotEmpty && _quantity > 0;
 

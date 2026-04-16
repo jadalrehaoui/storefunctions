@@ -61,8 +61,10 @@ Future<String> generateAndOpenInventorySearch({
 
   pw.TableRow buildRow(Map<String, dynamic> m, bool odd) {
     final costo = (m['Costo'] as num?)?.toDouble() ?? 0;
-    final ganancia = (m['Ganancia'] as num?)?.toDouble() ?? 0;
-    final precio = costFmt.format(costo + costo * ganancia / 100);
+    final utilidad = ((m['UTILIDAD'] ?? m['Ganancia']) as num?)?.toDouble() ?? 0;
+    final precioValue = (m['Precio'] as num?)?.toDouble() ??
+        costo + costo * utilidad / 100;
+    final precio = costFmt.format(precioValue);
     return pw.TableRow(
       decoration: pw.BoxDecoration(
           color: odd ? PdfColors.grey50 : PdfColors.white),
@@ -73,7 +75,7 @@ Future<String> generateAndOpenInventorySearch({
         cell('${m['MODELO'] ?? ''}'),
         if (showProfit) cell(fobFmt.format(m['FOB'] ?? 0), align: pw.TextAlign.right),
         if (showProfit) cell(costFmt.format(costo), align: pw.TextAlign.right),
-        if (showProfit) cell('${ganancia.toStringAsFixed(0)}%', align: pw.TextAlign.right),
+        if (showProfit) cell('${utilidad.toStringAsFixed(0)}%', align: pw.TextAlign.right),
         cell(precio, align: pw.TextAlign.right),
         cell('${m['Cantidad_Disponible'] ?? 0}', align: pw.TextAlign.right),
         cell('${m['Cantidad_Reservada'] ?? 0}', align: pw.TextAlign.right),
