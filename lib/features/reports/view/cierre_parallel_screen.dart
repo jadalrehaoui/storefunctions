@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 
 import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
+import '../../../services/api_client.dart';
+import '../../../services/invoice_service.dart';
 import '../../../services/receipt_printer_service.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import '../cubit/cierre_parallel_cubit.dart';
@@ -25,7 +27,9 @@ class CierreParallelScreen extends StatelessWidget {
         final auth = ctx.read<AuthCubit>().state;
         final username =
             personalOnly && auth is AuthAuthenticated ? auth.username : null;
-        return CierreParallelCubit(sl(), username: username)..generate();
+        return CierreParallelCubit(sl<InvoiceService>(), sl<ApiClient>(),
+            username: username)
+          ..generate();
       },
       child: _CierreParallelView(
         titleOverride: titleOverride,
@@ -47,6 +51,31 @@ class _CierreParallelView extends StatefulWidget {
 
 class _CierreParallelViewState extends State<_CierreParallelView> {
   static final _displayFmt = DateFormat('MMM d, yyyy');
+  bool _saving = false;
+
+  Future<void> _saveAndPrint(ParallelDailySummary summary) async {
+    final auth = context.read<AuthCubit>().state;
+    if (auth is! AuthAuthenticated) return;
+    final cubit = context.read<CierreParallelCubit>();
+
+    setState(() => _saving = true);
+    final err = await cubit.save(
+      summary,
+      usuario: auth.username,
+      createdBy: auth.username,
+    );
+    if (!mounted) return;
+    setState(() => _saving = false);
+
+    if (err != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.msgErrorDetail(err))));
+      return;
+    }
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Cierre guardado')));
+    await _print(summary);
+  }
 
   Future<void> _print(ParallelDailySummary summary) async {
     try {
@@ -147,8 +176,17 @@ class _CierreParallelViewState extends State<_CierreParallelView> {
                     child: Text(error,
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.error))),
-                CierreParallelSuccess(:final summary) =>
-                  _ParallelLayout(summary: summary),
+                CierreParallelSuccess(:final summary) => _ParallelLayout(
+                    summary: summary,
+                    onPrint: widget.personalOnly
+                        ? null
+                        : () => _print(summary),
+                    onSaveAndPrint: widget.personalOnly
+                        ? () => _saveAndPrint(summary)
+                        : null,
+                    saving: _saving,
+                    isUpdate: context.read<CierreParallelCubit>().isSaved,
+                  ),
               },
             ),
           ),
@@ -160,7 +198,17 @@ class _CierreParallelViewState extends State<_CierreParallelView> {
 
 class _ParallelLayout extends StatelessWidget {
   final ParallelDailySummary summary;
-  const _ParallelLayout({required this.summary});
+  final VoidCallback? onPrint;
+  final VoidCallback? onSaveAndPrint;
+  final bool saving;
+  final bool isUpdate;
+  const _ParallelLayout({
+    required this.summary,
+    this.onPrint,
+    this.onSaveAndPrint,
+    this.saving = false,
+    this.isUpdate = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -320,6 +368,41 @@ class _ParallelLayout extends StatelessWidget {
                       ])
                   .toList(),
             ),
+          ],
+          if (onSaveAndPrint != null) ...[
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FilledButton.icon(
+                  onPressed: saving ? null : onSaveAndPrint,
+                  icon: saving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.print_outlined, size: 18),
+                  label: Text(isUpdate
+                      ? 'Actualizar e Imprimir'
+                      : 'Guardar e Imprimir'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ] else if (onPrint != null) ...[
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FilledButton.icon(
+                  onPressed: onPrint,
+                  icon: const Icon(Icons.print_outlined, size: 18),
+                  label: Text(l10n.btnPrint),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
           ],
         ],
       ),

@@ -80,10 +80,17 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
   String? _closureId;
   bool _saving = false;
 
-  Future<void> _save() async {
+  Future<void> _saveAndPrint() async {
+    final ok = await _save();
+    if (ok && mounted) {
+      await _printReceipt();
+    }
+  }
+
+  Future<bool> _save() async {
     final g = _general;
     final caja = _selectedPkCaja;
-    if (g == null || caja == null) return;
+    if (g == null || caja == null) return false;
     final auth = context.read<AuthCubit>().state;
     final createdBy = auth is AuthAuthenticated ? auth.username : null;
     final dateStr = DateFormat('yyyy-MM-dd').format(_date);
@@ -142,11 +149,13 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('Cierre guardado')));
       }
+      return true;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Save error: $e')));
       }
+      return false;
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -424,22 +433,18 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              OutlinedButton.icon(
-                onPressed: _printReceipt,
-                icon: const Icon(Icons.print_outlined, size: 18),
-                label: const Text('Imprimir Recibo'),
-              ),
-              const SizedBox(width: 12),
               FilledButton.icon(
-                onPressed: _saving ? null : _save,
+                onPressed: _saving ? null : _saveAndPrint,
                 icon: _saving
                     ? const SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.save_outlined, size: 18),
-                label: Text(_closureId == null ? 'Guardar' : 'Actualizar'),
+                    : const Icon(Icons.print_outlined, size: 18),
+                label: Text(_closureId == null
+                    ? 'Guardar e Imprimir'
+                    : 'Actualizar e Imprimir'),
               ),
             ],
           ),

@@ -37,6 +37,13 @@ class NavItemConfig {
 
 final navItems = <NavItemConfig>[
   NavItemConfig(
+    id: 'dashboard',
+    icon: Icons.dashboard_outlined,
+    label: (l10n) => l10n.navDashboard,
+    route: '/dashboard',
+    privilege: 'see_dashboard',
+  ),
+  NavItemConfig(
     id: 'billing',
     icon: Icons.receipt_outlined,
     label: (l10n) => l10n.navBilling,
@@ -63,13 +70,6 @@ final navItems = <NavItemConfig>[
         privilege: 'view_invoices',
       ),
     ],
-  ),
-  NavItemConfig(
-    id: 'dashboard',
-    icon: Icons.dashboard_outlined,
-    label: (l10n) => l10n.navDashboard,
-    route: '/dashboard',
-    privilege: 'see_dashboard',
   ),
   NavItemConfig(
     id: 'inventory',
@@ -112,27 +112,6 @@ final navItems = <NavItemConfig>[
         privilege: 'generate_sales_report',
       ),
       NavSubConfig(
-        id: 'reports-cierre-sitsa',
-        icon: Icons.store_outlined,
-        label: (l10n) => l10n.navCierreSitsa,
-        route: '/reports/cierre-sitsa',
-        privilege: 'generate_closure',
-      ),
-      NavSubConfig(
-        id: 'reports-cierre-mikail',
-        icon: Icons.storefront_outlined,
-        label: (l10n) => l10n.navCierreMikail,
-        route: '/reports/cierre-mikail',
-        privilege: 'generate_closure',
-      ),
-      NavSubConfig(
-        id: 'reports-cierre-parallel',
-        icon: Icons.compare_arrows_outlined,
-        label: (l10n) => l10n.navCierreParallel,
-        route: '/reports/cierre-parallel',
-        privilege: 'generate_closure',
-      ),
-      NavSubConfig(
         id: 'reports-restock-list',
         icon: Icons.playlist_add_outlined,
         label: (l10n) => l10n.navRestockList,
@@ -142,14 +121,42 @@ final navItems = <NavItemConfig>[
       NavSubConfig(
         id: 'reports-closures',
         icon: Icons.history_outlined,
-        label: (l10n) => l10n.navCierres,
+        label: (l10n) => 'Historial de Cierres',
         route: '/reports/closures',
         privilege: 'inspect_closures',
       ),
+    ],
+  ),
+  NavItemConfig(
+    id: 'cierres',
+    icon: Icons.account_balance_outlined,
+    label: (l10n) => l10n.navCierres,
+    subItems: [
       NavSubConfig(
-        id: 'reports-cierres-personales',
+        id: 'cierres-sitsa',
+        icon: Icons.store_outlined,
+        label: (l10n) => 'Sitsa',
+        route: '/reports/cierre-sitsa',
+        privilege: 'generate_closure',
+      ),
+      NavSubConfig(
+        id: 'cierres-parallel',
+        icon: Icons.compare_arrows_outlined,
+        label: (l10n) => 'Parallel',
+        route: '/reports/cierre-parallel',
+        privilege: 'generate_closure',
+      ),
+      NavSubConfig(
+        id: 'cierres-mikail',
+        icon: Icons.storefront_outlined,
+        label: (l10n) => 'Mikail',
+        route: '/reports/cierre-mikail',
+        privilege: 'generate_closure',
+      ),
+      NavSubConfig(
+        id: 'cierres-personales',
         icon: Icons.person_outline,
-        label: (l10n) => 'Cierres Personales',
+        label: (l10n) => 'Personales',
         route: '/reports/cierres-personales',
         privilege: 'inspect_own_cierre_personal',
       ),

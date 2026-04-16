@@ -46,18 +46,25 @@ class _GoRouterRefreshStream extends ChangeNotifier {
 
 GoRouter createRouter(AuthCubit authCubit) {
   return GoRouter(
-    initialLocation: '/inventory/search',
+    initialLocation: '/dashboard',
     refreshListenable: _GoRouterRefreshStream(authCubit.stream),
     redirect: (context, state) {
       final isAuthenticated = authCubit.state is AuthAuthenticated;
       final isLoggingIn = state.matchedLocation == '/login';
 
       if (!isAuthenticated && !isLoggingIn) return '/login';
-      if (isAuthenticated && isLoggingIn) {
-        final auth = authCubit.state as AuthAuthenticated;
-        return auth.hasPrivilege('see_dashboard')
-            ? '/dashboard'
-            : '/inventory/search';
+      if (!isAuthenticated) return null;
+
+      final auth = authCubit.state as AuthAuthenticated;
+      final fallback = auth.hasPrivilege('see_dashboard')
+          ? '/dashboard'
+          : '/inventory/search';
+
+      if (isLoggingIn) return fallback;
+      // User hit /dashboard without the privilege — bounce to first accessible tab.
+      if (state.matchedLocation == '/dashboard' &&
+          !auth.hasPrivilege('see_dashboard')) {
+        return fallback;
       }
       return null;
     },

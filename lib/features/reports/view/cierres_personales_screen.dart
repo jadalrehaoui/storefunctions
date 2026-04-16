@@ -167,6 +167,7 @@ class _Table extends StatelessWidget {
                   _hd('Fecha', flex: 2, t: textTheme, c: colorScheme),
                   _hd('Cajero', flex: 2, t: textTheme, c: colorScheme),
                   _hd('Por', flex: 2, t: textTheme, c: colorScheme),
+                  _hd('Tipo', flex: 2, t: textTheme, c: colorScheme),
                   _hd('Total a Pagar',
                       flex: 2, t: textTheme, c: colorScheme, end: true),
                   _hd('Tarjetas',
@@ -185,21 +186,33 @@ class _Table extends StatelessWidget {
                 itemBuilder: (context, i) {
                   final m = items[i];
                   final id = m['id']?.toString();
+                  final type = m['type'] as String? ?? 'sitsa';
+                  final isParallel = type == 'parallel';
                   final dateRaw = m['date'] as String?;
                   final date = dateRaw != null
                       ? dateFmt.format(DateTime.parse(dateRaw))
                       : '—';
-                  final general = m['general'] as Map? ?? {};
-                  final totalAPagar =
-                      (general['SUM_TOTAL_A_PAGAR'] as num?)?.toDouble();
-                  final calc = m['calculations'] as Map? ?? {};
-                  final cardsTotal =
-                      (calc['cards_total'] as num?)?.toDouble();
-                  final dif =
-                      (calc['diferencia_a_depositar'] as num?)?.toDouble();
+
+                  double? totalAPagar;
+                  double? cardsTotal;
+                  double? dif;
+                  if (isParallel) {
+                    final totals = m['totals'] as Map? ?? {};
+                    totalAPagar =
+                        (totals['total_net'] as num?)?.toDouble();
+                  } else {
+                    final general = m['general'] as Map? ?? {};
+                    totalAPagar =
+                        (general['SUM_TOTAL_A_PAGAR'] as num?)?.toDouble();
+                    final calc = m['calculations'] as Map? ?? {};
+                    cardsTotal =
+                        (calc['cards_total'] as num?)?.toDouble();
+                    dif = (calc['diferencia_a_depositar'] as num?)
+                        ?.toDouble();
+                  }
 
                   return InkWell(
-                    onTap: id != null
+                    onTap: (!isParallel && id != null)
                         ? () => context
                             .push('/reports/cierres-personales/$id')
                         : null,
@@ -224,6 +237,15 @@ class _Table extends StatelessWidget {
                               flex: 2,
                               child: Text('${m['created_by'] ?? '—'}',
                                   style: textTheme.bodyMedium)),
+                          Expanded(
+                            flex: 2,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: _TypeChip(
+                                  isParallel: isParallel,
+                                  colorScheme: colorScheme),
+                            ),
+                          ),
                           Expanded(
                             flex: 2,
                             child: Text(
@@ -280,6 +302,34 @@ class _Table extends StatelessWidget {
           style: t.labelSmall?.copyWith(
               color: c.onSurfaceVariant, fontWeight: FontWeight.w600),
           textAlign: end ? TextAlign.end : TextAlign.start),
+    );
+  }
+}
+
+class _TypeChip extends StatelessWidget {
+  final bool isParallel;
+  final ColorScheme colorScheme;
+  const _TypeChip({required this.isParallel, required this.colorScheme});
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isParallel
+        ? colorScheme.tertiaryContainer
+        : colorScheme.primaryContainer;
+    final fg = isParallel
+        ? colorScheme.onTertiaryContainer
+        : colorScheme.onPrimaryContainer;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        isParallel ? 'Parallel' : 'Sitsa',
+        style: TextStyle(
+            color: fg, fontSize: 11, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

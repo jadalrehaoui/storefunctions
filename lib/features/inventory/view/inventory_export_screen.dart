@@ -32,25 +32,27 @@ class _ExportViewState extends State<_ExportView> {
 
   final _dateFmt = DateFormat('dd/MM/yyyy');
 
-  Future<void> _pickStart() async {
-    final picked = await showDatePicker(
+  Future<void> _pickRange() async {
+    final picked = await showDateRangePicker(
       context: context,
-      initialDate: _startDate ?? DateTime.now(),
+      initialDateRange: (_startDate != null && _endDate != null)
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) setState(() => _startDate = picked);
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+    }
   }
 
-  Future<void> _pickEnd() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _endDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null) setState(() => _endDate = picked);
-  }
+  void _clearRange() => setState(() {
+        _startDate = null;
+        _endDate = null;
+      });
 
   void _export() {
     context.read<ExportInventoryCubit>().export(
@@ -73,29 +75,24 @@ class _ExportViewState extends State<_ExportView> {
           Text(context.l10n.navExportInventory, style: textTheme.headlineSmall),
           const SizedBox(height: 24),
 
-          // Date pickers row
+          // Date range + filters row
           Row(
             children: [
               _DatePickerTile(
                 label: context.l10n.labelFechaInicio,
-                value: _startDate != null ? _dateFmt.format(_startDate!) : null,
-                onTap: _pickStart,
-                onClear: _startDate != null
-                    ? () => setState(() => _startDate = null)
+                value: (_startDate != null && _endDate != null)
+                    ? (_startDate == _endDate
+                        ? _dateFmt.format(_startDate!)
+                        : '${_dateFmt.format(_startDate!)} – ${_dateFmt.format(_endDate!)}')
+                    : null,
+                onTap: _pickRange,
+                onClear: (_startDate != null || _endDate != null)
+                    ? _clearRange
                     : null,
               ),
               const SizedBox(width: 16),
-              _DatePickerTile(
-                label: context.l10n.labelFechaFin,
-                value: _endDate != null ? _dateFmt.format(_endDate!) : null,
-                onTap: _pickEnd,
-                onClear: _endDate != null
-                    ? () => setState(() => _endDate = null)
-                    : null,
-              ),
-              const SizedBox(width: 16),
-              Builder(
-                builder: (context) {
+              BlocBuilder<ExportInventoryCubit, ExportInventoryState>(
+                builder: (context, _) {
                   final cubit = context.read<ExportInventoryCubit>();
                   final items = cubit.clasificaciones;
                   return ConstrainedBox(

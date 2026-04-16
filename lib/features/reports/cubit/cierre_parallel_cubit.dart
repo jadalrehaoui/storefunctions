@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
+import '../../../services/api_client.dart';
 import '../../../services/invoice_service.dart';
 import '../../invoices/model/invoice_models.dart';
 
@@ -95,22 +97,28 @@ class CierreParallelFailure extends CierreParallelState {
 
 class CierreParallelCubit extends Cubit<CierreParallelState> {
   final InvoiceService _service;
+  final ApiClient _api;
   final String? username;
   DateTime _date;
+  String? _closureId;
 
-  CierreParallelCubit(this._service, {this.username})
+  CierreParallelCubit(this._service, this._api, {this.username})
       : _date = DateTime(
             DateTime.now().year, DateTime.now().month, DateTime.now().day),
         super(CierreParallelInitial());
 
   DateTime get date => _date;
+  String? get closureId => _closureId;
+  bool get isSaved => _closureId != null;
 
   void setDate(DateTime d) {
     _date = DateTime(d.year, d.month, d.day);
+    _closureId = null;
   }
 
   Future<void> generate() async {
     emit(CierreParallelLoading());
+    _closureId = null;
     try {
       final data = await _service.dailySummary(_date, user: username);
       final map = (data is Map && data['data'] is Map)
@@ -123,5 +131,98 @@ class CierreParallelCubit extends Cubit<CierreParallelState> {
     } catch (e) {
       emit(CierreParallelFailure(e.toString()));
     }
+  }
+
+  /// Saves the current summary as a cierre parallel.
+  /// Returns null on success, or an error message to surface in a snackbar.
+  Future<String?> save(
+    ParallelDailySummary summary, {
+    required String usuario,
+    String? createdBy,
+  }) async {
+    final dateStr = DateFormat('yyyy-MM-dd').format(summary.date);
+    final payload = _buildPayload(
+      summary: summary,
+      usuario: usuario,
+      createdBy: createdBy,
+      dateStr: dateStr,
+    );
+    try {
+      if (_closureId != null) {
+        await _api.put('/api/workdb/cierre-parallel/$_closureId', payload);
+      } else {
+        try {
+          final res =
+              await _api.post('/api/workdb/cierre-parallel', payload);
+          final resData = res is Map ? res['data'] : null;
+          _closureId = resData is Map ? resData['id']?.toString() : null;
+        } on DioException catch (e) {
+          if (e.response?.statusCode == 409) {
+            final existing = await _api.get(
+                '/api/workdb/cierre-parallel?date=$dateStr&usuario=${Uri.encodeQueryComponent(usuario)}');
+            final id = (existing is Map)
+                ? (existing['data']?['id'] ??
+                        existing['data']?[0]?['id'] ??
+                        existing['id'])
+                    ?.toString()
+                : null;
+            if (id == null) rethrow;
+            await _api.put('/api/workdb/cierre-parallel/$id', payload);
+            _closureId = id;
+          } else {
+            rethrow;
+          }
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      return 'HTTP ${e.response?.statusCode}: ${e.response?.data ?? e.message}';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Map<String, dynamic> _buildPayload({
+    required ParallelDailySummary summary,
+    required String usuario,
+    required String? createdBy,
+    required String dateStr,
+  }) {
+    Map<String, dynamic> invoiceJson(InvoiceSummary inv) => {
+          'id': inv.id,
+          'date': inv.date.toIso8601String(),
+          'client_name': inv.clientName,
+          'created_by': inv.createdBy,
+          'subtotal': inv.subtotal,
+          'discount': inv.discount,
+          'total': inv.total,
+          'status': inv.status,
+        };
+
+    return {
+      'date': dateStr,
+      'usuario': usuario,
+      'created_by': createdBy,
+      'totals': {
+        'total_gross': summary.totalGross,
+        'total_discount': summary.totalDiscount,
+        'total_net': summary.totalNet,
+        'active_invoices_count': summary.invoices.length,
+        'voided_invoices_count': summary.voidedInvoices.length,
+      },
+      'invoices': summary.invoices.map(invoiceJson).toList(),
+      'voided_invoices':
+          summary.voidedInvoices.map(invoiceJson).toList(),
+      'items_sold': summary.itemsSold
+          .map((i) => {
+                'sitsa_code': i.sitsaCode,
+                'description': i.description,
+                'total_quantity': i.quantity,
+                'total_gross': i.gross,
+                'total_discount': i.discount,
+                'total_net': i.net,
+              })
+          .toList(),
+    };
   }
 }

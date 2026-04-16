@@ -33,12 +33,14 @@ class CierresPersonalesCubit extends Cubit<CierresPersonalesState> {
           .map((e) => '${e.key}=${Uri.encodeQueryComponent(e.value)}')
           .join('&');
       final path = query.isEmpty
-          ? '/api/workdb/cierre-personal'
-          : '/api/workdb/cierre-personal?$query';
+          ? '/api/workdb/cierres-personales'
+          : '/api/workdb/cierres-personales?$query';
       final data = await _api.get(path);
       final list = data is List
           ? data
-          : (data['data'] ?? data['items'] ?? []) as List;
+          : (data is Map
+              ? (data['data'] ?? data['items'] ?? []) as List
+              : const []);
       final items =
           list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       emit(CierresPersonalesLoaded(items));

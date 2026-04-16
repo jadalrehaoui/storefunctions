@@ -5,6 +5,7 @@ import '../features/auth/service/auth_service.dart';
 import '../services/api_client.dart';
 import '../services/inventory_service.dart';
 import '../services/invoice_service.dart';
+import '../services/label_printer_service.dart';
 import '../services/receipt_printer_service.dart';
 import '../shared/cubit/health_cubit.dart';
 
@@ -19,5 +20,7 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<InvoiceService>(() => InvoiceService(sl()));
   sl.registerLazySingleton<ReceiptPrinterService>(
       () => ReceiptPrinterService());
+  sl.registerLazySingleton<LabelPrinterService>(
+      () => LabelPrinterService());
   sl.registerLazySingleton<HealthCubit>(() => HealthCubit(sl()));
 }

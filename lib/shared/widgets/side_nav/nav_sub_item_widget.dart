@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../cubit/nav_cubit.dart';
 import '../../../l10n/l10n.dart';
 import 'nav_config.dart';
 
@@ -13,8 +11,9 @@ class NavSubItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeRoute = context.select((NavCubit c) => c.state.activeRoute);
-    final isActive = activeRoute == config.route;
+    final location = GoRouterState.of(context).matchedLocation;
+    final isActive = location == config.route ||
+        location.startsWith('${config.route}/');
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -22,10 +21,7 @@ class NavSubItemWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onTap: () {
-          context.read<NavCubit>().setActiveRoute(config.route);
-          context.go(config.route);
-        },
+        onTap: () => context.go(config.route),
         child: Container(
           height: 36,
           padding: const EdgeInsets.only(left: 24, right: 8),

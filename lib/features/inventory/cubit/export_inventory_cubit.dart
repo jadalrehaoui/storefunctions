@@ -24,6 +24,8 @@ class ExportInventoryCubit extends Cubit<ExportInventoryState> {
       clasificaciones = list
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
+      // Trigger a rebuild for listeners watching the cubit's state.
+      if (state is ExportInventoryInitial) emit(ExportInventoryInitial());
     } catch (e) {
       print('[ExportInventory] clasificaciones error: $e');
     }

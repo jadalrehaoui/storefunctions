@@ -1,12 +1,9 @@
-import 'dart:io';
-
 import 'package:intl/intl.dart';
 
+import '../../di/service_locator.dart';
 import '../../models/article_result.dart';
 import '../../models/combined_item.dart';
-
-const _printerHost = '10.10.0.144';
-const _printerPort = 9100;
+import '../../services/label_printer_service.dart';
 
 const _zplTemplate = r'''^XA
 ^MMT
@@ -55,22 +52,11 @@ Future<void> printCustomLabel({
     barcode: barcode,
     articleId: articleId,
     price: price,
-    description: description.length > 28 ? description.substring(0, 28) : description,
+    description:
+        description.length > 28 ? description.substring(0, 28) : description,
     count: count,
   );
-
-  final socket = await Socket.connect(
-    _printerHost,
-    _printerPort,
-    timeout: const Duration(seconds: 5),
-  );
-
-  try {
-    socket.write(zpl);
-    await socket.flush();
-  } finally {
-    await socket.close();
-  }
+  await sl<LabelPrinterService>().printZpl(zpl);
 }
 
 Future<void> printCombinedLabel(CombinedItem item, int count) async {
@@ -88,19 +74,7 @@ Future<void> printCombinedLabel(CombinedItem item, int count) async {
         description.length > 28 ? description.substring(0, 28) : description,
     count: count,
   );
-
-  final socket = await Socket.connect(
-    _printerHost,
-    _printerPort,
-    timeout: const Duration(seconds: 5),
-  );
-
-  try {
-    socket.write(zpl);
-    await socket.flush();
-  } finally {
-    await socket.close();
-  }
+  await sl<LabelPrinterService>().printZpl(zpl);
 }
 
 Future<void> printArticleLabels(ArticleResult article, int count) async {
@@ -115,17 +89,5 @@ Future<void> printArticleLabels(ArticleResult article, int count) async {
         : article.description,
     count: count,
   );
-
-  final socket = await Socket.connect(
-    _printerHost,
-    _printerPort,
-    timeout: const Duration(seconds: 5),
-  );
-
-  try {
-    socket.write(zpl);
-    await socket.flush();
-  } finally {
-    await socket.close();
-  }
+  await sl<LabelPrinterService>().printZpl(zpl);
 }

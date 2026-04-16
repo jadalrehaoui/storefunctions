@@ -78,35 +78,17 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
             _FilterBar(
               clientCtrl: _clientCtrl,
               range: _range,
-              onPickStart: () async {
+              onPickRange: () async {
                 final cubit = context.read<InvoiceListCubit>();
-                final picked = await showDatePicker(
+                final picked = await showDateRangePicker(
                   context: context,
-                  initialDate: _range.start,
+                  initialDateRange: _range,
                   firstDate: DateTime(2020),
                   lastDate: DateTime(2100),
                 );
                 if (picked != null) {
-                  final newEnd = picked.isAfter(_range.end) ? picked : _range.end;
-                  setState(() =>
-                      _range = DateTimeRange(start: picked, end: newEnd));
-                  cubit.setDateRange(picked, newEnd);
-                }
-              },
-              onPickEnd: () async {
-                final cubit = context.read<InvoiceListCubit>();
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _range.end,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime(2100),
-                );
-                if (picked != null) {
-                  final newStart =
-                      picked.isBefore(_range.start) ? picked : _range.start;
-                  setState(() =>
-                      _range = DateTimeRange(start: newStart, end: picked));
-                  cubit.setDateRange(newStart, picked);
+                  setState(() => _range = picked);
+                  cubit.setDateRange(picked.start, picked.end);
                 }
               },
               onClientChanged: (v) =>
@@ -150,18 +132,25 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 class _FilterBar extends StatelessWidget {
   final TextEditingController clientCtrl;
   final DateTimeRange range;
-  final VoidCallback onPickStart;
-  final VoidCallback onPickEnd;
+  final VoidCallback onPickRange;
   final ValueChanged<String> onClientChanged;
   final VoidCallback onGenerate;
   const _FilterBar({
     required this.clientCtrl,
     required this.range,
-    required this.onPickStart,
-    required this.onPickEnd,
+    required this.onPickRange,
     required this.onClientChanged,
     required this.onGenerate,
   });
+
+  String get _rangeLabel {
+    if (range.start.year == range.end.year &&
+        range.start.month == range.end.month &&
+        range.start.day == range.end.day) {
+      return _dateFmt.format(range.start);
+    }
+    return '${_dateFmt.format(range.start)} – ${_dateFmt.format(range.end)}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -169,17 +158,9 @@ class _FilterBar extends StatelessWidget {
     return Row(
       children: [
         OutlinedButton.icon(
-          onPressed: onPickStart,
-          icon: const Icon(Icons.calendar_today, size: 16),
-          label: Text(_dateFmt.format(range.start)),
-        ),
-        const SizedBox(width: 8),
-        const Text('→'),
-        const SizedBox(width: 8),
-        OutlinedButton.icon(
-          onPressed: onPickEnd,
-          icon: const Icon(Icons.calendar_today, size: 16),
-          label: Text(_dateFmt.format(range.end)),
+          onPressed: onPickRange,
+          icon: const Icon(Icons.date_range, size: 16),
+          label: Text(_rangeLabel),
         ),
         const SizedBox(width: 16),
         SizedBox(

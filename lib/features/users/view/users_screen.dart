@@ -11,6 +11,7 @@ const _validPrivileges = [
   'see_profit_margins',
   'inspect_inventory',
   'print_labels',
+  'create_custom_labels',
   'generate_inventory',
   'generate_sales_report',
   'create_users',
@@ -513,10 +514,11 @@ class _UserFormDialog extends StatelessWidget {
         width: 360,
         child: Form(
           key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               TextFormField(
                 controller: usernameCtrl,
                 decoration: InputDecoration(
@@ -576,6 +578,7 @@ class _UserFormDialog extends StatelessWidget {
                         color: colorScheme.error, fontSize: 12)),
               ],
             ],
+          ),
           ),
         ),
       ),

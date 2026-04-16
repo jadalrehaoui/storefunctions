@@ -110,6 +110,34 @@
       color: #555;
       line-height: 1.8;
     }
+
+    .cmd {
+      margin-top: 10px;
+      background: #1e1e1e;
+      color: #e6e6e6;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+      font-size: 12px;
+      text-align: left;
+      word-break: break-all;
+      position: relative;
+    }
+
+    .cmd button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #333;
+      color: #eee;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .cmd button:hover { background: #555; }
   </style>
 </head>
 <body>
@@ -131,12 +159,26 @@
     </div>
 
     <div class="steps">
-      <h3>Windows</h3>
+      <h3>Windows — Instalar / Actualizar automáticamente</h3>
+      <ol>
+        <li>Abre <strong>PowerShell</strong> (Win + R, escribe <code>powershell</code>, Enter)</li>
+        <li>Pega este comando y presiona Enter:</li>
+      </ol>
+      <div class="cmd" id="cmd">
+        <button onclick="copyCmd()">Copiar</button>
+        <code id="cmdText"></code>
+      </div>
+      <ol start="3">
+        <li>El instalador cierra la versión vieja, descarga la nueva y crea el acceso directo.</li>
+      </ol>
+    </div>
+
+    <div class="steps" style="margin-top: 16px;">
+      <h3>Windows — Descarga manual</h3>
       <ol>
         <li>Descarga el archivo .zip</li>
         <li>Extrae en cualquier carpeta</li>
         <li>Ejecuta <strong>storefunctions.exe</strong></li>
-        <li>No requiere instalación</li>
       </ol>
     </div>
 
@@ -164,6 +206,20 @@
         const el = document.getElementById('version');
         el.textContent = 'Versión no disponible';
       });
+
+    // Build the one-liner using the current page's origin so it works on any host.
+    const origin = window.location.origin;
+    const installCmd = `powershell -ExecutionPolicy Bypass -Command "$env:STOREFUNCTIONS_SERVER='${origin}'; iwr '${origin}/install.ps1' -UseBasicParsing | iex"`;
+    document.getElementById('cmdText').textContent = installCmd;
+
+    function copyCmd() {
+      navigator.clipboard.writeText(installCmd).then(() => {
+        const btn = document.querySelector('#cmd button');
+        const orig = btn.textContent;
+        btn.textContent = '¡Copiado!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      });
+    }
   </script>
 </body>
 </html>

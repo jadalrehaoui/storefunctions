@@ -29,3 +29,5 @@ bool canApproveDiscount(BuildContext context) =>
     _hasPrivilege(context, 'approve_discount');
 bool canPrintLabels(BuildContext context) =>
     _hasPrivilege(context, 'print_labels');
+bool canCreateCustomLabels(BuildContext context) =>
+    _hasPrivilege(context, 'create_custom_labels');

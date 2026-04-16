@@ -78,11 +78,12 @@ class _PrintLabelsViewState extends State<_PrintLabelsView> {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const Spacer(),
-                OutlinedButton.icon(
-                  onPressed: () => _showCustomLabelDialog(context),
-                  icon: const Icon(Icons.edit_note, size: 18),
-                  label: Text(context.l10n.btnCustomLabel),
-                ),
+                if (canCreateCustomLabels(context))
+                  OutlinedButton.icon(
+                    onPressed: () => _showCustomLabelDialog(context),
+                    icon: const Icon(Icons.edit_note, size: 18),
+                    label: Text(context.l10n.btnCustomLabel),
+                  ),
               ],
             ),
             const SizedBox(height: 24),

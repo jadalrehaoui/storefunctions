@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
 import '../../../services/api_client.dart';
+import '../../../services/label_printer_service.dart';
 import '../../../services/receipt_printer_service.dart';
 import '../../../shared/constants.dart';
 import '../../../shared/cubit/health_cubit.dart';
@@ -71,6 +72,15 @@ class SettingsScreen extends StatelessWidget {
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           const _PrinterPickerSection(kind: PrinterKind.report),
+          const SizedBox(height: 24),
+
+          // ── Label printer ──────────────────────────────────────────────
+          Text('Impresora de Etiquetas',
+              style: textTheme.titleSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+          const _LabelPrinterSection(),
           const SizedBox(height: 32),
           Divider(color: colorScheme.outlineVariant),
           const SizedBox(height: 24),
@@ -484,6 +494,193 @@ class _DbRow extends StatelessWidget {
                   ?.copyWith(color: colorScheme.onSurfaceVariant)),
         ],
       ),
+    );
+  }
+}
+
+class _LabelPrinterSection extends StatefulWidget {
+  const _LabelPrinterSection();
+
+  @override
+  State<_LabelPrinterSection> createState() => _LabelPrinterSectionState();
+}
+
+class _LabelPrinterSectionState extends State<_LabelPrinterSection> {
+  final _hostCtrl = TextEditingController();
+  final _portCtrl = TextEditingController();
+  LabelPrinterMode _mode = LabelPrinterMode.ip;
+  String? _savedUrl;
+  List<Printer> _printers = const [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _hostCtrl.dispose();
+    _portCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final svc = sl<LabelPrinterService>();
+    final cfg = await svc.getConfig();
+    final printers = await svc.listPrinters().catchError((_) => <Printer>[]);
+    if (!mounted) return;
+    setState(() {
+      _mode = cfg.mode;
+      _hostCtrl.text = cfg.host;
+      _portCtrl.text = cfg.port.toString();
+      _savedUrl = cfg.systemPrinterUrl;
+      _printers = printers;
+      _loading = false;
+    });
+  }
+
+  Future<void> _saveIp() async {
+    final host = _hostCtrl.text.trim();
+    final port = int.tryParse(_portCtrl.text.trim());
+    if (host.isEmpty || port == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Host y puerto requeridos.')));
+      return;
+    }
+    await sl<LabelPrinterService>().saveIp(host: host, port: port);
+    setState(() => _mode = LabelPrinterMode.ip);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impresora de etiquetas guardada.')));
+  }
+
+  Future<void> _pickSystemPrinter(Printer p) async {
+    await sl<LabelPrinterService>().saveSystemPrinter(p);
+    setState(() {
+      _mode = LabelPrinterMode.system;
+      _savedUrl = p.url;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Mode selector
+        Row(
+          children: [
+            Expanded(
+              child: RadioListTile<LabelPrinterMode>(
+                value: LabelPrinterMode.ip,
+                groupValue: _mode,
+                onChanged: (v) => setState(() => _mode = v!),
+                title: const Text('IP (red)'),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            Expanded(
+              child: RadioListTile<LabelPrinterMode>(
+                value: LabelPrinterMode.system,
+                groupValue: _mode,
+                onChanged: (v) => setState(() => _mode = v!),
+                title: const Text('Sistema (USB)'),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        if (_mode == LabelPrinterMode.ip) ...[
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: TextField(
+                  controller: _hostCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Host',
+                    hintText: '10.10.0.144',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _portCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Puerto',
+                    hintText: '9100',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton(
+                onPressed: _saveIp,
+                child: const Text('Guardar'),
+              ),
+            ],
+          ),
+        ] else ...[
+          if (_printers.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text('No hay impresoras disponibles.',
+                  style: textTheme.bodySmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant)),
+            )
+          else
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: colorScheme.outlineVariant),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  for (var i = 0; i < _printers.length; i++) ...[
+                    if (i > 0)
+                      Divider(height: 1, color: colorScheme.outlineVariant),
+                    ListTile(
+                      dense: true,
+                      title: Text(_printers[i].name),
+                      subtitle: Text(_printers[i].url,
+                          style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant)),
+                      trailing: _savedUrl == _printers[i].url
+                          ? Icon(Icons.check_circle,
+                              color: colorScheme.primary)
+                          : null,
+                      onTap: () => _pickSystemPrinter(_printers[i]),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+        ],
+      ],
     );
   }
 }
