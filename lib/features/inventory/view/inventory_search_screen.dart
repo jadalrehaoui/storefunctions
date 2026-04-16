@@ -994,3 +994,45 @@ class _StretchBadge extends StatelessWidget {
   }
 }
 
+class _CopyableRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _CopyableRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('$label: ',
+            style: textTheme.bodySmall
+                ?.copyWith(color: colorScheme.onSurfaceVariant)),
+        SelectableText(
+          value,
+          style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface),
+        ),
+        const SizedBox(width: 4),
+        InkWell(
+          borderRadius: BorderRadius.circular(4),
+          onTap: () async {
+            await Clipboard.setData(ClipboardData(text: value));
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text('$label copiado'),
+                  duration: const Duration(seconds: 1)),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(Icons.copy_outlined,
+                size: 14, color: colorScheme.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
