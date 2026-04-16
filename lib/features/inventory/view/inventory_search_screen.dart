@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -702,12 +703,19 @@ class _SitsaCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title
-            Text(
+            // Title (selectable so the user can copy the description)
+            SelectableText(
               sitsa.description,
               style: textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w600),
             ),
+            if ((sitsa.codigoBarras ?? '').isNotEmpty) ...[
+              const SizedBox(height: 4),
+              _CopyableRow(
+                label: 'Código de Barras',
+                value: sitsa.codigoBarras!,
+              ),
+            ],
             const SizedBox(height: 6),
             // Subtitle + badges row
             Row(

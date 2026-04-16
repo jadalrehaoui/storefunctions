@@ -510,6 +510,7 @@ class _LabelPrinterSectionState extends State<_LabelPrinterSection> {
   final _portCtrl = TextEditingController();
   LabelPrinterMode _mode = LabelPrinterMode.ip;
   String? _savedUrl;
+  int _systemDpi = 203;
   List<Printer> _printers = const [];
   bool _loading = true;
 
@@ -536,9 +537,16 @@ class _LabelPrinterSectionState extends State<_LabelPrinterSection> {
       _hostCtrl.text = cfg.host;
       _portCtrl.text = cfg.port.toString();
       _savedUrl = cfg.systemPrinterUrl;
+      _systemDpi = cfg.systemDpi;
       _printers = printers;
       _loading = false;
     });
+  }
+
+  Future<void> _onDpiChanged(int? dpi) async {
+    if (dpi == null) return;
+    setState(() => _systemDpi = dpi);
+    await sl<LabelPrinterService>().saveSystemDpi(dpi);
   }
 
   Future<void> _saveIp() async {
@@ -645,6 +653,31 @@ class _LabelPrinterSectionState extends State<_LabelPrinterSection> {
             ],
           ),
         ] else ...[
+          Row(
+            children: [
+              Text('DPI de la impresora',
+                  style: textTheme.bodySmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant)),
+              const SizedBox(width: 12),
+              DropdownButton<int>(
+                value: _systemDpi,
+                onChanged: _onDpiChanged,
+                items: const [
+                  DropdownMenuItem(value: 203, child: Text('203 dpi')),
+                  DropdownMenuItem(value: 300, child: Text('300 dpi')),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Ajusta el tamaño de la etiqueta según el modelo de impresora.',
+                  style: textTheme.bodySmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           if (_printers.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),

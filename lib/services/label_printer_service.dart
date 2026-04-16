@@ -9,17 +9,25 @@ import 'package:win32/win32.dart';
 
 enum LabelPrinterMode { ip, system }
 
+/// The ZPL template in `label_printer.dart` was tuned for a 300 dpi Zebra.
+/// When a system printer runs at a different DPI (e.g. ZD421 at 203 dpi),
+/// the same ZPL comes out too large. We scale all dot-based coordinates
+/// by `targetDpi / templateDpi` before sending.
+const int _templateDpi = 300;
+
 class LabelPrinterConfig {
   final LabelPrinterMode mode;
   final String host;
   final int port;
   final String? systemPrinterUrl;
+  final int systemDpi;
 
   const LabelPrinterConfig({
     required this.mode,
     required this.host,
     required this.port,
     required this.systemPrinterUrl,
+    required this.systemDpi,
   });
 
   static const defaults = LabelPrinterConfig(
@@ -27,6 +35,7 @@ class LabelPrinterConfig {
     host: '10.10.0.144',
     port: 9100,
     systemPrinterUrl: null,
+    systemDpi: 203,
   );
 }
 
@@ -41,6 +50,7 @@ class LabelPrinterService {
   static const _hostKey = 'label_printer_host';
   static const _portKey = 'label_printer_port';
   static const _urlKey = 'label_printer_url';
+  static const _dpiKey = 'label_printer_system_dpi';
 
   Future<LabelPrinterConfig> getConfig() async {
     final prefs = await SharedPreferences.getInstance();
@@ -53,6 +63,8 @@ class LabelPrinterService {
       host: prefs.getString(_hostKey) ?? LabelPrinterConfig.defaults.host,
       port: prefs.getInt(_portKey) ?? LabelPrinterConfig.defaults.port,
       systemPrinterUrl: prefs.getString(_urlKey),
+      systemDpi:
+          prefs.getInt(_dpiKey) ?? LabelPrinterConfig.defaults.systemDpi,
     );
   }
 
@@ -67,6 +79,11 @@ class LabelPrinterService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_modeKey, 'system');
     await prefs.setString(_urlKey, printer.url);
+  }
+
+  Future<void> saveSystemDpi(int dpi) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_dpiKey, dpi);
   }
 
   Future<List<Printer>> listPrinters() => Printing.listPrinters();
@@ -92,7 +109,44 @@ class LabelPrinterService {
       throw StateError(
           'No system printer selected. Configure it in Settings → Impresora de Etiquetas.');
     }
-    await _printRawToSystem(zpl, printer);
+    final scaled = cfg.systemDpi == _templateDpi
+        ? zpl
+        : _scaleZpl(zpl, cfg.systemDpi / _templateDpi);
+    await _printRawToSystem(scaled, printer);
+  }
+
+  /// Scales dot-based coordinates in the ZPL template so the same label
+  /// prints at the correct physical size on a printer with a different DPI.
+  /// Only numeric params known to represent dots are scaled — counts,
+  /// orientations, ratios, and data fields are left alone.
+  String _scaleZpl(String zpl, double scale) {
+    int s(int v) => (v * scale).round();
+    return zpl
+        // ^PW<n>, ^LL<n>, ^LS<signed n>
+        .replaceAllMapped(RegExp(r'\^(PW|LL|LS)(-?\d+)'), (m) {
+          return '^${m.group(1)}${s(int.parse(m.group(2)!))}';
+        })
+        // ^FT<x>,<y>
+        .replaceAllMapped(RegExp(r'\^FT(\d+),(\d+)'), (m) {
+          return '^FT${s(int.parse(m.group(1)!))},${s(int.parse(m.group(2)!))}';
+        })
+        // ^FB<width>,<lines>,<line-space>,<align>
+        .replaceAllMapped(RegExp(r'\^FB(\d+),(\d+),(\d+),(\w)'), (m) {
+          return '^FB${s(int.parse(m.group(1)!))},'
+              '${m.group(2)},${s(int.parse(m.group(3)!))},${m.group(4)}';
+        })
+        // ^BY<narrow>,<ratio>,<height>
+        .replaceAllMapped(RegExp(r'\^BY(\d+),(\d+(?:\.\d+)?),(\d+)'),
+            (m) {
+          final narrow =
+              (int.parse(m.group(1)!) * scale).round().clamp(1, 10);
+          return '^BY$narrow,${m.group(2)},${s(int.parse(m.group(3)!))}';
+        })
+        // ^A0B,<h>,<w> or ^A0N,<h>,<w>
+        .replaceAllMapped(RegExp(r'\^A0([BN]),(\d+),(\d+)'), (m) {
+          return '^A0${m.group(1)},'
+              '${s(int.parse(m.group(2)!))},${s(int.parse(m.group(3)!))}';
+        });
   }
 
   Future<void> _printViaSocket(String zpl, String host, int port) async {
