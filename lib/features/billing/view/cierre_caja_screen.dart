@@ -124,7 +124,11 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
       'created_by': createdBy,
       'general': g,
       'card_charges': _cards
-          .map((c) => {'bank': c.bankName, 'amount': _parse(c.amount.text)})
+          .map((c) => {
+                'bank': c.bank,
+                'amount': _parse(c.amount.text),
+                if (c.bank == 'Custom') 'custom_bank': c.customBank.text,
+              })
           .toList(),
       'calculations': {
         'cards_total': cardsTotal,
@@ -159,6 +163,13 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
             .showSnackBar(const SnackBar(content: Text('Cierre guardado')));
       }
       return true;
+    } on DioException catch (e) {
+      if (mounted) {
+        final body = e.response?.data;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Save error (${e.response?.statusCode}): $body')));
+      }
+      return false;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -281,6 +292,9 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
           final bank = '${m['bank'] ?? ''}';
           if (bank == 'BCR' || bank == 'Promerica') {
             entry.bank = bank;
+          } else if (bank == 'Custom') {
+            entry.bank = 'Custom';
+            entry.customBank.text = '${m['custom_bank'] ?? ''}';
           } else {
             entry.bank = 'Custom';
             entry.customBank.text = bank;

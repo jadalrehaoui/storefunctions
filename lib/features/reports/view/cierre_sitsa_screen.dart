@@ -129,8 +129,9 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
         'amount': _parse(d.amount.text),
       }).toList(),
       'card_charges': _cards.map((c) => {
-        'bank': c.bankName,
+        'bank': c.bank,
         'amount': _parse(c.amount.text),
+        if (c.bank == 'Custom') 'custom_bank': c.customBank.text,
       }).toList(),
       if (data?.tipoCambio != null) 'bccrtc': data!.tipoCambio!.ventaUsd,
     };

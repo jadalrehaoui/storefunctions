@@ -72,6 +72,9 @@ class _Content extends StatelessWidget {
       final bank = '${m['bank'] ?? ''}';
       if (bank == 'BCR' || bank == 'Promerica') {
         entry.bank = bank;
+      } else if (bank == 'Custom') {
+        entry.bank = 'Custom';
+        entry.customBank.text = '${m['custom_bank'] ?? ''}';
       } else {
         entry.bank = 'Custom';
         entry.customBank.text = bank;
