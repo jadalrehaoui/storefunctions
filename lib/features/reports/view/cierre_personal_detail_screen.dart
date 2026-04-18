@@ -145,10 +145,16 @@ class _Content extends StatelessWidget {
         ? dateFmt.format(DateTime.parse(dateRaw))
         : '—';
     final general = item['general'] as Map? ?? {};
-    double n(String k) => (general[k] as num?)?.toDouble() ?? 0.0;
+    double _p(dynamic v) {
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
+
+    double n(String k) => _p(general[k]);
     final calc = item['calculations'] as Map? ?? {};
-    final cardsTotal = (calc['cards_total'] as num?)?.toDouble() ?? 0.0;
-    final dif = (calc['diferencia_a_depositar'] as num?)?.toDouble() ?? 0.0;
+    final cardsTotal = _p(calc['cards_total']);
+    final dif = _p(calc['diferencia_a_depositar']);
 
     final auth = context.read<AuthCubit>().state;
     final canDelete = auth is AuthAuthenticated &&
@@ -206,7 +212,7 @@ class _Content extends StatelessWidget {
                   value: colones.format(n('SUM_TOTAL_A_PAGAR'))),
               _Tile(
                   label: 'Facturas Anuladas',
-                  value: '${(general['TotalVoided'] as num?)?.toInt() ?? 0}'),
+                  value: '${n('TotalVoided').toInt()}'),
             ],
           ),
           const SizedBox(height: 24),
@@ -243,9 +249,7 @@ class _Content extends StatelessWidget {
                               child: Text(
                                   '${(cards[i] as Map)['bank'] ?? '—'}')),
                           Text(colones.format(
-                              ((cards[i] as Map)['amount'] as num?)
-                                      ?.toDouble() ??
-                                  0.0)),
+                              _p((cards[i] as Map)['amount']))),
                         ],
                       ),
                     ),

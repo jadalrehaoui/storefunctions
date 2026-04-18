@@ -28,14 +28,20 @@ Future<Uint8List> buildCierrePersonalReceiptPdf({
         fontSize: size,
       );
 
-  double n(String k) => (general[k] as num?)?.toDouble() ?? 0.0;
+  double n(String k) {
+    final v = general[k];
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v) ?? 0.0;
+    return 0.0;
+  }
+
   final brut = n('BrutTotal');
   final bonos = n('TotalBonos');
   final desc = n('TotalDiscount');
   final totalAPagar = n('SUM_TOTAL_A_PAGAR');
   final apartadosCobrados = n('APARTADOS_COBRADOS');
   final apartadosOtro = n('APARTADOS_FACTURADOS_POR_OTRO_USUARIO');
-  final voided = (general['TotalVoided'] as num?)?.toInt() ?? 0;
+  final voided = n('TotalVoided').toInt();
   final cardsTotal = cards.fold<double>(
       0.0,
       (sum, c) =>

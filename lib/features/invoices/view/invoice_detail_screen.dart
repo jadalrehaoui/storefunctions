@@ -5,9 +5,11 @@ import 'package:intl/intl.dart';
 
 import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
+import '../../../services/receipt_printer_service.dart';
 import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/invoice_detail_cubit.dart';
 import '../model/invoice_models.dart';
+import '../utils/receipt_pdf.dart';
 
 final _money = NumberFormat.currency(symbol: '₡', decimalDigits: 2);
 final _dateFmt = DateFormat('yyyy-MM-dd');
@@ -57,6 +59,31 @@ class _InvoiceDetailView extends StatelessWidget {
 class _DetailBody extends StatelessWidget {
   final InvoiceDetail invoice;
   const _DetailBody({required this.invoice});
+
+  Future<void> _printVoidedReceipt(
+      ScaffoldMessengerState messenger, InvoiceDetail inv) async {
+    try {
+      final bytes = await buildReceiptPdf(
+        invoiceId: inv.id,
+        date: inv.date,
+        clientName: inv.clientName ?? '',
+        clientId: inv.clientId ?? '',
+        notes: inv.notes ?? '',
+        items: inv.items,
+        createdBy: inv.createdBy,
+        voided: true,
+      );
+      final printer = sl<ReceiptPrinterService>();
+      final printed =
+          await printer.printPdf(bytes, name: 'void_${inv.id}');
+      if (!printed) {
+        await openReceiptPdf(bytes, 'void_${inv.id}');
+      }
+    } catch (e) {
+      messenger
+          .showSnackBar(SnackBar(content: Text('Print error: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,9 +137,13 @@ class _DetailBody extends StatelessWidget {
                       ),
                     );
                     if (ok == true && context.mounted) {
-                      await context
-                          .read<InvoiceDetailCubit>()
-                          .voidInvoice();
+                      final cubit = context.read<InvoiceDetailCubit>();
+                      final messenger = ScaffoldMessenger.of(context);
+                      final invoiceCopy = invoice;
+                      final voided = await cubit.voidInvoice();
+                      if (voided) {
+                        await _printVoidedReceipt(messenger, invoiceCopy);
+                      }
                     }
                   },
                   icon: const Icon(Icons.block),

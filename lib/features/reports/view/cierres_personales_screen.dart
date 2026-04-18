@@ -193,22 +193,24 @@ class _Table extends StatelessWidget {
                       ? dateFmt.format(DateTime.parse(dateRaw))
                       : '—';
 
+                  double? _p(dynamic v) {
+                    if (v is num) return v.toDouble();
+                    if (v is String) return double.tryParse(v);
+                    return null;
+                  }
+
                   double? totalAPagar;
                   double? cardsTotal;
                   double? dif;
                   if (isParallel) {
                     final totals = m['totals'] as Map? ?? {};
-                    totalAPagar =
-                        (totals['total_net'] as num?)?.toDouble();
+                    totalAPagar = _p(totals['total_net']);
                   } else {
                     final general = m['general'] as Map? ?? {};
-                    totalAPagar =
-                        (general['SUM_TOTAL_A_PAGAR'] as num?)?.toDouble();
+                    totalAPagar = _p(general['SUM_TOTAL_A_PAGAR']);
                     final calc = m['calculations'] as Map? ?? {};
-                    cardsTotal =
-                        (calc['cards_total'] as num?)?.toDouble();
-                    dif = (calc['diferencia_a_depositar'] as num?)
-                        ?.toDouble();
+                    cardsTotal = _p(calc['cards_total']);
+                    dif = _p(calc['diferencia_a_depositar']);
                   }
 
                   return InkWell(

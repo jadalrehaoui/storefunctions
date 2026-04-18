@@ -144,15 +144,18 @@ class _HeaderBarState extends State<_HeaderBar> {
   @override
   void didUpdateWidget(covariant _HeaderBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_seeded &&
-        (widget.state.clientName.isNotEmpty ||
-            widget.state.clientId.isNotEmpty ||
-            widget.state.notes.isNotEmpty)) {
+    if (!_seeded && _isEditLoad(oldWidget.state, widget.state)) {
       _clientNameCtrl.text = widget.state.clientName;
       _clientIdCtrl.text = widget.state.clientId;
       _notesCtrl.text = widget.state.notes;
       _seeded = true;
     }
+  }
+
+  bool _isEditLoad(InvoiceFormState prev, InvoiceFormState curr) {
+    return prev.items.isEmpty &&
+        curr.items.isNotEmpty &&
+        prev.clientName.isEmpty;
   }
 
   @override

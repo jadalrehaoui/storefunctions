@@ -68,6 +68,16 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
 
   double _parse(String s) => double.tryParse(s.replaceAll(',', '')) ?? 0.0;
 
+  String? _extractId(dynamic res) {
+    if (res is! Map) return null;
+    final data = res['data'];
+    if (data is Map) return data['id']?.toString();
+    if (data is List && data.isNotEmpty && data[0] is Map) {
+      return (data[0] as Map)['id']?.toString();
+    }
+    return res['id']?.toString();
+  }
+
   double get _cardsTotal =>
       _cards.fold(0.0, (s, c) => s + _parse(c.amount.text));
 
@@ -96,7 +106,12 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
     final dateStr = DateFormat('yyyy-MM-dd').format(_date);
 
     final cardsTotal = _cardsTotal;
-    double gn(String k) => (g[k] as num?)?.toDouble() ?? 0.0;
+    double gn(String k) {
+      final v = g[k];
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
     final totalAPagar = gn('SUM_TOTAL_A_PAGAR');
     final apartadosCobrados = gn('APARTADOS_COBRADOS');
     final apartadosOtro = gn('APARTADOS_FACTURADOS_POR_OTRO_USUARIO');
@@ -125,18 +140,12 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
       } else {
         try {
           final res = await api.post('/api/workdb/cierre-personal', payload);
-          _closureId = res['data']?['id']?.toString();
+          _closureId = _extractId(res);
         } on DioException catch (e) {
           if (e.response?.statusCode == 409) {
-            // Find existing and PUT
             final existing = await api.get(
                 '/api/workdb/cierre-personal?date=$dateStr&usuario=${Uri.encodeQueryComponent(caja)}');
-            final id = (existing is Map)
-                ? (existing['data']?['id'] ??
-                        existing['data']?[0]?['id'] ??
-                        existing['id'])
-                    ?.toString()
-                : null;
+            final id = _extractId(existing);
             if (id == null) rethrow;
             await api.put('/api/workdb/cierre-personal/$id', payload);
             _closureId = id;
@@ -242,11 +251,45 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
       _reportError = null;
     });
     try {
-      final data =
-          await sl<InventoryService>().getDailyReportByCashier(_date, caja);
+      final dateStr = DateFormat('yyyy-MM-dd').format(_date);
+      final results = await Future.wait([
+        sl<InventoryService>().getDailyReportByCashier(_date, caja),
+        sl<ApiClient>()
+            .get('/api/workdb/cierre-personal/card-charges?date=$dateStr&usuario=${Uri.encodeQueryComponent(caja)}')
+            .catchError((_) => null),
+      ]);
+
+      final data = results[0];
       final general = (data is Map && data['general'] is Map)
           ? Map<String, dynamic>.from(data['general'] as Map)
           : null;
+
+      // Load previously saved card charges if any.
+      for (final c in _cards) {
+        c.dispose();
+      }
+      _cards.clear();
+      final saved = results[1];
+      if (saved is Map) {
+        final savedData = saved['data'];
+        final rawCards = savedData is Map
+            ? (savedData['card_charges'] as List?) ?? []
+            : <dynamic>[];
+        for (final c in rawCards) {
+          final m = c is Map ? Map<String, dynamic>.from(c) : <String, dynamic>{};
+          final entry = CardChargeEntry();
+          final bank = '${m['bank'] ?? ''}';
+          if (bank == 'BCR' || bank == 'Promerica') {
+            entry.bank = bank;
+          } else {
+            entry.bank = 'Custom';
+            entry.customBank.text = bank;
+          }
+          entry.amount.text = '${m['amount'] ?? 0}';
+          _cards.add(entry);
+        }
+      }
+
       if (!mounted) return;
       setState(() {
         _general = general;
@@ -394,7 +437,12 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
       );
     }
     final colones = NumberFormat.currency(symbol: '₡', decimalDigits: 2);
-    double n(String k) => (g[k] as num?)?.toDouble() ?? 0.0;
+    double n(String k) {
+      final v = g[k];
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
     final totalAPagar = n('SUM_TOTAL_A_PAGAR');
     final diferencia = totalAPagar - _cardsTotal + n('APARTADOS_COBRADOS') - n('APARTADOS_FACTURADOS_POR_OTRO_USUARIO');
     final tiles = <(String, String)>[
@@ -402,7 +450,7 @@ class _CierreSitsaPanelState extends State<_CierreSitsaPanel> {
       ('Bonos', colones.format(n('TotalBonos'))),
       ('Descuentos', colones.format(n('TotalDiscount'))),
       ('Total a Pagar', colones.format(totalAPagar)),
-      ('Facturas Anuladas', '${(g['TotalVoided'] as num?)?.toInt() ?? 0}'),
+      ('Facturas Anuladas', '${n('TotalVoided').toInt()}'),
       ('Venta Licor', colones.format(n('Venta_Licor'))),
       ('Apartados Facturados por Otro', colones.format(n('APARTADOS_FACTURADOS_POR_OTRO_USUARIO'))),
       ('Apartados Cobrados', colones.format(n('APARTADOS_COBRADOS'))),

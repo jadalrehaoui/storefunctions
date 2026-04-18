@@ -384,7 +384,36 @@ class _RowActions extends StatelessWidget {
                 ),
               );
               if (ok == true && context.mounted) {
-                await context.read<InvoiceListCubit>().voidInvoice(invoice.id);
+                final messenger = ScaffoldMessenger.of(context);
+                final cubit = context.read<InvoiceListCubit>();
+                await cubit.voidInvoice(invoice.id);
+                try {
+                  final raw =
+                      await sl<InvoiceService>().getInvoice(invoice.id);
+                  final map = (raw is Map && raw['data'] is Map)
+                      ? raw['data'] as Map<String, dynamic>
+                      : (raw as Map<String, dynamic>);
+                  final detail = InvoiceDetail.fromJson(map);
+                  final bytes = await receipt_pdf.buildReceiptPdf(
+                    invoiceId: detail.id,
+                    date: detail.date,
+                    clientName: detail.clientName ?? '',
+                    clientId: detail.clientId ?? '',
+                    notes: detail.notes ?? '',
+                    items: detail.items,
+                    createdBy: detail.createdBy,
+                    voided: true,
+                  );
+                  final printed = await sl<ReceiptPrinterService>()
+                      .printPdf(bytes, name: 'void_${detail.id}');
+                  if (!printed) {
+                    await receipt_pdf.openReceiptPdf(
+                        bytes, 'void_${detail.id}');
+                  }
+                } catch (e) {
+                  messenger.showSnackBar(
+                      SnackBar(content: Text('Print error: $e')));
+                }
               }
             },
             child: Text(l10n.invoiceVoid,

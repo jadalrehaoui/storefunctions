@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:intl/intl.dart';
@@ -8,6 +9,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../model/invoice_models.dart';
 
 /// Builds an 80mm wide receipt PDF for the given invoice data.
+/// When [voided] is true a diagonal "NULA" watermark is overlaid.
 Future<Uint8List> buildReceiptPdf({
   required String invoiceId,
   required DateTime date,
@@ -16,9 +18,10 @@ Future<Uint8List> buildReceiptPdf({
   required String notes,
   required List<InvoiceLineItem> items,
   required String? createdBy,
+  bool voided = false,
 }) async {
   final pdf = pw.Document();
-  final colones = NumberFormat.currency(symbol: '', decimalDigits: 2);
+  final colones = NumberFormat.currency(symbol: '', decimalDigits: 0);
   final dateFmt = DateFormat('yyyy-MM-dd HH:mm');
 
   final bold = pw.Font.helveticaBold();
@@ -38,18 +41,21 @@ Future<Uint8List> buildReceiptPdf({
   pdf.addPage(
     pw.Page(
       pageFormat: PdfPageFormat(
-        76 * PdfPageFormat.mm,
+        74 * PdfPageFormat.mm,
         double.infinity,
-        marginLeft: 3 * PdfPageFormat.mm,
-        marginRight: 3 * PdfPageFormat.mm,
+        marginLeft: 4 * PdfPageFormat.mm,
+        marginRight: 8 * PdfPageFormat.mm,
         marginTop: 6 * PdfPageFormat.mm,
         marginBottom: 6 * PdfPageFormat.mm,
       ),
-      build: (ctx) => pw.Column(
+      build: (ctx) {
+        final content = pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.stretch,
         children: [
           pw.Center(
-            child: pw.Text('TIQUETE', style: s(b: true, size: 14)),
+            child: pw.Text(
+                voided ? 'TIQUETE — NULA' : 'TIQUETE',
+                style: s(b: true, size: 14)),
           ),
           pw.SizedBox(height: 2),
           pw.Center(child: pw.Text('#$invoiceId', style: s(b: true, size: 12))),
@@ -96,7 +102,31 @@ Future<Uint8List> buildReceiptPdf({
           pw.SizedBox(height: 10),
           pw.Center(child: pw.Text('Tiquete de entrega', style: s(b: true))),
         ],
-      ),
+        );
+
+        if (!voided) return content;
+
+        return pw.Stack(
+          children: [
+            content,
+            pw.Positioned.fill(
+              child: pw.Center(
+                child: pw.Transform.rotate(
+                  angle: -math.pi / 4,
+                  child: pw.Text(
+                    'NULA',
+                    style: pw.TextStyle(
+                      font: bold,
+                      fontSize: 38,
+                      color: PdfColor.fromInt(0x44FF0000),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     ),
   );
 

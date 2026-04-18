@@ -202,10 +202,10 @@ Future<Uint8List> buildParallelReceiptPdf(
   pdf.addPage(
     pw.Page(
       pageFormat: PdfPageFormat(
-        76 * PdfPageFormat.mm,
+        74 * PdfPageFormat.mm,
         double.infinity,
-        marginLeft: 3 * PdfPageFormat.mm,
-        marginRight: 3 * PdfPageFormat.mm,
+        marginLeft: 4 * PdfPageFormat.mm,
+        marginRight: 8 * PdfPageFormat.mm,
         marginTop: 6 * PdfPageFormat.mm,
         marginBottom: 6 * PdfPageFormat.mm,
       ),
