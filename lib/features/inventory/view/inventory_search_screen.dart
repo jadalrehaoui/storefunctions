@@ -12,19 +12,27 @@ import '../cubit/inventory_search_cubit.dart';
 import '../utils/inventory_search_pdf.dart';
 
 class InventorySearchScreen extends StatelessWidget {
-  const InventorySearchScreen({super.key});
+  final String? initialQuery;
+  const InventorySearchScreen({super.key, this.initialQuery});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => InventorySearchCubit(sl()),
-      child: const _InventorySearchView(),
+      create: (_) {
+        final cubit = InventorySearchCubit(sl());
+        if (initialQuery != null && initialQuery!.isNotEmpty) {
+          cubit.search(initialQuery!);
+        }
+        return cubit;
+      },
+      child: _InventorySearchView(initialQuery: initialQuery),
     );
   }
 }
 
 class _InventorySearchView extends StatefulWidget {
-  const _InventorySearchView();
+  final String? initialQuery;
+  const _InventorySearchView({this.initialQuery});
 
   @override
   State<_InventorySearchView> createState() => _InventorySearchViewState();
@@ -32,6 +40,14 @@ class _InventorySearchView extends StatefulWidget {
 
 class _InventorySearchViewState extends State<_InventorySearchView> {
   final _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialQuery != null) {
+      _controller.text = widget.initialQuery!;
+    }
+  }
 
   @override
   void dispose() {

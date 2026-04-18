@@ -30,24 +30,20 @@ class _SalesReportsViewState extends State<_SalesReportsView> {
 
   static final _displayFmt = DateFormat('MMM d, yyyy');
 
-  Future<void> _pickStart() async {
-    final picked = await showDatePicker(
+  Future<void> _pickRange() async {
+    final picked = await showDateRangePicker(
       context: context,
-      initialDate: _startDate,
+      initialDateRange:
+          DateTimeRange(start: _startDate, end: _endDate),
       firstDate: DateTime(2000),
-      lastDate: _endDate,
-    );
-    if (picked != null) setState(() => _startDate = picked);
-  }
-
-  Future<void> _pickEnd() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _endDate,
-      firstDate: _startDate,
       lastDate: DateTime.now(),
     );
-    if (picked != null) setState(() => _endDate = picked);
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+    }
   }
 
   void _load() {
@@ -86,15 +82,11 @@ class _SalesReportsViewState extends State<_SalesReportsView> {
           Row(
             children: [
               _DateButton(
-                label: 'From',
-                value: _displayFmt.format(_startDate),
-                onTap: _pickStart,
-              ),
-              const SizedBox(width: 12),
-              _DateButton(
-                label: 'To',
-                value: _displayFmt.format(_endDate),
-                onTap: _pickEnd,
+                label: 'Rango',
+                value: _startDate == _endDate
+                    ? _displayFmt.format(_startDate)
+                    : '${_displayFmt.format(_startDate)} – ${_displayFmt.format(_endDate)}',
+                onTap: _pickRange,
               ),
               const SizedBox(width: 12),
               FilledButton.icon(

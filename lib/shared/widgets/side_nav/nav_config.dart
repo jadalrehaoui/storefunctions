@@ -163,6 +163,27 @@ final navItems = <NavItemConfig>[
     ],
   ),
   NavItemConfig(
+    id: 'stocking',
+    icon: Icons.local_shipping_outlined,
+    label: (l10n) => 'Stocking',
+    subItems: [
+      NavSubConfig(
+        id: 'stocking-manual-pl',
+        icon: Icons.list_alt_outlined,
+        label: (l10n) => 'Manual PL',
+        route: '/stocking/manual-pl',
+        privilege: 'purchasing_user',
+      ),
+      NavSubConfig(
+        id: 'stocking-automatic-pl',
+        icon: Icons.auto_awesome_outlined,
+        label: (l10n) => 'Automatic PL',
+        route: '/stocking/automatic-pl',
+        privilege: 'purchasing_user',
+      ),
+    ],
+  ),
+  NavItemConfig(
     id: 'users',
     icon: Icons.people_outline,
     label: (l10n) => l10n.navUsers,

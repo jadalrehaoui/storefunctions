@@ -26,6 +26,8 @@ import '../features/dashboard/view/dashboard_screen.dart';
 import '../features/invoices/view/invoice_detail_screen.dart';
 import '../features/invoices/view/invoice_form_screen.dart';
 import '../features/invoices/view/invoice_list_screen.dart';
+import '../features/stocking/view/automatic_pl_screen.dart';
+import '../features/stocking/view/manual_pl_screen.dart';
 import '../features/users/view/users_screen.dart';
 import '../shared/widgets/app_shell.dart';
 
@@ -234,6 +236,20 @@ GoRouter createRouter(AuthCubit authCubit) {
               child: InvoiceFormScreen(
                 editingInvoiceId: state.pathParameters['id']!,
               ),
+            ),
+          ),
+          GoRoute(
+            path: '/stocking/manual-pl',
+            name: 'stocking-manual-pl',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ManualPlScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/stocking/automatic-pl',
+            name: 'stocking-automatic-pl',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: AutomaticPlScreen(),
             ),
           ),
           GoRoute(

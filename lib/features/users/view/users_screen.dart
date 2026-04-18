@@ -12,6 +12,7 @@ const _validPrivileges = [
   'inspect_inventory',
   'print_labels',
   'create_custom_labels',
+  'purchasing_user',
   'generate_inventory',
   'generate_sales_report',
   'create_users',
