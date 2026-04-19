@@ -207,9 +207,9 @@
         el.textContent = 'Versión no disponible';
       });
 
-    // Build the one-liner using the current page's origin so it works on any host.
-    const origin = window.location.origin;
-    const installCmd = `powershell -ExecutionPolicy Bypass -Command "$env:STOREFUNCTIONS_SERVER='${origin}'; iwr '${origin}/install.ps1' -UseBasicParsing | iex"`;
+    // Server URL is templated in by the Node server at serve time (see server.js).
+    const serverUrl = '{{SERVER_URL}}';
+    const installCmd = `powershell -ExecutionPolicy Bypass -Command "iwr '${serverUrl}/install.ps1' -UseBasicParsing | iex"`;
     document.getElementById('cmdText').textContent = installCmd;
 
     function copyCmd() {

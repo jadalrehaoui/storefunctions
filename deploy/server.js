@@ -9,6 +9,18 @@ const PORT = 8080;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const STATE_FILE = path.join(__dirname, '.artifact-state.json');
 
+function detectLanIp() {
+  const nets = require('os').networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) return net.address;
+    }
+  }
+  return '127.0.0.1';
+}
+const SERVER_URL = `http://${detectLanIp()}:${PORT}`;
+const TEMPLATED_EXTS = new Set(['.html', '.ps1']);
+
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'jadalrehaoui/storefunctions';
 
@@ -172,6 +184,18 @@ const server = http.createServer(async (req, res) => {
     }
     const ext = path.extname(filePath);
     const contentType = MIME[ext] || 'application/octet-stream';
+
+    if (TEMPLATED_EXTS.has(ext)) {
+      const content = fs.readFileSync(filePath, 'utf8')
+        .split('{{SERVER_URL}}').join(SERVER_URL);
+      const buf = Buffer.from(content, 'utf8');
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Content-Length': buf.length,
+      });
+      return res.end(buf);
+    }
+
     res.writeHead(200, {
       'Content-Type': contentType,
       'Content-Length': stat.size,

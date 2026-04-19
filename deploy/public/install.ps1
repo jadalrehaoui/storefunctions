@@ -16,8 +16,9 @@
 
 [CmdletBinding()]
 param(
-    [string]$ServerUrl = $env:STOREFUNCTIONS_SERVER,
+    [string]$ServerUrl = '{{SERVER_URL}}',
     [string]$InstallDir = (Join-Path $env:LOCALAPPDATA "Storefunctions"),
+    [string]$ShortcutName = 'Parallel',
     [switch]$NoShortcut,
     [switch]$Launch
 )
@@ -45,7 +46,9 @@ function Fail([string]$msg) {
 }
 
 # --- 1. Resolve server URL ---------------------------------------------------
-if (-not $ServerUrl) {
+# If the placeholder was never replaced (script downloaded raw from git instead
+# of through the deploy server), fall back to an interactive prompt.
+if (-not $ServerUrl -or $ServerUrl -eq '{{SERVER_URL}}') {
     $ServerUrl = Read-Host "Deploy server URL (e.g. http://10.0.0.5:8080)"
 }
 $ServerUrl = $ServerUrl.TrimEnd('/')
@@ -109,14 +112,18 @@ Write-Ok "Main binary: $exePath"
 if (-not $NoShortcut) {
     Write-Step "Creating desktop shortcut"
     $desktop = [Environment]::GetFolderPath("Desktop")
-    $shortcutPath = Join-Path $desktop "Storefunctions.lnk"
+    $shortcutPath = Join-Path $desktop "$ShortcutName.lnk"
+    $oldShortcut = Join-Path $desktop "Storefunctions.lnk"
+    if ($oldShortcut -ne $shortcutPath -and (Test-Path $oldShortcut)) {
+        Remove-Item $oldShortcut -Force -ErrorAction SilentlyContinue
+    }
     try {
         $wsh = New-Object -ComObject WScript.Shell
         $shortcut = $wsh.CreateShortcut($shortcutPath)
         $shortcut.TargetPath = $exePath
         $shortcut.WorkingDirectory = $InstallDir
         $shortcut.IconLocation = "$exePath,0"
-        $shortcut.Description = "Storefunctions"
+        $shortcut.Description = $ShortcutName
         $shortcut.Save()
         Write-Ok "Shortcut: $shortcutPath"
     } catch {
