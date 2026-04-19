@@ -7,6 +7,38 @@ import 'package:intl/intl.dart';
 import '../../../services/api_client.dart';
 import '../view/cierre_sitsa_screen.dart';
 
+class EmailConfig {
+  final String smtpHost;
+  final int smtpPort;
+  final bool smtpSecure;
+  final String fromAddress;
+  final String fromName;
+  final String appPassword;
+  final List<String> recipients;
+
+  const EmailConfig({
+    required this.smtpHost,
+    required this.smtpPort,
+    required this.smtpSecure,
+    required this.fromAddress,
+    required this.fromName,
+    required this.appPassword,
+    required this.recipients,
+  });
+
+  factory EmailConfig.fromJson(Map<String, dynamic> json) => EmailConfig(
+        smtpHost: json['smtp_host'] as String,
+        smtpPort: (json['smtp_port'] as num).toInt(),
+        smtpSecure: json['smtp_secure'] as bool? ?? false,
+        fromAddress: json['from_address'] as String,
+        fromName: json['from_name'] as String? ?? 'Storefunctions',
+        appPassword: json['app_password'] as String,
+        recipients: ((json['recipients'] as List?) ?? const [])
+            .map((e) => e.toString())
+            .toList(),
+      );
+}
+
 class TipoCambio {
   final double ventaUsd;
   final String date;
@@ -215,6 +247,14 @@ class CierreSitsaCubit extends Cubit<CierreSitsaState> {
     final path = '$dir${Platform.pathSeparator}cierre_sitsa_$timestamp.csv';
     await File(path).writeAsString(buffer.toString());
     return path;
+  }
+
+  Future<EmailConfig> fetchEmailConfig(String name) async {
+    final res = await _api.get('/api/workdb/email-configs/$name');
+    final data = res is Map && res['data'] is Map
+        ? Map<String, dynamic>.from(res['data'] as Map)
+        : Map<String, dynamic>.from(res as Map);
+    return EmailConfig.fromJson(data);
   }
 
   /// Returns the closure id (create → POST, update → PUT).

@@ -1,11 +1,44 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+Future<Uint8List> buildClosurePdfBytes(Map<String, dynamic> closure, {bool showCosts = true}) async {
+  final pdf = _buildClosureDocument(closure, showCosts: showCosts);
+  return pdf.save();
+}
+
 Future<String> generateAndOpenClosure(Map<String, dynamic> closure, {bool showCosts = true}) async {
+  final pdf = _buildClosureDocument(closure, showCosts: showCosts);
+
+  final dateRaw = closure['date'] as String?;
+  final dateLabel = dateRaw != null
+      ? DateFormat('MMM d, yyyy').format(DateTime.parse(dateRaw))
+      : '—';
+
+  if (Platform.isWindows) {
+    // Use native print dialog on Windows
+    await Printing.layoutPdf(
+      onLayout: (_) async => pdf.save(),
+      name: 'cierre_$dateLabel',
+    );
+    return 'printed';
+  }
+
+  // macOS: save to Downloads and open with Preview
+  final dir = '/Users/${Platform.environment['USER']}/Downloads';
+  await Directory(dir).create(recursive: true);
+  final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+  final path = '$dir/cierre_$timestamp.pdf';
+  await File(path).writeAsBytes(await pdf.save());
+  await Process.run('open', [path]);
+  return path;
+}
+
+pw.Document _buildClosureDocument(Map<String, dynamic> closure, {bool showCosts = true}) {
   final pdf = pw.Document();
 
   final colones = NumberFormat.currency(symbol: 'CRC ', decimalDigits: 2);
@@ -168,7 +201,12 @@ Future<String> generateAndOpenClosure(Map<String, dynamic> closure, {bool showCo
         if (deposits.isNotEmpty) ...[
           sectionTitleWithTotal(
             'Depositos Bancarios',
-            colones.format(deposits.fold(0.0, (s, d) => s + n(d['amount']))),
+            colones.format(deposits.fold(0.0, (s, d) {
+              final amount = n(d['amount']);
+              final currency = d['currency'] as String? ?? 'CRC';
+              final rate = n(d['exchangeRate']);
+              return s + (currency == 'USD' && rate > 0 ? amount * rate : amount);
+            })),
           ),
           table(
             ['No. Deposito', 'Banco', 'Moneda', 'T/C', 'Monto', 'Colones'],
@@ -224,21 +262,5 @@ Future<String> generateAndOpenClosure(Map<String, dynamic> closure, {bool showCo
     ),
   );
 
-  if (Platform.isWindows) {
-    // Use native print dialog on Windows
-    await Printing.layoutPdf(
-      onLayout: (_) async => pdf.save(),
-      name: 'cierre_$date',
-    );
-    return 'printed';
-  }
-
-  // macOS: save to Downloads and open with Preview
-  final dir = '/Users/${Platform.environment['USER']}/Downloads';
-  await Directory(dir).create(recursive: true);
-  final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-  final path = '$dir/cierre_$timestamp.pdf';
-  await File(path).writeAsBytes(await pdf.save());
-  await Process.run('open', [path]);
-  return path;
+  return pdf;
 }

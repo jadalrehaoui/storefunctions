@@ -10,6 +10,8 @@ import '../../../features/auth/cubit/auth_cubit.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/cierre_sitsa_cubit.dart';
+import '../utils/closure_email.dart' show sendClosureEmail;
+import '../utils/closure_pdf.dart';
 
 // ── Models ────────────────────────────────────────────────────────────────────
 
@@ -136,17 +138,49 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
       if (data?.tipoCambio != null) 'bccrtc': data!.tipoCambio!.ventaUsd,
     };
 
+    final authState = context.read<AuthCubit>().state;
+    final createdBy = authState is AuthAuthenticated ? authState.username : '—';
+    final showCosts = canSeeProfitMargins(context);
+    final cubit = context.read<CierreSitsaCubit>();
+
     try {
       final isNew = _closureId == null;
-      final id = await context
-          .read<CierreSitsaCubit>()
-          .saveOrUpdate(payload, closureId: _closureId);
+      final id = await cubit.saveOrUpdate(payload, closureId: _closureId);
       setState(() => _closureId = id);
+
+      final pdfPayload = {
+        ...payload,
+        'id': id,
+        'created_by': createdBy,
+      };
+      final pdfBytes = await buildClosurePdfBytes(pdfPayload, showCosts: showCosts);
+
+      final failures = <String>[];
+      try {
+        await generateAndOpenClosure(pdfPayload, showCosts: showCosts);
+      } catch (e) {
+        print('[CierreSitsa] print error: $e');
+        failures.add('print: $e');
+      }
+      try {
+        final emailConfig = await cubit.fetchEmailConfig('cierre_sitsa');
+        await sendClosureEmail(
+          config: emailConfig,
+          pdfBytes: pdfBytes,
+          date: _date,
+        );
+      } catch (e) {
+        print('[CierreSitsa] email error: $e');
+        failures.add('email: $e');
+      }
+
       if (mounted) {
         final l10n = context.l10n;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isNew ? l10n.msgSaved : l10n.msgUpdated)),
-        );
+        final baseMsg = isNew ? l10n.msgSaved : l10n.msgUpdated;
+        final msg = failures.isEmpty
+            ? baseMsg
+            : '$baseMsg — ${failures.join('; ')}';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (e, st) {
       print('[CierreSitsa] save error: $e\n$st');
@@ -307,8 +341,8 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
                                   .hasPrivilege('generate_closure'));
                           return FilledButton.icon(
                             onPressed: canSave ? _savePrevInventory : null,
-                            icon: const Icon(Icons.save_outlined, size: 16),
-                            label: Text(context.l10n.btnSave),
+                            icon: const Icon(Icons.send_outlined, size: 16),
+                            label: Text('${context.l10n.btnSave} · Email · Print'),
                           );
                         }),
                       ],

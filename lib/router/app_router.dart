@@ -20,6 +20,8 @@ import '../features/reports/view/cierres_personales_screen.dart';
 import '../features/reports/view/cierre_personal_detail_screen.dart';
 import '../features/reports/view/sales_reports_screen.dart';
 import '../features/billing/view/cierre_caja_screen.dart';
+import '../features/bodega/view/bodega_dispatcho_screen.dart';
+import '../features/bodega/view/bodega_listas_screen.dart';
 import '../features/billing/view/cierre_caja_sitsa_screen.dart';
 import '../features/billing/view/invoice_screen.dart';
 import '../features/dashboard/view/dashboard_screen.dart';
@@ -236,6 +238,20 @@ GoRouter createRouter(AuthCubit authCubit) {
               child: InvoiceFormScreen(
                 editingInvoiceId: state.pathParameters['id']!,
               ),
+            ),
+          ),
+          GoRoute(
+            path: '/bodega/listas',
+            name: 'bodega-listas',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: BodegaListasScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/bodega/dispatcho',
+            name: 'bodega-dispatcho',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: BodegaDispatchoScreen(),
             ),
           ),
           GoRoute(

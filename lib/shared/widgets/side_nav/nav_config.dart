@@ -72,6 +72,28 @@ final navItems = <NavItemConfig>[
     ],
   ),
   NavItemConfig(
+    id: 'bodega',
+    icon: Icons.warehouse_outlined,
+    label: (l10n) => 'Bodega',
+    privilege: 'bodega_user',
+    subItems: [
+      NavSubConfig(
+        id: 'bodega-listas',
+        icon: Icons.list_alt_outlined,
+        label: (l10n) => 'Listas',
+        route: '/bodega/listas',
+        privilege: 'bodega_user',
+      ),
+      NavSubConfig(
+        id: 'bodega-dispatcho',
+        icon: Icons.local_shipping_outlined,
+        label: (l10n) => 'Dispatcho',
+        route: '/bodega/dispatcho',
+        privilege: 'bodega_user',
+      ),
+    ],
+  ),
+  NavItemConfig(
     id: 'inventory',
     icon: Icons.inventory_2_outlined,
     label: (l10n) => l10n.navInventory,

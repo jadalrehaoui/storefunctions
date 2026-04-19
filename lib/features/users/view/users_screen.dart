@@ -31,6 +31,7 @@ const _validPrivileges = [
   'void_invoice',
   'reprint_invoice',
   'approve_discount',
+  'bodega_user',
 ];
 
 class UsersScreen extends StatelessWidget {
