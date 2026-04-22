@@ -377,10 +377,19 @@ class _ResultsTableState extends State<_ResultsTable> {
   }
 
   Future<void> _export(BuildContext context) async {
+    final rows = _selected.map((i) => _sorted[i]).toList();
+    if (rows.isEmpty) return;
+    await _exportRows(context, rows, 'manual_pl');
+  }
+
+  Future<void> _exportAll(BuildContext context) async {
+    if (_sorted.isEmpty) return;
+    await _exportRows(context, _sorted, 'manual_pl_todo');
+  }
+
+  Future<void> _exportRows(
+      BuildContext context, List<Map<String, dynamic>> rows, String prefix) async {
     final columns = _columns;
-    final selectedRows =
-        _selected.map((i) => _sorted[i]).toList();
-    if (selectedRows.isEmpty) return;
 
     String esc(String v) {
       if (v.contains(',') || v.contains('"') || v.contains('\n')) {
@@ -391,7 +400,7 @@ class _ResultsTableState extends State<_ResultsTable> {
 
     final buf = StringBuffer();
     buf.writeln(columns.map((c) => esc(_label(c))).join(','));
-    for (final row in selectedRows) {
+    for (final row in rows) {
       buf.writeln(columns.map((c) => esc('${row[c] ?? ''}')).join(','));
     }
 
@@ -401,7 +410,7 @@ class _ResultsTableState extends State<_ResultsTable> {
     await Directory(dir).create(recursive: true);
     final ts = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final sep = Platform.isWindows ? '\\' : '/';
-    final path = '$dir${sep}manual_pl_$ts.csv';
+    final path = '$dir$sep${prefix}_$ts.csv';
     await File(path).writeAsString(buf.toString());
 
     if (Platform.isWindows) {
@@ -412,8 +421,7 @@ class _ResultsTableState extends State<_ResultsTable> {
 
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('${selectedRows.length} filas exportadas → $path')),
+      SnackBar(content: Text('${rows.length} filas exportadas → $path')),
     );
   }
 
@@ -429,21 +437,30 @@ class _ResultsTableState extends State<_ResultsTable> {
 
     return Column(
       children: [
-        if (_selected.isNotEmpty)
+        if (_sorted.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               children: [
-                Text(
-                  '${_selected.length} seleccionadas',
-                  style: textTheme.bodySmall
-                      ?.copyWith(color: colorScheme.onSurfaceVariant),
-                ),
+                if (_selected.isNotEmpty)
+                  Text(
+                    '${_selected.length} seleccionadas',
+                    style: textTheme.bodySmall
+                        ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  ),
                 const Spacer(),
-                FilledButton.icon(
-                  onPressed: () => _export(context),
-                  icon: const Icon(Icons.download_outlined, size: 18),
-                  label: const Text('Exportar'),
+                if (_selected.isNotEmpty) ...[
+                  FilledButton.icon(
+                    onPressed: () => _export(context),
+                    icon: const Icon(Icons.download_outlined, size: 18),
+                    label: const Text('Exportar seleccionadas'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                FilledButton.tonalIcon(
+                  onPressed: () => _exportAll(context),
+                  icon: const Icon(Icons.download_for_offline_outlined, size: 18),
+                  label: const Text('Exportar todo'),
                 ),
               ],
             ),
