@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,15 +65,28 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isAndroid = Platform.isAndroid;
+    final cardWidth = isAndroid ? 520.0 : 360.0;
+    final cardPadding = isAndroid ? 40.0 : 32.0;
+    final logoSize = isAndroid ? 80.0 : 48.0;
+    final fieldGap = isAndroid ? 24.0 : 16.0;
+    final buttonPadding = isAndroid
+        ? const EdgeInsets.symmetric(vertical: 18)
+        : const EdgeInsets.symmetric(vertical: 12);
+    final inputContentPadding = isAndroid
+        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 20)
+        : const EdgeInsets.symmetric(horizontal: 12, vertical: 14);
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       body: Center(
-        child: Card(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Card(
           elevation: 2,
           child: Container(
-            width: 360,
-            padding: const EdgeInsets.all(32),
+            width: cardWidth,
+            padding: EdgeInsets.all(cardPadding),
             child: Stack(
               children: [
                 Positioned(
@@ -114,14 +129,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Icon(
                         Icons.store_rounded,
-                        size: 48,
+                        size: logoSize,
                         color: colorScheme.primary,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Storefunctions',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineSmall
+                        style: (isAndroid
+                                ? Theme.of(context).textTheme.headlineMedium
+                                : Theme.of(context).textTheme.headlineSmall)
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
@@ -151,16 +168,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _usernameController,
                         enabled: !isLoading,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Usuario',
-                          prefixIcon: Icon(Icons.person_outline),
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.person_outline),
+                          border: const OutlineInputBorder(),
+                          contentPadding: inputContentPadding,
                         ),
                         textInputAction: TextInputAction.next,
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? 'Requerido' : null,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: fieldGap),
                       TextFormField(
                         controller: _passwordController,
                         enabled: !isLoading,
@@ -169,6 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           labelText: 'Contraseña',
                           prefixIcon: const Icon(Icons.lock_outline),
                           border: const OutlineInputBorder(),
+                          contentPadding: inputContentPadding,
                           suffixIcon: IconButton(
                             icon: Icon(_obscurePassword
                                 ? Icons.visibility_outlined
@@ -192,6 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                       const SizedBox(height: 24),
                       FilledButton(
+                        style: FilledButton.styleFrom(padding: buttonPadding),
                         onPressed: isLoading ? null : _submit,
                         child: isLoading
                             ? const SizedBox(
@@ -202,7 +222,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('Iniciar sesión'),
+                            : Text(
+                                'Iniciar sesión',
+                                style: TextStyle(
+                                    fontSize: isAndroid ? 18 : 14,
+                                    fontWeight: FontWeight.w600),
+                              ),
                       ),
                       const SizedBox(height: 48),
                     ],
@@ -213,6 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

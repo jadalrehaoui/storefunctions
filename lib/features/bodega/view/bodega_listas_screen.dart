@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +37,13 @@ class _BodegaListasViewState extends State<_BodegaListasView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _focusNode.requestFocus());
+    // On desktop the input autofocuses so a USB barcode scanner can keep
+    // firing hands-free. On Android this would pop the software keyboard
+    // immediately, which we don't want.
+    if (!Platform.isAndroid) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _focusNode.requestFocus());
+    }
   }
 
   @override
@@ -50,7 +58,9 @@ class _BodegaListasViewState extends State<_BodegaListasView> {
     if (text.isEmpty) return;
     context.read<BodegaListasCubit>().addByCode(text);
     _controller.clear();
-    _focusNode.requestFocus();
+    if (!Platform.isAndroid) {
+      _focusNode.requestFocus();
+    }
   }
 
   String? _currentUsername(BuildContext context) {

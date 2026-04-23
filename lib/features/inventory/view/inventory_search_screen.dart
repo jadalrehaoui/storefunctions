@@ -416,7 +416,15 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
   static const _headers = [
     'Código', 'Barras', 'Descripción', 'Modelo', 'FOB', 'Costo', 'G%', 'Precio', 'Disp.', 'Res.'
   ];
-  static const _widths = [100.0, 130.0, null, 120.0, 85.0, 105.0, 50.0, 105.0, 55.0, 45.0];
+  static const _widths = [100.0, 130.0, 220.0, 120.0, 85.0, 105.0, 50.0, 105.0, 55.0, 45.0];
+
+  final ScrollController _hScroll = ScrollController();
+
+  @override
+  void dispose() {
+    _hScroll.dispose();
+    super.dispose();
+  }
 
   // sortable column indices → data keys
   static const _sortKeys = {
@@ -518,7 +526,25 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Column(
+              child: LayoutBuilder(builder: (context, constraints) {
+                final contentWidth = _widths
+                        .whereType<double>()
+                        .fold<double>(0, (a, b) => a + b) +
+                    24;
+                final needsScroll = contentWidth > constraints.maxWidth;
+                return Scrollbar(
+                  controller: _hScroll,
+                  thumbVisibility: needsScroll,
+                  child: SingleChildScrollView(
+                    controller: _hScroll,
+                    scrollDirection: Axis.horizontal,
+                    physics: needsScroll
+                        ? const AlwaysScrollableScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    child: SizedBox(
+                      width:
+                          needsScroll ? contentWidth : constraints.maxWidth,
+                      child: Column(
                 children: [
                   // Header
                   Container(
@@ -585,7 +611,11 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
                     ),
                   ),
                 ],
-              ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
         ),

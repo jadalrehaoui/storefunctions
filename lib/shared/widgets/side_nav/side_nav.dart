@@ -49,7 +49,7 @@ class SideNav extends StatelessWidget {
                 bool hasAccess(String? privilege) =>
                     privilege == null || privileges.contains(privilege);
 
-                final visibleItems = navItems
+                final visibleItems = navItemsForPlatform()
                     .where((item) => hasAccess(item.privilege))
                     .map((item) {
                       final visibleSubs = item.subItems

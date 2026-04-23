@@ -1,4 +1,4 @@
-package com.example.storefunctions
+package com.storefunctions.app
 
 import io.flutter.embedding.android.FlutterActivity
 

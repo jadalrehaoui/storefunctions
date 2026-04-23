@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../shared/widgets/side_nav/nav_config.dart';
 
 import '../features/auth/cubit/auth_cubit.dart';
 import '../features/auth/view/login_screen.dart';
@@ -23,6 +26,7 @@ import '../features/billing/view/cierre_caja_screen.dart';
 import '../features/bodega/view/bodega_dispatcho_screen.dart';
 import '../features/bodega/view/bodega_listas_screen.dart';
 import '../features/billing/view/cierre_caja_sitsa_screen.dart';
+import '../features/android/view/android_hub_screens.dart';
 import '../features/billing/view/invoice_screen.dart';
 import '../features/dashboard/view/dashboard_screen.dart';
 import '../features/invoices/view/invoice_detail_screen.dart';
@@ -60,11 +64,20 @@ GoRouter createRouter(AuthCubit authCubit) {
       if (!isAuthenticated) return null;
 
       final auth = authCubit.state as AuthAuthenticated;
-      final fallback = auth.hasPrivilege('see_dashboard')
-          ? '/dashboard'
-          : '/inventory/search';
+      final fallback = Platform.isAndroid
+          ? androidFallbackRoute
+          : (auth.hasPrivilege('see_dashboard')
+              ? '/dashboard'
+              : '/inventory/search');
 
       if (isLoggingIn) return fallback;
+
+      // On Android the app is scoped to a small allowlist of routes.
+      if (Platform.isAndroid &&
+          !androidAllowedRoutes.contains(state.matchedLocation)) {
+        return fallback;
+      }
+
       // User hit /dashboard without the privilege — bounce to first accessible tab.
       if (state.matchedLocation == '/dashboard' &&
           !auth.hasPrivilege('see_dashboard')) {
@@ -83,6 +96,27 @@ GoRouter createRouter(AuthCubit authCubit) {
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
+          GoRoute(
+            path: '/android/home',
+            name: 'android-home',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: AndroidHomeScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/android/bodega',
+            name: 'android-bodega',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: AndroidBodegaScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/android/inventory',
+            name: 'android-inventory',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: AndroidInventoryScreen(),
+            ),
+          ),
           GoRoute(
             path: '/dashboard',
             name: 'dashboard',

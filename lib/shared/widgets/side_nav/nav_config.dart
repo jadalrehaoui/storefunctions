@@ -1,5 +1,53 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import '../../../l10n/l10n.dart';
+
+/// Sub-item ids exposed in the Android build. Anything else is hidden from
+/// nav and blocked in the router.
+const androidAllowedSubIds = <String>{
+  'inventory-search',
+  'inventory-print-labels',
+  'bodega-listas',
+};
+
+const androidAllowedRoutes = <String>{
+  '/android/home',
+  '/android/bodega',
+  '/android/inventory',
+  '/inventory/search',
+  '/inventory/print-labels',
+  '/bodega/listas',
+  '/bodega/dispatcho',
+  '/settings',
+};
+
+/// Default landing route on Android when the user has nowhere else to go
+/// (e.g. tried to open /dashboard).
+const androidFallbackRoute = '/android/home';
+
+/// Returns the nav items to show, filtered for the current platform.
+/// Privilege filtering is applied separately at render time.
+List<NavItemConfig> navItemsForPlatform() {
+  if (!Platform.isAndroid) return navItems;
+  return navItems
+      .map((item) {
+        final subs = item.subItems
+            .where((s) => androidAllowedSubIds.contains(s.id))
+            .toList();
+        if (subs.isEmpty) return null;
+        return NavItemConfig(
+          id: item.id,
+          icon: item.icon,
+          label: item.label,
+          route: item.route,
+          subItems: subs,
+          privilege: item.privilege,
+        );
+      })
+      .whereType<NavItemConfig>()
+      .toList();
+}
 
 class NavSubConfig {
   final String id;
