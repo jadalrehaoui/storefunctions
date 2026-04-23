@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
@@ -37,12 +38,30 @@ class _BodegaListasViewState extends State<_BodegaListasView> {
   @override
   void initState() {
     super.initState();
-    // On desktop the input autofocuses so a USB barcode scanner can keep
-    // firing hands-free. On Android this would pop the software keyboard
-    // immediately, which we don't want.
-    if (!Platform.isAndroid) {
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _focusNode.requestFocus());
+    // Keep focus on the input so a USB / Bluetooth HID scanner can keep
+    // firing characters hands-free. On Android we additionally suppress the
+    // software keyboard — the user toggles it on demand via the keyboard
+    // button next to the input.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+      if (Platform.isAndroid) _hideSoftKeyboard();
+    });
+  }
+
+  void _hideSoftKeyboard() {
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  }
+
+  void _toggleSoftKeyboard() {
+    final visible = MediaQuery.of(context).viewInsets.bottom > 0;
+    if (visible) {
+      _hideSoftKeyboard();
+    } else {
+      // Re-establish an input connection so Android shows the keyboard.
+      _focusNode.unfocus();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusNode.requestFocus();
+      });
     }
   }
 
@@ -58,9 +77,8 @@ class _BodegaListasViewState extends State<_BodegaListasView> {
     if (text.isEmpty) return;
     context.read<BodegaListasCubit>().addByCode(text);
     _controller.clear();
-    if (!Platform.isAndroid) {
-      _focusNode.requestFocus();
-    }
+    _focusNode.requestFocus();
+    if (Platform.isAndroid) _hideSoftKeyboard();
   }
 
   String? _currentUsername(BuildContext context) {
@@ -195,6 +213,7 @@ class _BodegaListasViewState extends State<_BodegaListasView> {
                     currentUsername: _currentUsername(context),
                     onSubmit: _submit,
                     onPrint: () => _print(state),
+                    onToggleKeyboard: _toggleSoftKeyboard,
                   ));
                 }
                 return const SizedBox.shrink();
@@ -240,6 +259,7 @@ class _ReadyView extends StatelessWidget {
   final String? currentUsername;
   final VoidCallback onSubmit;
   final VoidCallback onPrint;
+  final VoidCallback onToggleKeyboard;
 
   const _ReadyView({
     required this.state,
@@ -248,6 +268,7 @@ class _ReadyView extends StatelessWidget {
     required this.currentUsername,
     required this.onSubmit,
     required this.onPrint,
+    required this.onToggleKeyboard,
   });
 
   @override
@@ -265,11 +286,25 @@ class _ReadyView extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 focusNode: focusNode,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Escanear código o escribir',
-                  prefixIcon: Icon(Icons.qr_code_scanner),
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.qr_code_scanner),
+                  border: const OutlineInputBorder(),
                   isDense: true,
+                  suffixIcon: Platform.isAndroid
+                      ? IconButton(
+                          tooltip:
+                              MediaQuery.of(context).viewInsets.bottom > 0
+                                  ? 'Ocultar teclado'
+                                  : 'Mostrar teclado',
+                          icon: Icon(
+                            MediaQuery.of(context).viewInsets.bottom > 0
+                                ? Icons.keyboard_hide
+                                : Icons.keyboard,
+                          ),
+                          onPressed: onToggleKeyboard,
+                        )
+                      : null,
                 ),
                 onSubmitted: (_) => onSubmit(),
               ),

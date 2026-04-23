@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -413,10 +415,34 @@ class _DescriptionResultsList extends StatefulWidget {
 }
 
 class _DescriptionResultsListState extends State<_DescriptionResultsList> {
-  static const _headers = [
-    'Código', 'Barras', 'Descripción', 'Modelo', 'FOB', 'Costo', 'G%', 'Precio', 'Disp.', 'Res.'
-  ];
-  static const _widths = [100.0, 130.0, 220.0, 120.0, 85.0, 105.0, 50.0, 105.0, 55.0, 45.0];
+  // Android shows only a subset of columns: Código, Descripción, Modelo, Disp.
+  List<String> get _headers => Platform.isAndroid
+      ? const ['Código', 'Descripción', 'Modelo', 'Disp.']
+      : const [
+          'Código', 'Barras', 'Descripción', 'Modelo', 'FOB',
+          'Costo', 'G%', 'Precio', 'Disp.', 'Res.'
+        ];
+
+  List<double?> get _widths => Platform.isAndroid
+      ? const [100.0, 220.0, 120.0, 55.0]
+      : const [100.0, 130.0, 220.0, 120.0, 85.0, 105.0, 50.0, 105.0, 55.0, 45.0];
+
+  // Column positions (within the active `_headers`) that are sortable, mapped
+  // to the data key they sort by.
+  Map<int, String> get _sortKeys => Platform.isAndroid
+      ? const {
+          0: 'PK_FK_Articulo',
+          1: 'Articulo_Descripcion',
+          2: 'MODELO',
+          3: 'Cantidad_Disponible',
+        }
+      : const {
+          0: 'PK_FK_Articulo',
+          2: 'Articulo_Descripcion',
+          3: 'MODELO',
+          5: 'Costo',
+          8: 'Cantidad_Disponible',
+        };
 
   final ScrollController _hScroll = ScrollController();
 
@@ -425,15 +451,6 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
     _hScroll.dispose();
     super.dispose();
   }
-
-  // sortable column indices → data keys
-  static const _sortKeys = {
-    0: 'PK_FK_Articulo',
-    2: 'Articulo_Descripcion',
-    3: 'MODELO',
-    5: 'Costo',
-    8: 'Cantidad_Disponible',
-  };
 
   int? _sortCol;
   bool _sortAsc = true;
@@ -580,26 +597,34 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
                                 ? colorScheme.surfaceContainerLowest
                                 : null,
                             child: _ModeloRow(
-                              columns: [
-                                code,
-                                m['Codigo_Barras'] as String? ?? '',
-                                m['Articulo_Descripcion'] as String? ?? '',
-                                m['MODELO'] as String? ?? '',
-                                canSeeProfitMargins(context) ? fobFmt.format(m['FOB'] ?? 0) : redacted,
-                                canSeeProfitMargins(context) ? costFmt.format(m['Costo'] ?? 0) : redacted,
-                                canSeeProfitMargins(context)
-                                    ? '${((m['UTILIDAD'] ?? m['Ganancia']) as num?)?.toStringAsFixed(0) ?? '0'}%'
-                                    : redacted,
-                                canSeeProfitMargins(context) ? () {
-                                  final precio = (m['Precio'] as num?)?.toDouble();
-                                  if (precio != null) return costFmt.format(precio);
-                                  final costo = (m['Costo'] as num?)?.toDouble() ?? 0;
-                                  final util = ((m['UTILIDAD'] ?? m['Ganancia']) as num?)?.toDouble() ?? 0;
-                                  return costFmt.format(costo + costo * util / 100);
-                                }() : redacted,
-                                '${m['Cantidad_Disponible'] ?? 0}',
-                                '${m['Cantidad_Reservada'] ?? 0}',
-                              ],
+                              columns: Platform.isAndroid
+                                  ? [
+                                      code,
+                                      m['Articulo_Descripcion'] as String? ??
+                                          '',
+                                      m['MODELO'] as String? ?? '',
+                                      '${m['Cantidad_Disponible'] ?? 0}',
+                                    ]
+                                  : [
+                                      code,
+                                      m['Codigo_Barras'] as String? ?? '',
+                                      m['Articulo_Descripcion'] as String? ?? '',
+                                      m['MODELO'] as String? ?? '',
+                                      canSeeProfitMargins(context) ? fobFmt.format(m['FOB'] ?? 0) : redacted,
+                                      canSeeProfitMargins(context) ? costFmt.format(m['Costo'] ?? 0) : redacted,
+                                      canSeeProfitMargins(context)
+                                          ? '${((m['UTILIDAD'] ?? m['Ganancia']) as num?)?.toStringAsFixed(0) ?? '0'}%'
+                                          : redacted,
+                                      canSeeProfitMargins(context) ? () {
+                                        final precio = (m['Precio'] as num?)?.toDouble();
+                                        if (precio != null) return costFmt.format(precio);
+                                        final costo = (m['Costo'] as num?)?.toDouble() ?? 0;
+                                        final util = ((m['UTILIDAD'] ?? m['Ganancia']) as num?)?.toDouble() ?? 0;
+                                        return costFmt.format(costo + costo * util / 100);
+                                      }() : redacted,
+                                      '${m['Cantidad_Disponible'] ?? 0}',
+                                      '${m['Cantidad_Reservada'] ?? 0}',
+                                    ],
                               widths: _widths,
                               isHeader: false,
                               textTheme: textTheme,
@@ -770,7 +795,7 @@ class _SitsaCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(sitsa.model,
+                    SelectableText(sitsa.model,
                         style: textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant)),
                     const SizedBox(height: 2),
