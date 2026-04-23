@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import '../features/auth/cubit/auth_cubit.dart';
 import '../features/auth/service/auth_service.dart';
 import '../services/api_client.dart';
+import '../services/bodega_service.dart';
 import '../services/inventory_service.dart';
 import '../services/invoice_service.dart';
 import '../services/label_printer_service.dart';
@@ -18,6 +19,7 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<AuthCubit>(() => AuthCubit(sl(), sl()));
   sl.registerLazySingleton<InventoryService>(() => InventoryService(sl()));
   sl.registerLazySingleton<InvoiceService>(() => InvoiceService(sl()));
+  sl.registerLazySingleton<BodegaService>(() => BodegaService(sl()));
   sl.registerLazySingleton<ReceiptPrinterService>(
       () => ReceiptPrinterService());
   sl.registerLazySingleton<LabelPrinterService>(

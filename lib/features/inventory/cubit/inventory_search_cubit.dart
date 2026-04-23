@@ -26,7 +26,11 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
     _includeZero = value;
     final s = state;
     if (s is InventorySearchDescriptionResults) {
-      await _searchByDescription(s.query);
+      if (s.query.startsWith('/')) {
+        await _searchByModelo(s.query.substring(1));
+      } else {
+        await _searchByDescription(s.query);
+      }
     } else if (s is InventorySearchSuccess && s.modeloItems != null) {
       final modelo = s.item.sitsa?.model;
       if (modelo != null) await loadModeloItems(modelo);
@@ -44,11 +48,36 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
     final c = input.trim();
     if (c.isEmpty) return;
 
+    if (c.startsWith('/')) {
+      final modelo = c.substring(1).trim();
+      if (modelo.isEmpty) return;
+      await _searchByModelo(modelo);
+      return;
+    }
+
     final hasLetter = c.contains(RegExp(r'[a-zA-Z]'));
     if (hasLetter) {
       await _searchByDescription(c);
     } else {
       await _searchByCode(c);
+    }
+  }
+
+  Future<void> _searchByModelo(String modelo) async {
+    _previousResults = null;
+    emit(InventorySearchLoading());
+    try {
+      final data = await _inventoryService.getItemsByModelo(modelo,
+          includeZero: _includeZero);
+      final items = (data is Map && data['data'] is List)
+          ? data['data'] as List<dynamic>
+          : <dynamic>[];
+      emit(InventorySearchDescriptionResults(
+          query: '/$modelo', items: items, raw: data));
+    } on DioException catch (e) {
+      emit(InventorySearchFailure(e.message ?? 'Error de conexión'));
+    } catch (e) {
+      emit(InventorySearchFailure(e.toString()));
     }
   }
 

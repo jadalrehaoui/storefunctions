@@ -49,4 +49,21 @@ class ApiClient {
     final response = await _dio.delete<dynamic>(path);
     return response.data;
   }
+
+  Future<dynamic> deleteWithBody(String path, Map<String, dynamic> data) async {
+    final response = await _dio.delete<dynamic>(path, data: data);
+    return response.data;
+  }
+
+  Future<ResponseBody> getStream(String path) async {
+    final response = await _dio.get<ResponseBody>(
+      path,
+      options: Options(
+        responseType: ResponseType.stream,
+        headers: {'Accept': 'text/event-stream'},
+        receiveTimeout: Duration.zero,
+      ),
+    );
+    return response.data!;
+  }
 }
