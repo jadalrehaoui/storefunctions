@@ -28,61 +28,58 @@ Future<Uint8List> buildBodegaListaReceiptPdf({
   final totalUnits = items.fold<int>(0, (n, i) => n + i.qty);
 
   pdf.addPage(
-    pw.Page(
+    pw.MultiPage(
       pageFormat: PdfPageFormat(
         74 * PdfPageFormat.mm,
-        double.infinity,
+        297 * PdfPageFormat.mm,
         marginLeft: 4 * PdfPageFormat.mm,
         marginRight: 8 * PdfPageFormat.mm,
         marginTop: 6 * PdfPageFormat.mm,
         marginBottom: 6 * PdfPageFormat.mm,
       ),
-      build: (ctx) => pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-        children: [
-          pw.Center(child: pw.Text('LISTA BODEGA', style: s(b: true, size: 14))),
-          pw.SizedBox(height: 4),
-          pw.Text(dateFmt.format(now), style: s()),
-          pw.Text('Creador: $creator', style: s(b: true)),
-          pw.Divider(thickness: 0.5),
-          for (final i in items) ...[
-            pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.center,
-              children: [
-                pw.Expanded(
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(i.sitsaCode, style: s(b: true, size: 11)),
-                      pw.Text(i.descripcion, style: s()),
-                      if (i.modelo != null && i.modelo!.isNotEmpty)
-                        pw.Text(i.modelo!, style: s(b: true, size: 8)),
-                    ],
-                  ),
+      build: (ctx) => [
+        pw.Center(child: pw.Text('LISTA BODEGA', style: s(b: true, size: 14))),
+        pw.SizedBox(height: 4),
+        pw.Text(dateFmt.format(now), style: s()),
+        pw.Text('Creador: $creator', style: s(b: true)),
+        pw.Divider(thickness: 0.5),
+        for (final i in items) ...[
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(i.sitsaCode, style: s(b: true, size: 11)),
+                    pw.Text(i.descripcion, style: s()),
+                    if (i.modelo != null && i.modelo!.isNotEmpty)
+                      pw.Text(i.modelo!, style: s(b: true, size: 8)),
+                  ],
                 ),
-                pw.SizedBox(width: 6),
-                pw.Text('${i.qty}', style: s(b: true, size: 16)),
-              ],
-            ),
-            pw.SizedBox(height: 6),
-          ],
-          pw.Divider(thickness: 0.5),
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Text('Total líneas', style: s()),
-              pw.Text('${items.length}', style: s(b: true)),
+              ),
+              pw.SizedBox(width: 6),
+              pw.Text('${i.qty}', style: s(b: true, size: 16)),
             ],
           ),
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Text('Total unidades', style: s()),
-              pw.Text('$totalUnits', style: s(b: true)),
-            ],
-          ),
+          pw.SizedBox(height: 6),
         ],
-      ),
+        pw.Divider(thickness: 0.5),
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Text('Total líneas', style: s()),
+            pw.Text('${items.length}', style: s(b: true)),
+          ],
+        ),
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Text('Total unidades', style: s()),
+            pw.Text('$totalUnits', style: s(b: true)),
+          ],
+        ),
+      ],
     ),
   );
 

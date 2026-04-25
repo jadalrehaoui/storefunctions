@@ -154,6 +154,15 @@ class _Content extends StatelessWidget {
       return 0.0;
     }
 
+    String _cardBankLabel(Map m) {
+      final bank = '${m['bank'] ?? ''}';
+      if (bank == 'Custom') {
+        final custom = '${m['custom_bank'] ?? ''}';
+        return custom.isNotEmpty ? custom : '—';
+      }
+      return bank.isNotEmpty ? bank : '—';
+    }
+
     double n(String k) => _p(general[k]);
     final calc = item['calculations'] as Map? ?? {};
     final cardsTotal = _p(calc['cards_total']);
@@ -249,8 +258,7 @@ class _Content extends StatelessWidget {
                       child: Row(
                         children: [
                           Expanded(
-                              child: Text(
-                                  '${(cards[i] as Map)['bank'] ?? '—'}')),
+                              child: Text(_cardBankLabel(cards[i] as Map))),
                           Text(colones.format(
                               _p((cards[i] as Map)['amount']))),
                         ],
