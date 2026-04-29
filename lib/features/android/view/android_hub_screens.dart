@@ -43,11 +43,6 @@ class AndroidBodegaScreen extends StatelessWidget {
           label: 'Listas',
           onTap: () => context.push('/bodega/listas'),
         ),
-        _HubItem(
-          icon: Icons.local_shipping_outlined,
-          label: 'Dispatcho',
-          onTap: () => context.push('/bodega/dispatcho'),
-        ),
       ],
     );
   }

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../di/service_locator.dart';
+import '../../features/bodega/cubit/despacho_cubit.dart';
 import '../cubit/health_cubit.dart';
 import '../cubit/nav_cubit.dart';
 import 'side_nav/side_nav.dart';
@@ -20,6 +21,7 @@ class AppShell extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => NavCubit()),
         BlocProvider.value(value: sl<HealthCubit>()),
+        BlocProvider.value(value: sl<DespachoCubit>()),
       ],
       child: Platform.isAndroid
           ? _AndroidShell(child: child)
@@ -73,7 +75,8 @@ class _AndroidShell extends StatelessWidget {
       '/android/bodega': 'Bodega',
       '/android/inventory': 'Inventario',
       '/bodega/listas': 'Listas',
-      '/bodega/dispatcho': 'Dispatcho',
+      '/bodega/despacho': 'Despacho Bod',
+      '/bodega/despacho-tec': 'Despacho Tec',
       '/inventory/search': 'Buscar items',
       '/inventory/print-labels': 'Imprimir etiquetas',
       '/settings': 'Configuración',

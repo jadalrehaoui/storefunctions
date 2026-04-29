@@ -23,7 +23,8 @@ import '../features/reports/view/cierres_personales_screen.dart';
 import '../features/reports/view/cierre_personal_detail_screen.dart';
 import '../features/reports/view/sales_reports_screen.dart';
 import '../features/billing/view/cierre_caja_screen.dart';
-import '../features/bodega/view/bodega_dispatcho_screen.dart';
+import '../features/bodega/view/bodega_despacho_screen.dart';
+import '../features/bodega/view/bodega_despacho_tec_screen.dart';
 import '../features/bodega/view/bodega_listas_screen.dart';
 import '../features/billing/view/cierre_caja_sitsa_screen.dart';
 import '../features/android/view/android_hub_screens.dart';
@@ -282,10 +283,17 @@ GoRouter createRouter(AuthCubit authCubit) {
             ),
           ),
           GoRoute(
-            path: '/bodega/dispatcho',
-            name: 'bodega-dispatcho',
+            path: '/bodega/despacho',
+            name: 'bodega-despacho',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: BodegaDispatchoScreen(),
+              child: BodegaDespachoScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/bodega/despacho-tec',
+            name: 'bodega-despacho-tec',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: BodegaDespachoTecScreen(),
             ),
           ),
           GoRoute(

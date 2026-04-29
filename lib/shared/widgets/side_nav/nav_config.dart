@@ -18,7 +18,6 @@ const androidAllowedRoutes = <String>{
   '/inventory/search',
   '/inventory/print-labels',
   '/bodega/listas',
-  '/bodega/dispatcho',
   '/settings',
 };
 
@@ -133,10 +132,17 @@ final navItems = <NavItemConfig>[
         privilege: 'bodega_user',
       ),
       NavSubConfig(
-        id: 'bodega-dispatcho',
+        id: 'bodega-despacho',
         icon: Icons.local_shipping_outlined,
-        label: (l10n) => 'Dispatcho',
-        route: '/bodega/dispatcho',
+        label: (l10n) => 'Despacho Bod',
+        route: '/bodega/despacho',
+        privilege: 'bodega_user',
+      ),
+      NavSubConfig(
+        id: 'bodega-despacho-tec',
+        icon: Icons.devices_other,
+        label: (l10n) => 'Despacho Tec',
+        route: '/bodega/despacho-tec',
         privilege: 'bodega_user',
       ),
     ],

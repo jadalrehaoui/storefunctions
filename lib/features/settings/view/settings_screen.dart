@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
+import '../../../features/bodega/cubit/despacho_cubit.dart';
 import '../../../services/api_client.dart';
 import '../../../services/label_printer_service.dart';
 import '../../../services/receipt_printer_service.dart';
@@ -84,6 +85,21 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 32),
           Divider(color: colorScheme.outlineVariant),
           const SizedBox(height: 24),
+
+          // ── Despacho machine (desktop only) ────────────────────────────
+          if (!kIsWeb && !Platform.isAndroid) ...[
+            Text('Despacho',
+                style: textTheme.titleSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            const _DespachoModeSection(),
+            const SizedBox(height: 12),
+            const _DespachoTecnologiaSection(),
+            const SizedBox(height: 32),
+            Divider(color: colorScheme.outlineVariant),
+            const SizedBox(height: 24),
+          ],
 
           // ── Updates ────────────────────────────────────────────────────
           Text('Actualizaciones',
@@ -714,6 +730,95 @@ class _LabelPrinterSectionState extends State<_LabelPrinterSection> {
             ),
         ],
       ],
+    );
+  }
+}
+
+class _DespachoModeSection extends StatelessWidget {
+  const _DespachoModeSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DespachoCubit, DespachoState>(
+      builder: (context, state) => _DespachoToggleTile(
+        icon: Icons.local_shipping_outlined,
+        title: 'Máquina de despacho de bodega',
+        subtitle:
+            'Activa funciones específicas para despacho de bodega.',
+        value: state.bodegaEnabled,
+        onChanged: (v) =>
+            context.read<DespachoCubit>().setBodegaEnabled(v),
+      ),
+    );
+  }
+}
+
+class _DespachoTecnologiaSection extends StatelessWidget {
+  const _DespachoTecnologiaSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DespachoCubit, DespachoState>(
+      builder: (context, state) => _DespachoToggleTile(
+        icon: Icons.devices_other,
+        title: 'Máquina de despacho de tecnología',
+        subtitle:
+            'Activa funciones específicas para despacho de tecnología.',
+        value: state.tecnologiaEnabled,
+        onChanged: (v) =>
+            context.read<DespachoCubit>().setTecnologiaEnabled(v),
+      ),
+    );
+  }
+}
+
+class _DespachoToggleTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _DespachoToggleTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600)),
+                Text(subtitle,
+                    style: textTheme.bodySmall
+                        ?.copyWith(color: colorScheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          Switch(value: value, onChanged: onChanged),
+        ],
+      ),
     );
   }
 }
