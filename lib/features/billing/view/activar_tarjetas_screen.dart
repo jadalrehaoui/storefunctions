@@ -167,7 +167,28 @@ class _ActivarTarjetasScreenState extends State<ActivarTarjetasScreen>
                     Text('Activar Tarjetas',
                         style: theme.textTheme.headlineSmall),
                     const Spacer(),
-                    if (_cameraSupported)
+                    if (_cameraSupported) ...[
+                      IconButton.outlined(
+                        onPressed: _cameraEnabled
+                            ? () async {
+                                final messenger =
+                                    ScaffoldMessenger.of(context);
+                                try {
+                                  await _camera.switchCamera();
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            'No se pudo cambiar de cámara: $e')),
+                                  );
+                                }
+                              }
+                            : null,
+                        icon: const Icon(Icons.flip_camera_ios_outlined),
+                        tooltip: 'Cambiar cámara',
+                      ),
+                      const SizedBox(width: 8),
                       IconButton.outlined(
                         onPressed: () {
                           setState(() => _cameraEnabled = !_cameraEnabled);
@@ -184,6 +205,7 @@ class _ActivarTarjetasScreenState extends State<ActivarTarjetasScreen>
                             ? 'Apagar cámara'
                             : 'Encender cámara',
                       ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -220,6 +242,28 @@ class _ActivarTarjetasScreenState extends State<ActivarTarjetasScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (_cameraSupported && _cameraEnabled)
+          ValueListenableBuilder<MobileScannerState>(
+            valueListenable: _camera,
+            builder: (context, value, _) {
+              final dir = value.cameraDirection;
+              final n = value.availableCameras;
+              final initialized = value.isInitialized;
+              final running = value.isRunning;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  'Cámaras detectadas: $n  •  '
+                  'Activa: ${dir.name}  •  '
+                  'Inicializada: $initialized  •  '
+                  'Corriendo: $running',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontFamily: 'monospace'),
+                ),
+              );
+            },
+          ),
         Container(
           decoration: BoxDecoration(
             color: Colors.black,
