@@ -447,10 +447,19 @@ class _TicaCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (tica == null || tica!.isEmpty) return const Text('');
-    final isZero = tica!.trim() == '0/0';
+    final value = tica;
+    if (value == null || value.isEmpty) {
+      return const Text(
+        'No disponible',
+        style: TextStyle(
+          fontStyle: FontStyle.italic,
+          color: Colors.grey,
+        ),
+      );
+    }
+    final isZero = value.trim() == '0/0';
     return Text(
-      tica!,
+      value,
       style: TextStyle(
         fontWeight: FontWeight.bold,
         color: isZero ? Colors.green : Colors.red,

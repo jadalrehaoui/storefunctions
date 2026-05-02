@@ -11,7 +11,7 @@ import '../../../models/combined_item.dart';
 import '../../../shared/utils/label_printer.dart';
 import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/inventory_search_cubit.dart';
-import '../utils/inventory_search_pdf.dart';
+import '../utils/inventory_search_excel.dart';
 
 class InventorySearchScreen extends StatelessWidget {
   final String? initialQuery;
@@ -420,12 +420,22 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
       ? const ['Código', 'Descripción', 'Modelo', 'Disp.']
       : const [
           'Código', 'Barras', 'Descripción', 'Modelo', 'FOB',
-          'Costo', 'G%', 'Precio', 'Disp.', 'Res.'
+          'Costo', 'G%', 'Precio', 'Disp.', 'Res.', 'Ingr.'
         ];
 
-  List<double?> get _widths => Platform.isAndroid
-      ? const [100.0, 220.0, 120.0, 55.0]
-      : const [100.0, 130.0, 220.0, 120.0, 85.0, 105.0, 50.0, 105.0, 55.0, 45.0];
+  late final List<double?> _widths = Platform.isAndroid
+      ? <double?>[100.0, 220.0, 120.0, 55.0]
+      : <double?>[100.0, 130.0, 220.0, 120.0, 85.0, 105.0, 50.0, 105.0, 55.0, 45.0, 45.0];
+
+  static const double _minColumnWidth = 40.0;
+
+  void _resizeColumn(int index, double delta) {
+    final current = _widths[index];
+    if (current == null) return;
+    final next = (current + delta).clamp(_minColumnWidth, 800.0);
+    if (next == current) return;
+    setState(() => _widths[index] = next);
+  }
 
   // Column positions (within the active `_headers`) that are sortable, mapped
   // to the data key they sort by.
@@ -524,13 +534,25 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
             TextButton.icon(
               onPressed: items.isEmpty
                   ? null
-                  : () => generateAndOpenInventorySearch(
-                        query: widget.state.query,
-                        items: items,
-                        showProfit: canSeeProfitMargins(context),
-                      ),
-              icon: const Icon(Icons.print_outlined, size: 16),
-              label: const Text('Imprimir'),
+                  : () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        final path = await exportInventorySearchToExcel(
+                          query: widget.state.query,
+                          items: items,
+                          showProfit: canSeeProfitMargins(context),
+                        );
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Exportado: $path')),
+                        );
+                      } catch (e) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Error al exportar: $e')),
+                        );
+                      }
+                    },
+              icon: const Icon(Icons.file_download_outlined, size: 16),
+              label: const Text('Exportar'),
             ),
           ],
         ),
@@ -575,6 +597,7 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
                       sortCol: _sortCol,
                       sortAsc: _sortAsc,
                       onTap: _onHeaderTap,
+                      onResize: _resizeColumn,
                       textTheme: textTheme,
                       colorScheme: colorScheme,
                     ),
@@ -624,6 +647,7 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
                                       }() : redacted,
                                       '${m['Cantidad_Disponible'] ?? 0}',
                                       '${m['Cantidad_Reservada'] ?? 0}',
+                                      '${m['Ingresado'] ?? 0}',
                                     ],
                               widths: _widths,
                               isHeader: false,
@@ -656,6 +680,7 @@ class _SortableHeaderRow extends StatelessWidget {
   final int? sortCol;
   final bool sortAsc;
   final void Function(int) onTap;
+  final void Function(int index, double delta)? onResize;
   final TextTheme textTheme;
   final ColorScheme colorScheme;
 
@@ -668,6 +693,7 @@ class _SortableHeaderRow extends StatelessWidget {
     required this.onTap,
     required this.textTheme,
     required this.colorScheme,
+    this.onResize,
   });
 
   @override
@@ -676,19 +702,21 @@ class _SortableHeaderRow extends StatelessWidget {
       children: List.generate(headers.length, (i) {
         final isSortable = sortableIndices.contains(i);
         final isActive = sortCol == i;
-        final cell = GestureDetector(
+        final label = GestureDetector(
           onTap: isSortable ? () => onTap(i) : null,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                headers[i],
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.labelSmall?.copyWith(
-                  color: isActive
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  headers[i],
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: isActive
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               if (isSortable) ...[
@@ -707,7 +735,40 @@ class _SortableHeaderRow extends StatelessWidget {
           ),
         );
         final w = widths[i];
-        return w == null ? Expanded(child: cell) : SizedBox(width: w, child: cell);
+        final canResize = w != null && onResize != null;
+        final cellWithHandle = Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: label,
+            ),
+            if (canResize)
+              Positioned(
+                top: -8,
+                bottom: -8,
+                right: -4,
+                width: 12,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.resizeColumn,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onHorizontalDragUpdate: (d) =>
+                        onResize!(i, d.delta.dx),
+                    child: Center(
+                      child: Container(
+                        width: 1,
+                        color: colorScheme.outlineVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+        return w == null
+            ? Expanded(child: cellWithHandle)
+            : SizedBox(width: w, child: cellWithHandle);
       }),
     );
   }
@@ -888,21 +949,25 @@ class _SitsaCard extends StatelessWidget {
                           color: const Color(0xFFFFF0CC),
                           onColor: const Color(0xFF5C3D00),
                         ),
-                      if (mikail != null) const SizedBox(width: 8),
-                      if (mikail != null)
+                      if (sitsa.ingresado != null) const SizedBox(width: 8),
+                      if (sitsa.ingresado != null)
                         _StretchBadge(
-                          label: context.l10n.labelIngreso,
-                          value: num_.format(mikail.ingreso),
+                          label: context.l10n.labelIngresado,
+                          value: num_.format(sitsa.ingresado),
                           color: const Color(0xFFEDD5F5),
                           onColor: const Color(0xFF4A0072),
                         ),
-                      if (item.tica != null) const SizedBox(width: 8),
-                      if (item.tica != null)
+                      if (item.ticaFetched) const SizedBox(width: 8),
+                      if (item.ticaFetched)
                         _StretchBadge(
                           label: 'TICA',
-                          value: item.tica!,
-                          color: const Color(0xFFD6EAD6),
-                          onColor: const Color(0xFF1A3D1A),
+                          value: item.tica ?? 'No disponible',
+                          color: item.tica == null
+                              ? const Color(0xFFEEEEEE)
+                              : const Color(0xFFD6EAD6),
+                          onColor: item.tica == null
+                              ? const Color(0xFF555555)
+                              : const Color(0xFF1A3D1A),
                         ),
                     ],
                   ),
@@ -953,6 +1018,14 @@ class _SitsaCard extends StatelessWidget {
                     value: num_.format(sitsa.disponible),
                     color: colorScheme.primaryContainer,
                     onColor: colorScheme.onPrimaryContainer,
+                  ),
+                if (sitsa.reservada != null) const SizedBox(width: 8),
+                if (sitsa.reservada != null)
+                  _Badge(
+                    label: context.l10n.labelReservada,
+                    value: num_.format(sitsa.reservada),
+                    color: const Color(0xFFFFE0B2),
+                    onColor: const Color(0xFF6B3A00),
                   ),
               ],
             ),

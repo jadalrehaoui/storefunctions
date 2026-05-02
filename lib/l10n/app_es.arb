@@ -150,6 +150,8 @@
   "labelFob": "FOB",
   "labelSalida": "Salida",
   "labelDisponible": "Disponible",
+  "labelReservada": "Reservada",
+  "labelIngresado": "Ingresado",
   "labelVendidoSitsa": "V. Sitsa",
   "labelVendidoMikail": "V. Mikail",
   "labelVendidoWorkdb": "V. WorkDB",

@@ -447,6 +447,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelDisponible => 'Available';
 
   @override
+  String get labelReservada => 'Reserved';
+
+  @override
+  String get labelIngresado => 'Received';
+
+  @override
   String get labelVendidoSitsa => 'V. Sitsa';
 
   @override

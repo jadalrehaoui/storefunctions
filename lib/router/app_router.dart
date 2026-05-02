@@ -19,6 +19,7 @@ import '../features/settings/view/settings_screen.dart';
 import '../features/reports/view/cierre_sitsa_screen.dart';
 import '../features/reports/view/closure_detail_screen.dart';
 import '../features/reports/view/closures_screen.dart';
+import '../features/reports/view/closures_graphs_screen.dart';
 import '../features/reports/view/cierres_personales_screen.dart';
 import '../features/reports/view/cierre_personal_detail_screen.dart';
 import '../features/reports/view/sales_reports_screen.dart';
@@ -195,6 +196,13 @@ GoRouter createRouter(AuthCubit authCubit) {
             name: 'reports-closures',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: ClosuresScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/reports/graphs',
+            name: 'reports-graphs',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ClosuresGraphsScreen(),
             ),
           ),
           GoRoute(

@@ -21,6 +21,7 @@ const _validPrivileges = [
   'generate_closure',
   'edit_closure',
   'inspect_closures',
+  'see_graphs',
   'delete_closure',
   'inspect_own_cierre_personal',
   'inspect_all_cierres_personal',

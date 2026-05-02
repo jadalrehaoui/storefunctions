@@ -10,6 +10,8 @@ class SitsaItem {
   final double? vendido;
   final String? codigoBarras;
   final double? disponible;
+  final double? reservada;
+  final double? ingresado;
   final double? salida;
   final bool? invoiceError;
 
@@ -25,6 +27,8 @@ class SitsaItem {
     this.vendido,
     this.codigoBarras,
     this.disponible,
+    this.reservada,
+    this.ingresado,
     this.salida,
     this.invoiceError,
   });
@@ -54,7 +58,11 @@ class SitsaItem {
       fechaCreacion: fecha,
       vendido: (json['VendidoEnSitsa'] as num?)?.toDouble(),
       codigoBarras: json['Codigo_Barras'] as String?,
-      disponible: (json['Disponible'] as num?)?.toDouble(),
+      disponible: (json['Disponible'] as num?)?.toDouble() ??
+          (json['Cantidad_Disponible'] as num?)?.toDouble(),
+      reservada: (json['Reservada'] as num?)?.toDouble() ??
+          (json['Cantidad_Reservada'] as num?)?.toDouble(),
+      ingresado: (json['Ingresado'] as num?)?.toDouble(),
       salida: (json['Salida'] as num?)?.toDouble(),
       invoiceError: json['invoiceError'] as bool?,
     );
@@ -97,6 +105,9 @@ class CombinedItem {
   final double? workdbVendido;
   final dynamic raw;
   final String? tica;
+  // Distinguishes "not fetched yet" (false) from "fetched but upstream
+  // returned null/unavailable" (true with tica == null).
+  final bool ticaFetched;
 
   const CombinedItem({
     required this.code,
@@ -105,6 +116,7 @@ class CombinedItem {
     this.mikail,
     this.workdbVendido,
     this.tica,
+    this.ticaFetched = false,
   });
 
   double? get totalVentas {
@@ -155,6 +167,7 @@ class CombinedItem {
       workdbVendido: workdbVendido,
       raw: raw,
       tica: ticaValue,
+      ticaFetched: true,
     );
   }
 }

@@ -24,17 +24,24 @@ class _SalesReportsView extends StatefulWidget {
   State<_SalesReportsView> createState() => _SalesReportsViewState();
 }
 
-class _SalesReportsViewState extends State<_SalesReportsView> {
+class _SalesReportsViewState extends State<_SalesReportsView>
+    with SingleTickerProviderStateMixin {
   DateTime _startDate = DateTime.now().copyWith(day: 1);
   DateTime _endDate = DateTime.now();
+  late final TabController _tabs = TabController(length: 3, vsync: this);
 
   static final _displayFmt = DateFormat('MMM d, yyyy');
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickRange() async {
     final picked = await showDateRangePicker(
       context: context,
-      initialDateRange:
-          DateTimeRange(start: _startDate, end: _endDate),
+      initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
@@ -56,7 +63,7 @@ class _SalesReportsViewState extends State<_SalesReportsView> {
       final path = await fn();
       if (context.mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Saved: $path')));
+            .showSnackBar(SnackBar(content: Text('Guardado: $path')));
       }
     } catch (e) {
       if (context.mounted) {
@@ -68,17 +75,14 @@ class _SalesReportsViewState extends State<_SalesReportsView> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Sales Reports',
-              style: Theme.of(context).textTheme.headlineSmall),
+          Text('Reporte de Venta', style: theme.textTheme.headlineSmall),
           const SizedBox(height: 20),
-          // Date range row
           Row(
             children: [
               _DateButton(
@@ -92,64 +96,42 @@ class _SalesReportsViewState extends State<_SalesReportsView> {
               FilledButton.icon(
                 onPressed: _load,
                 icon: const Icon(Icons.search, size: 18),
-                label: const Text('Generate'),
+                label: const Text('Generar'),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          // Split panels
+          const SizedBox(height: 16),
+          TabBar(
+            controller: _tabs,
+            isScrollable: true,
+            tabs: const [
+              Tab(text: '1. Sitsa'),
+              Tab(text: '2. Parallel'),
+              Tab(text: '3. Mikail'),
+            ],
+          ),
+          const SizedBox(height: 12),
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: TabBarView(
+              controller: _tabs,
               children: [
-                // Sitsa panel
-                Expanded(
-                  child: BlocBuilder<SalesReportCubit, SalesReportState>(
-                    builder: (context, state) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _PanelHeader(
-                          title: 'Sitsa',
-                          color: colorScheme.primaryContainer,
-                          onColor: colorScheme.onPrimaryContainer,
-                          onDownload: state is SalesReportLoaded &&
-                                  state.sitsaRows.isNotEmpty
-                              ? () => _download(context, () =>
-                                  context
-                                      .read<SalesReportCubit>()
-                                      .downloadSitsa(state.sitsaRows))
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        const Expanded(child: _SitsaPanel()),
-                      ],
-                    ),
-                  ),
+                _ReportTab(
+                  title: 'Sitsa',
+                  rowsSelector: (s) => s.sitsaRows,
+                  download: (cubit, rows) => cubit.downloadSitsa(rows),
+                  onDownload: _download,
                 ),
-                const SizedBox(width: 16),
-                // Mikail panel
-                Expanded(
-                  child: BlocBuilder<SalesReportCubit, SalesReportState>(
-                    builder: (context, state) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _PanelHeader(
-                          title: 'Mikail',
-                          color: colorScheme.secondaryContainer,
-                          onColor: colorScheme.onSecondaryContainer,
-                          onDownload: state is SalesReportLoaded &&
-                                  state.mikailRows.isNotEmpty
-                              ? () => _download(context, () =>
-                                  context
-                                      .read<SalesReportCubit>()
-                                      .downloadMikail(state.mikailRows))
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        Expanded(child: _MikailPanel()),
-                      ],
-                    ),
-                  ),
+                _ReportTab(
+                  title: 'Parallel',
+                  rowsSelector: (s) => s.parallelRows,
+                  download: (cubit, rows) => cubit.downloadParallel(rows),
+                  onDownload: _download,
+                ),
+                _ReportTab(
+                  title: 'Mikail',
+                  rowsSelector: (s) => s.mikailRows,
+                  download: (cubit, rows) => cubit.downloadMikail(rows),
+                  onDownload: _download,
                 ),
               ],
             ),
@@ -160,45 +142,67 @@ class _SalesReportsViewState extends State<_SalesReportsView> {
   }
 }
 
-class _SitsaPanel extends StatelessWidget {
-  const _SitsaPanel();
+class _ReportTab extends StatelessWidget {
+  final String title;
+  final List<dynamic> Function(SalesReportLoaded state) rowsSelector;
+  final Future<String> Function(SalesReportCubit cubit, List<dynamic> rows)
+      download;
+  final Future<void> Function(BuildContext, Future<String> Function()) onDownload;
+
+  const _ReportTab({
+    required this.title,
+    required this.rowsSelector,
+    required this.download,
+    required this.onDownload,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return BlocBuilder<SalesReportCubit, SalesReportState>(
-      builder: (context, state) => switch (state) {
-        SalesReportInitial() => const Center(
-            child: Text('Select a date range and press Generate')),
-        SalesReportLoading() =>
-          const Center(child: CircularProgressIndicator()),
-        SalesReportFailure(:final error) => Center(
-            child: Text(error,
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.error))),
-        SalesReportLoaded(:final sitsaRows) => sitsaRows.isEmpty
-            ? const Center(child: Text('No data for this period'))
-            : _ReportTable(rows: sitsaRows),
-      },
-    );
-  }
-}
-
-class _MikailPanel extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<SalesReportCubit, SalesReportState>(
-      builder: (context, state) => switch (state) {
-        SalesReportInitial() => const Center(
-            child: Text('Select a date range and press Generate')),
-        SalesReportLoading() =>
-          const Center(child: CircularProgressIndicator()),
-        SalesReportFailure(:final error) => Center(
-            child: Text(error,
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.error))),
-        SalesReportLoaded(:final mikailRows) => mikailRows.isEmpty
-            ? const Center(child: Text('No data for this period'))
-            : _ReportTable(rows: mikailRows),
+      builder: (context, state) {
+        Widget body;
+        VoidCallback? downloadCb;
+        switch (state) {
+          case SalesReportInitial():
+            body = const Center(
+                child: Text('Selecciona un rango y presiona Generar'));
+            break;
+          case SalesReportLoading():
+            body = const Center(child: CircularProgressIndicator());
+            break;
+          case SalesReportFailure(:final error):
+            body = Center(
+                child: Text(error,
+                    style: TextStyle(color: colorScheme.error)));
+            break;
+          case SalesReportLoaded():
+            final rows = rowsSelector(state);
+            if (rows.isEmpty) {
+              body =
+                  const Center(child: Text('Sin datos para este período'));
+            } else {
+              body = _ReportTable(rows: rows);
+              downloadCb = () => onDownload(
+                  context,
+                  () => download(
+                      context.read<SalesReportCubit>(), rows));
+            }
+            break;
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _PanelHeader(
+              title: title,
+              color: colorScheme.primaryContainer,
+              onColor: colorScheme.onPrimaryContainer,
+              onDownload: downloadCb,
+            ),
+            const SizedBox(height: 12),
+            Expanded(child: body),
+          ],
+        );
       },
     );
   }
@@ -314,7 +318,7 @@ class _PanelHeader extends StatelessWidget {
             IconButton(
               onPressed: onDownload,
               icon: Icon(Icons.download_outlined, size: 18, color: onColor),
-              tooltip: 'Download CSV',
+              tooltip: 'Descargar CSV',
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             ),

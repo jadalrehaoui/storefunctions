@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../di/service_locator.dart';
 import '../../../features/auth/cubit/auth_cubit.dart';
 import '../../../l10n/l10n.dart';
+import '../../../services/api_client.dart';
 import '../../../shared/utils/privilege_helpers.dart';
 import '../cubit/cierre_sitsa_cubit.dart';
 import '../utils/closure_email.dart' show sendClosureEmail;
@@ -210,6 +211,67 @@ class _CierreSitsaViewState extends State<_CierreSitsaView> {
 
   void _generate() {
     context.read<CierreSitsaCubit>().load(_date);
+    _autoSuggestCardCharges(_date);
+  }
+
+  /// Sums BCR/Promerica from all per-cashier cierres for the selected date and
+  /// pre-populates the COBROS CON TARJETA rows. Skips if the user has already
+  /// added card entries to avoid clobbering manual edits.
+  Future<void> _autoSuggestCardCharges(DateTime date) async {
+    if (_cards.isNotEmpty) return;
+    try {
+      final dateStr = DateFormat('yyyy-MM-dd').format(date);
+      final api = sl<ApiClient>();
+      final res = await api
+          .get('/api/workdb/cierres-personales?date=$dateStr');
+      final list = res is List
+          ? res
+          : (res is Map
+              ? (res['data'] ?? res['items'] ?? const []) as List
+              : const []);
+
+      double bcrTotal = 0;
+      double promericaTotal = 0;
+      for (final raw in list) {
+        if (raw is! Map) continue;
+        if ((raw['type'] as String? ?? 'sitsa') == 'parallel') continue;
+        final charges = raw['card_charges'];
+        if (charges is! List) continue;
+        for (final c in charges) {
+          if (c is! Map) continue;
+          final bank = '${c['bank'] ?? ''}';
+          final amt = c['amount'];
+          final value = amt is num
+              ? amt.toDouble()
+              : double.tryParse(amt?.toString() ?? '') ?? 0.0;
+          if (bank == 'BCR') {
+            bcrTotal += value;
+          } else if (bank == 'Promerica') {
+            promericaTotal += value;
+          }
+        }
+      }
+
+      if (!mounted || _cards.isNotEmpty) return;
+      final additions = <CardChargeEntry>[];
+      if (bcrTotal > 0) {
+        final e = CardChargeEntry()
+          ..bank = 'BCR'
+          ..amount.text = bcrTotal.toStringAsFixed(2);
+        additions.add(e);
+      }
+      if (promericaTotal > 0) {
+        final e = CardChargeEntry()
+          ..bank = 'Promerica'
+          ..amount.text = promericaTotal.toStringAsFixed(2);
+        additions.add(e);
+      }
+      if (additions.isEmpty) return;
+      setState(() => _cards.addAll(additions));
+    } catch (e) {
+      // Silent — auto-suggest is a convenience; user can still add manually.
+      print('[CierreSitsa] auto-suggest card charges error: $e');
+    }
   }
 
   void _addDeposit() => setState(() => _deposits.add(DepositEntry()));

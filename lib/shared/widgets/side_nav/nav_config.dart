@@ -201,6 +201,13 @@ final navItems = <NavItemConfig>[
         route: '/reports/closures',
         privilege: 'inspect_closures',
       ),
+      NavSubConfig(
+        id: 'reports-graphs',
+        icon: Icons.show_chart_outlined,
+        label: (l10n) => 'Gráficos',
+        route: '/reports/graphs',
+        privilege: 'see_graphs',
+      ),
     ],
   ),
   NavItemConfig(

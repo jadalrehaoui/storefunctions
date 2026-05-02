@@ -968,6 +968,18 @@ abstract class AppLocalizations {
   /// **'Disponible'**
   String get labelDisponible;
 
+  /// No description provided for @labelReservada.
+  ///
+  /// In es, this message translates to:
+  /// **'Reservada'**
+  String get labelReservada;
+
+  /// No description provided for @labelIngresado.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresado'**
+  String get labelIngresado;
+
   /// No description provided for @labelVendidoSitsa.
   ///
   /// In es, this message translates to:

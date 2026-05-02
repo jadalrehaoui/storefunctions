@@ -122,6 +122,37 @@ class _BodegaListasViewState extends State<_BodegaListasView> {
         return;
       }
 
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: const Text('¿Se imprimió la lista correctamente?'),
+          content: const Text(
+              'Confirma sólo si el papel salió de la impresora. Si la impresora falló, mantén la lista para reintentar.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('No, mantener lista'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Sí, remover líneas'),
+            ),
+          ],
+        ),
+      );
+
+      if (!mounted) return;
+      if (confirmed != true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'Lista conservada. Puedes reintentar la impresión.')),
+        );
+        return;
+      }
+
       final ids = itemsToPrint.map((i) => i.id).toList();
       final ok = await cubit.removeItems(ids);
       if (!mounted) return;

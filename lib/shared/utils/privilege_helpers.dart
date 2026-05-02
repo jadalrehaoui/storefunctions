@@ -31,3 +31,5 @@ bool canPrintLabels(BuildContext context) =>
     _hasPrivilege(context, 'print_labels');
 bool canCreateCustomLabels(BuildContext context) =>
     _hasPrivilege(context, 'create_custom_labels');
+bool canSeeGraphs(BuildContext context) =>
+    _hasPrivilege(context, 'see_graphs');
