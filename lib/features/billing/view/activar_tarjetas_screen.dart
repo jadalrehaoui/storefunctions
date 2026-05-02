@@ -55,10 +55,22 @@ class _ActivarTarjetasScreenState extends State<ActivarTarjetasScreen>
         defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.windows;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _scannerFocus.requestFocus();
+      if (_cameraSupported && _cameraEnabled) {
+        try {
+          await _camera.start();
+        } catch (e) {
+          if (!mounted) return;
+          setState(() {
+            _cameraInitError = '$e';
+          });
+        }
+      }
     });
   }
+
+  String? _cameraInitError;
 
   @override
   void dispose() {
@@ -190,12 +202,20 @@ class _ActivarTarjetasScreenState extends State<ActivarTarjetasScreen>
                       ),
                       const SizedBox(width: 8),
                       IconButton.outlined(
-                        onPressed: () {
-                          setState(() => _cameraEnabled = !_cameraEnabled);
-                          if (_cameraEnabled) {
-                            _camera.start();
-                          } else {
-                            _camera.stop();
+                        onPressed: () async {
+                          setState(() {
+                            _cameraEnabled = !_cameraEnabled;
+                            _cameraInitError = null;
+                          });
+                          try {
+                            if (_cameraEnabled) {
+                              await _camera.start();
+                            } else {
+                              await _camera.stop();
+                            }
+                          } catch (e) {
+                            if (!mounted) return;
+                            setState(() => _cameraInitError = '$e');
                           }
                         },
                         icon: Icon(_cameraEnabled
@@ -243,20 +263,24 @@ class _ActivarTarjetasScreenState extends State<ActivarTarjetasScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_cameraSupported && _cameraEnabled)
-          ValueListenableBuilder<MobileScannerState>(
-            valueListenable: _camera,
-            builder: (context, value, _) {
-              final dir = value.cameraDirection;
-              final n = value.availableCameras;
-              final initialized = value.isInitialized;
-              final running = value.isRunning;
+          AnimatedBuilder(
+            animation: _camera,
+            builder: (context, _) {
+              String summary;
+              try {
+                final v = _camera.value;
+                final dir = v.cameraDirection.name;
+                summary = 'Cámaras: ${v.availableCameras ?? '?'}  •  '
+                    'Activa: $dir  •  '
+                    'Inicializada: ${v.isInitialized}  •  '
+                    'Corriendo: ${v.isRunning}';
+              } catch (e) {
+                summary = 'Cámara no inicializada (${_cameraInitError ?? e})';
+              }
               return Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Text(
-                  'Cámaras detectadas: $n  •  '
-                  'Activa: ${dir.name}  •  '
-                  'Inicializada: $initialized  •  '
-                  'Corriendo: $running',
+                  summary,
                   style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontFamily: 'monospace'),
