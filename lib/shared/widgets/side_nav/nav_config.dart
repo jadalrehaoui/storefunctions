@@ -116,13 +116,6 @@ final navItems = <NavItemConfig>[
         route: '/billing/cierre-caja',
         privilege: 'view_invoices',
       ),
-      NavSubConfig(
-        id: 'billing-activar-tarjetas',
-        icon: Icons.credit_card_outlined,
-        label: (l10n) => 'Activar Tarjetas',
-        route: '/billing/activar-tarjetas',
-        privilege: 'create_invoice',
-      ),
     ],
   ),
   NavItemConfig(

@@ -23,7 +23,6 @@ import '../features/reports/view/closures_graphs_screen.dart';
 import '../features/reports/view/cierres_personales_screen.dart';
 import '../features/reports/view/cierre_personal_detail_screen.dart';
 import '../features/reports/view/sales_reports_screen.dart';
-import '../features/billing/view/activar_tarjetas_screen.dart';
 import '../features/billing/view/cierre_caja_screen.dart';
 import '../features/bodega/view/bodega_despacho_screen.dart';
 import '../features/bodega/view/bodega_despacho_tec_screen.dart';
@@ -243,13 +242,6 @@ GoRouter createRouter(AuthCubit authCubit) {
             name: 'billing-cierre-caja',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: CierreCajaScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/billing/activar-tarjetas',
-            name: 'billing-activar-tarjetas',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ActivarTarjetasScreen(),
             ),
           ),
           GoRoute(
