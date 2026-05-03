@@ -37,7 +37,11 @@ class _LoginScreenState extends State<LoginScreen> {
         connectTimeout: const Duration(seconds: 5),
         receiveTimeout: const Duration(seconds: 5),
       ));
-      final response = await dio.get<dynamic>('/api/workdb/current-version');
+      final platform = Platform.isAndroid ? 'android' : 'windows';
+      final response = await dio.get<dynamic>(
+        '/api/workdb/current-version',
+        queryParameters: {'platform': platform},
+      );
       final data = response.data;
       if (data is Map && data['version'] != null) {
         return data['version'] != appVersion;

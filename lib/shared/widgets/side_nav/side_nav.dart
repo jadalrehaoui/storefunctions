@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -105,7 +107,9 @@ class _BottomBarState extends State<_BottomBar> {
 
   Future<_VersionInfo> _fetchVersion() async {
     try {
-      final data = await sl<ApiClient>().get('/api/workdb/current-version');
+      final platform = Platform.isAndroid ? 'android' : 'windows';
+      final data = await sl<ApiClient>()
+          .get('/api/workdb/current-version?platform=$platform');
       if (data is Map && data['version'] != null) {
         final serverVersion = data['version'] as String;
         return _VersionInfo(
