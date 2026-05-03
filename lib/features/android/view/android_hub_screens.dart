@@ -22,6 +22,11 @@ class AndroidHomeScreen extends StatelessWidget {
           onTap: () => context.push('/android/inventory'),
         ),
         _HubItem(
+          icon: Icons.badge_outlined,
+          label: 'Abrir Sesión',
+          onTap: () => context.push('/android/abrir-sesion'),
+        ),
+        _HubItem(
           icon: Icons.settings_outlined,
           label: 'Configuración',
           onTap: () => context.push('/settings'),

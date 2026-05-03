@@ -15,6 +15,7 @@ const androidAllowedRoutes = <String>{
   '/android/home',
   '/android/bodega',
   '/android/inventory',
+  '/android/abrir-sesion',
   '/inventory/search',
   '/inventory/print-labels',
   '/bodega/listas',

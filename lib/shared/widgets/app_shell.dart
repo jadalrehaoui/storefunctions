@@ -74,6 +74,7 @@ class _AndroidShell extends StatelessWidget {
       '/android/home': 'Menú',
       '/android/bodega': 'Bodega',
       '/android/inventory': 'Inventario',
+      '/android/abrir-sesion': 'Abrir Sesión',
       '/bodega/listas': 'Listas',
       '/bodega/despacho': 'Despacho Bod',
       '/bodega/despacho-tec': 'Despacho Tec',

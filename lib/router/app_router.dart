@@ -28,6 +28,7 @@ import '../features/bodega/view/bodega_despacho_screen.dart';
 import '../features/bodega/view/bodega_despacho_tec_screen.dart';
 import '../features/bodega/view/bodega_listas_screen.dart';
 import '../features/billing/view/cierre_caja_sitsa_screen.dart';
+import '../features/android/view/abrir_sesion_screen.dart';
 import '../features/android/view/android_hub_screens.dart';
 import '../features/billing/view/invoice_screen.dart';
 import '../features/dashboard/view/dashboard_screen.dart';
@@ -117,6 +118,13 @@ GoRouter createRouter(AuthCubit authCubit) {
             name: 'android-inventory',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: AndroidInventoryScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/android/abrir-sesion',
+            name: 'android-abrir-sesion',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: AbrirSesionScreen(),
             ),
           ),
           GoRoute(
