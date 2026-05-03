@@ -1,22 +1,29 @@
 #!/bin/sh
-# Pre-push hook: runs the release script (prompts patch/minor/major,
-# bumps version in DB + files, commits, and pushes). Aborts the original
-# push because the script already performs its own push.
+# Pre-push hook: forces every push that updates main through scripts/release.js
+# (prompts platform + bump type, updates files + DB, commits, tags, pushes).
+# Pushes that don't touch main pass through.
 
-# Re-entry guard so the script's internal `git push` doesn't loop.
+# Re-entry guard: release.js itself uses --no-verify, but keep this for safety.
 if [ -n "$STOREFUNCTIONS_RELEASE_IN_PROGRESS" ]; then
   exit 0
 fi
 
-# Skip if there's nothing to push (e.g. branch already up to date).
-if git diff --quiet @{u} 2>/dev/null; then
+# Detect whether main is among the refs being pushed (git provides them on stdin).
+pushing_main=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main) pushing_main=1 ;;
+  esac
+done
+
+if [ "$pushing_main" -eq 0 ]; then
   exit 0
 fi
 
 export STOREFUNCTIONS_RELEASE_IN_PROGRESS=1
 node "$(git rev-parse --show-toplevel)/scripts/release.js" </dev/tty || exit 1
 
-# Release script already pushed; abort this original push to avoid double-push.
+# Release script already pushed branch + tag(s); abort the original push.
 echo ""
 echo "✓ Release pushed via scripts/release.js. Original 'git push' aborted (this is expected)."
 exit 1

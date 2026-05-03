@@ -2,8 +2,11 @@ name: Build Windows
 
 on:
   push:
-    branches: [main]
+    tags: ['windows-v*']
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -12,6 +15,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $raw = (Get-Content release/windows.version -Raw).Trim()
+          $name = $raw.Split('+')[0]
+          $build = $raw.Split('+')[1]
+          "name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "build=$build" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -22,21 +35,29 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows release
-        run: flutter build windows --release
+        run: flutter build windows --release --build-name=${{ steps.version.outputs.name }} --build-number=${{ steps.version.outputs.build }}
 
       - name: Bundle VC++ runtime DLLs
         shell: powershell
         run: ./deploy/bundle-vcredist.ps1 -ReleaseDir "build/windows/x64/runner/Release"
 
       - name: Zip release
-        run: |
-          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "storefunctions.zip"
         shell: powershell
+        run: Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "storefunctions-${{ steps.version.outputs.name }}.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: storefunctions-windows
-          path: storefunctions.zip
+          path: storefunctions-${{ steps.version.outputs.name }}.zip
           retention-days: 30
-          compression-level: 0  # Don't re-zip, the file is already a zip
+          compression-level: 0
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/windows-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Windows v${{ steps.version.outputs.name }}
+          files: storefunctions-${{ steps.version.outputs.name }}.zip
+          generate_release_notes: true

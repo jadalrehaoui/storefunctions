@@ -1,2 +1,7 @@
-/// The current version of the app. Update this when releasing a new version.
-const String appVersion = '5.1.0';
+import 'dart:io' show Platform;
+
+const String appVersionAndroid = '5.1.0';
+const String appVersionWindows = '5.1.0';
+
+String get appVersion =>
+    Platform.isAndroid ? appVersionAndroid : appVersionWindows;

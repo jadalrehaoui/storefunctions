@@ -2,8 +2,11 @@ name: Build Android
 
 on:
   push:
-    branches: [main]
+    tags: ['android-v*']
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -12,6 +15,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: |
+          raw=$(tr -d '[:space:]' < release/android.version)
+          name="${raw%%+*}"
+          build="${raw##*+}"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -28,11 +40,23 @@ jobs:
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --build-name=${{ steps.version.outputs.name }} --build-number=${{ steps.version.outputs.build }}
+
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk storefunctions-${{ steps.version.outputs.name }}.apk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: storefunctions-android
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: storefunctions-${{ steps.version.outputs.name }}.apk
           retention-days: 30
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/android-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Android v${{ steps.version.outputs.name }}
+          files: storefunctions-${{ steps.version.outputs.name }}.apk
+          generate_release_notes: true
