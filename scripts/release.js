@@ -85,21 +85,21 @@ async function upsertDbVersion(client, key, value) {
 
 (async () => {
   // 1) Platform
-  console.log('\n¿Qué plataforma se publica?');
+  console.log('\nWhich platform is being released?');
   console.log('  1) Android');
   console.log('  2) Windows');
   console.log('  3) Both');
-  const platChoice = await ask('› ');
+  const platChoice = await ask('> ');
   if (!['1', '2', '3'].includes(platChoice)) {
-    console.error('Opción inválida.'); process.exit(1);
+    console.error('Invalid choice.'); process.exit(1);
   }
   const releaseAndroid = platChoice === '1' || platChoice === '3';
   const releaseWindows = platChoice === '2' || platChoice === '3';
 
   // 2) Bump kind
-  const kindRaw = (await ask('Tipo de bump [patch/minor/major] (patch): ')).toLowerCase() || 'patch';
+  const kindRaw = (await ask('Bump type [patch/minor/major] (patch): ')).toLowerCase() || 'patch';
   if (!['patch', 'minor', 'major'].includes(kindRaw)) {
-    console.error('Tipo inválido.'); process.exit(1);
+    console.error('Invalid type.'); process.exit(1);
   }
 
   // Compute next versions
@@ -115,15 +115,15 @@ async function upsertDbVersion(client, key, value) {
     plan.push({ platform: 'windows', file: WINDOWS_VERSION_FILE, cur, next });
   }
 
-  console.log('\nResumen:');
+  console.log('\nSummary:');
   for (const p of plan) {
-    console.log(`  ${p.platform}: ${p.cur.name}+${p.cur.build} → ${p.next.name}+${p.next.build}`);
+    console.log(`  ${p.platform}: ${p.cur.name}+${p.cur.build} -> ${p.next.name}+${p.next.build}`);
   }
   const tags = plan.map((p) => `${p.platform}-v${p.next.name}`);
   console.log(`Tags: ${tags.join(' ')}`);
 
-  const ok = (await ask('¿Confirmar y publicar? [y/N]: ')).toLowerCase();
-  if (ok !== 'y' && ok !== 'yes') { console.log('Abortado.'); process.exit(0); }
+  const ok = (await ask('Confirm and publish? [y/N]: ')).toLowerCase();
+  if (ok !== 'y' && ok !== 'yes') { console.log('Aborted.'); process.exit(0); }
 
   // Update files
   for (const p of plan) {
@@ -155,8 +155,8 @@ async function upsertDbVersion(client, key, value) {
     }
     await client.end();
   } catch (e) {
-    console.error('⚠ No se pudo actualizar la DB:', e.message);
-    console.error('  Continuando con commit + push de todas formas.');
+    console.error('! Could not update the DB:', e.message);
+    console.error('  Continuing with commit + push anyway.');
   }
 
   // Git
@@ -176,5 +176,5 @@ async function upsertDbVersion(client, key, value) {
   const refs = ['HEAD', ...tags.map((t) => `refs/tags/${t}`)];
   execSync(`git push --no-verify --atomic origin ${refs.join(' ')}`, { stdio: 'inherit' });
 
-  console.log(`\n✓ Publicado: ${tags.join(' ')}`);
+  console.log(`\nDone. Published: ${tags.join(' ')}`);
 })().catch((e) => { console.error(e); process.exit(1); });

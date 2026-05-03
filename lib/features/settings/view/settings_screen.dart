@@ -132,7 +132,11 @@ class _UpdateSectionState extends State<_UpdateSection> {
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ));
-      final response = await dio.get<dynamic>('/api/version');
+      final platform = Platform.isAndroid ? 'android' : 'windows';
+      final response = await dio.get<dynamic>(
+        '/api/version',
+        queryParameters: {'platform': platform},
+      );
       final data = response.data;
       if (data is! Map || data['version'] == null) {
         throw 'Respuesta inesperada del servidor';

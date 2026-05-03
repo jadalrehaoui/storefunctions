@@ -76,6 +76,16 @@
       transition: background 0.15s;
     }
 
+    .btn .ver {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.85;
+      background: rgba(255,255,255,0.18);
+      padding: 2px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.3px;
+    }
+
     .btn:hover { background: #1557b0; }
 
     .btn-android { background: #34a853; }
@@ -138,23 +148,39 @@
     }
 
     .cmd button:hover { background: #555; }
+
+    .artifact-info {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+      font-size: 11.5px;
+      color: #555;
+      text-align: left;
+      line-height: 1.6;
+    }
+    .artifact-info strong { color: #1a1a1a; }
+    .artifact-info .lbl { color: #888; display: inline-block; width: 92px; }
   </style>
 </head>
 <body>
   <div class="card">
     <img class="icon" src="/icon.png" alt="Storefunctions" />
     <h1>Storefunctions</h1>
-    <p class="subtitle">Aplicación de gestión de inventario</p>
-    <div class="version loading" id="version">Cargando versión…</div>
+    <p class="subtitle" style="margin-bottom: 28px;">Aplicación de gestión de inventario</p>
 
     <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
       <a class="btn" href="/storefunctions-windows.zip" download>
         <svg viewBox="0 0 24 24"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
         Windows (.zip)
+        <span class="ver" id="ver-windows">…</span>
       </a>
       <a class="btn btn-android" href="/app-release.apk" download>
         <svg viewBox="0 0 24 24"><path d="M17.6 11.48V8a5.6 5.6 0 0 0-11.2 0v3.48A4.5 4.5 0 0 0 3 15.5V18a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-2.5a4.5 4.5 0 0 0-3.4-4.02zM7.4 8a4.6 4.6 0 0 1 9.2 0v3h-9.2V8zm7.85-4.6l1.42-1.42a.5.5 0 0 0-.71-.71L14.5 2.73a5.55 5.55 0 0 0-5 0L8.04 1.27a.5.5 0 0 0-.71.71L8.75 3.4A5.6 5.6 0 0 0 6.4 8h11.2a5.6 5.6 0 0 0-2.35-4.6zM9.5 6a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5zm5 0a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5z"/></svg>
         Android (.apk)
+        <span class="ver" id="ver-android">…</span>
       </a>
     </div>
 
@@ -180,6 +206,7 @@
         <li>Extrae en cualquier carpeta</li>
         <li>Ejecuta <strong>storefunctions.exe</strong></li>
       </ol>
+      <div class="artifact-info" id="info-windows">Cargando información del artefacto…</div>
     </div>
 
     <div class="steps" style="margin-top: 16px;">
@@ -190,21 +217,61 @@
         <li>Permite la instalación de fuentes desconocidas</li>
         <li>Instala y abre la app</li>
       </ol>
+      <div class="artifact-info" id="info-android">Cargando información del artefacto…</div>
     </div>
   </div>
   <script>
-    fetch('/api/version')
+    function loadVersion(platform, elId) {
+      const el = document.getElementById(elId);
+      fetch('/api/version?platform=' + platform)
+        .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+        .then((d) => {
+          const v = d && (d.version || d.value);
+          if (!v) throw new Error('no version');
+          el.textContent = 'v' + v;
+        })
+        .catch(() => { el.textContent = 'n/a'; });
+    }
+    loadVersion('windows', 'ver-windows');
+    loadVersion('android', 'ver-android');
+
+    function fmtBytes(n) {
+      if (n == null) return '?';
+      if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
+      if (n >= 1024) return (n / 1024).toFixed(1) + ' KB';
+      return n + ' B';
+    }
+    function fmtDate(iso) {
+      if (!iso) return '?';
+      try {
+        return new Date(iso).toLocaleString('es-CR', {
+          dateStyle: 'medium', timeStyle: 'short',
+        });
+      } catch { return iso; }
+    }
+    fetch('/api/artifacts')
       .then((r) => r.ok ? r.json() : Promise.reject(r.status))
-      .then((d) => {
-        const el = document.getElementById('version');
-        const v = d && (d.version || d.value);
-        if (!v) throw new Error('no version');
-        el.classList.remove('loading');
-        el.textContent = 'v' + v;
+      .then((data) => {
+        for (const platform of ['windows', 'android']) {
+          const a = data[platform] || {};
+          const el = document.getElementById('info-' + platform);
+          const runLabel = a.runNumber
+            ? '#' + a.runNumber + (a.commitShortSha ? ' (' + a.commitShortSha + ')' : '')
+            : (a.runId ? '#' + a.runId : '?');
+          el.innerHTML =
+            '<div><span class="lbl">Archivo:</span> <strong>' + (a.originalName || a.publishedAs || '?') + '</strong></div>' +
+            '<div><span class="lbl">Servido como:</span> ' + (a.publishedAs || '?') + '</div>' +
+            '<div><span class="lbl">Tamaño:</span> ' + fmtBytes(a.sizeBytes) + '</div>' +
+            '<div><span class="lbl">Sincronizado:</span> ' + fmtDate(a.syncedAt) + '</div>' +
+            '<div><span class="lbl">CI run:</span> ' + runLabel + '</div>' +
+            (a.commitMessage ? '<div><span class="lbl">Commit:</span> ' + a.commitMessage + '</div>' : '');
+        }
       })
       .catch(() => {
-        const el = document.getElementById('version');
-        el.textContent = 'Versión no disponible';
+        for (const platform of ['windows', 'android']) {
+          const el = document.getElementById('info-' + platform);
+          el.textContent = 'Información del artefacto no disponible';
+        }
       });
 
     // Server URL is templated in by the Node server at serve time (see server.js).

@@ -77,6 +77,7 @@ async function downloadArtifact(artifactId, destZipPath) {
 }
 
 // Extract first file from a zip into destPath using system unzip.
+// Returns the original filename of the file that was inside the zip.
 function extractFirstFile(zipPath, destPath) {
   const { execSync } = require('child_process');
   const tmpDir = path.join(path.dirname(zipPath), `.unzip-${Date.now()}`);
@@ -85,7 +86,9 @@ function extractFirstFile(zipPath, destPath) {
     execSync(`unzip -o "${zipPath}" -d "${tmpDir}"`, { stdio: 'pipe' });
     const files = fs.readdirSync(tmpDir);
     if (!files.length) throw new Error('Empty artifact zip');
-    fs.copyFileSync(path.join(tmpDir, files[0]), destPath);
+    const original = files[0];
+    fs.copyFileSync(path.join(tmpDir, original), destPath);
+    return original;
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
     fs.rmSync(zipPath, { force: true });
@@ -93,8 +96,12 @@ function extractFirstFile(zipPath, destPath) {
 }
 
 async function syncWorkflow(workflowFile, cfg, state) {
+  // Don't filter by branch — tag-triggered runs (e.g. android-v5.2.0) report
+  // head_branch as the tag name, not 'main', so a branch=main filter would
+  // skip them. Filter only by status=success and event=push (both branch
+  // pushes and tag pushes count as 'push' events).
   const runsRes = await gh(
-    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${workflowFile}/runs?branch=main&status=success&per_page=1`
+    `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${workflowFile}/runs?status=success&event=push&per_page=1`
   );
   const runsJson = await runsRes.json();
   const run = runsJson.workflow_runs?.[0];
@@ -114,10 +121,18 @@ async function syncWorkflow(workflowFile, cfg, state) {
   console.log(`  ${workflowFile}: downloading run ${run.id} (artifact ${artifact.id})...`);
   const tmpZip = path.join(PUBLIC_DIR, `.tmp-${cfg.artifactName}.zip`);
   await downloadArtifact(artifact.id, tmpZip);
-  extractFirstFile(tmpZip, path.join(PUBLIC_DIR, cfg.outputFile));
+  const originalName = extractFirstFile(tmpZip, path.join(PUBLIC_DIR, cfg.outputFile));
 
-  state[workflowFile] = { runId: run.id, updatedAt: new Date().toISOString() };
-  console.log(`  ${workflowFile}: ✓ updated -> public/${cfg.outputFile}`);
+  state[workflowFile] = {
+    runId: run.id,
+    runNumber: run.run_number,
+    commitSha: run.head_sha,
+    commitShortSha: (run.head_sha || '').slice(0, 7),
+    commitMessage: (run.head_commit?.message || '').split('\n')[0],
+    updatedAt: new Date().toISOString(),
+    originalName,
+  };
+  console.log(`  ${workflowFile}: ✓ updated -> public/${cfg.outputFile} (run #${run.run_number}, ${originalName})`);
 }
 
 async function syncAllArtifacts() {
@@ -142,11 +157,17 @@ async function syncAllArtifacts() {
 // HTTP server
 // ──────────────────────────────────────────────────────────────────────────
 
-async function getDbVersion() {
+async function getDbVersion(platform) {
   const c = new PgClient(DB);
   await c.connect();
   try {
-    const { rows } = await c.query("SELECT value FROM ui_config WHERE name = 'version'");
+    const key = platform === 'android' ? 'version_android' : 'version_windows';
+    let { rows } = await c.query("SELECT value FROM ui_config WHERE name = $1", [key]);
+    if (!rows.length) {
+      // Fallback to the legacy single-version row during the rollout window.
+      const legacy = await c.query("SELECT value FROM ui_config WHERE name = 'version'");
+      rows = legacy.rows;
+    }
     return rows[0]?.value || null;
   } finally {
     await c.end();
@@ -154,9 +175,13 @@ async function getDbVersion() {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === '/api/version') {
+  const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+  if (parsedUrl.pathname === '/api/version') {
     try {
-      const version = await getDbVersion();
+      const platform = parsedUrl.searchParams.get('platform') === 'android'
+        ? 'android'
+        : 'windows';
+      const version = await getDbVersion(platform);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({
         version,
@@ -167,6 +192,35 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: e.message }));
     }
+  }
+
+  if (parsedUrl.pathname === '/api/artifacts') {
+    const state = loadState();
+    const result = {};
+    for (const [wf, cfg] of Object.entries(WORKFLOWS)) {
+      const platform = wf.includes('android') ? 'android' : 'windows';
+      const filePath = path.join(PUBLIC_DIR, cfg.outputFile);
+      let size = null, mtime = null;
+      try {
+        const st = fs.statSync(filePath);
+        size = st.size;
+        mtime = st.mtime.toISOString();
+      } catch { /* file missing */ }
+      result[platform] = {
+        publishedAs: cfg.outputFile,
+        originalName: state[wf]?.originalName || null,
+        runId: state[wf]?.runId || null,
+        runNumber: state[wf]?.runNumber || null,
+        commitSha: state[wf]?.commitSha || null,
+        commitShortSha: state[wf]?.commitShortSha || null,
+        commitMessage: state[wf]?.commitMessage || null,
+        syncedAt: state[wf]?.updatedAt || null,
+        sizeBytes: size,
+        modifiedAt: mtime,
+      };
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(result));
   }
 
   let filePath = req.url === '/' ? '/index.html' : req.url;
