@@ -2,7 +2,10 @@ sealed class ExportInventoryState {}
 
 class ExportInventoryInitial extends ExportInventoryState {}
 
-class ExportInventoryLoading extends ExportInventoryState {}
+class ExportInventoryLoading extends ExportInventoryState {
+  final String? stage;
+  ExportInventoryLoading({this.stage});
+}
 
 class ExportInventorySuccess extends ExportInventoryState {
   final String filePath;

@@ -62,6 +62,14 @@ class _ExportViewState extends State<_ExportView> {
         );
   }
 
+  void _exportWithTica() {
+    context.read<ExportInventoryCubit>().exportWithTica(
+          startingDate: _startDate,
+          endingDate: _endDate,
+          clasificacion: _clasificacion,
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -125,23 +133,42 @@ class _ExportViewState extends State<_ExportView> {
                   );
                 },
               ),
-              const SizedBox(width: 24),
-              BlocBuilder<ExportInventoryCubit, ExportInventoryState>(
-                builder: (context, state) => FilledButton.icon(
-                  onPressed:
-                      state is ExportInventoryLoading ? null : _export,
-                  icon: state is ExportInventoryLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Icon(Icons.download_outlined, size: 18),
-                  label: Text(context.l10n.btnExportCsv),
-                ),
-              ),
             ],
+          ),
+          const SizedBox(height: 16),
+          BlocBuilder<ExportInventoryCubit, ExportInventoryState>(
+            builder: (context, state) {
+              final loading = state is ExportInventoryLoading;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  FilledButton.icon(
+                    onPressed: loading ? null : _export,
+                    icon: loading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.download_outlined, size: 18),
+                    label: Text(context.l10n.btnExportCsv),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: loading ? null : _exportWithTica,
+                    icon: loading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.merge_type_outlined, size: 18),
+                    label: const Text('Exportar CSV con TICA'),
+                  ),
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: 32),
@@ -159,7 +186,7 @@ class _ExportViewState extends State<_ExportView> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2)),
                     const SizedBox(width: 12),
-                    Text(context.l10n.msgDescargandoDatos,
+                    Text(state.stage ?? context.l10n.msgDescargandoDatos,
                         style: textTheme.bodyMedium),
                   ],
                 );

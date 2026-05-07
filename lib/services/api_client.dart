@@ -35,6 +35,15 @@ class ApiClient {
     return response.data;
   }
 
+  Future<dynamic> postMultipart(String path, FormData data) async {
+    final response = await _dio.post<dynamic>(
+      path,
+      data: data,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+    return response.data;
+  }
+
   Future<dynamic> get(String path) async {
     final response = await _dio.get<dynamic>(path);
     return response.data;

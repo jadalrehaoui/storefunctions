@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import 'api_client.dart';
 
 class InventoryService {
@@ -8,6 +10,16 @@ class InventoryService {
 
   Future<dynamic> searchByBarcode(String articleId) {
     return _client.post('/api/sitsa/get-item', {'code': articleId});
+  }
+
+  Future<dynamic> checkBarcodesFile({
+    required String filePath,
+    required String filename,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: filename),
+    });
+    return _client.postMultipart('/api/sitsa/check-barcodes', formData);
   }
 
   Future<dynamic> getTicaData(String barcode) {
@@ -37,6 +49,18 @@ class InventoryService {
 
   Future<dynamic> getClasificaciones() {
     return _client.get('/api/sitsa/get-clasificaciones');
+  }
+
+  Future<dynamic> getStagnantItems({
+    int? days,
+    int? clasificacion,
+    int? limit,
+  }) {
+    return _client.post('/api/sitsa/get-stagnant-items', {
+      if (days != null) 'days': days,
+      if (clasificacion != null) 'clasificacion': clasificacion,
+      if (limit != null) 'limit': limit,
+    });
   }
 
   Future<dynamic> getItemsByModelo(String modelo, {bool includeZero = false}) {

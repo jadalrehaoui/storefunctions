@@ -12,6 +12,8 @@ import '../features/inventory/view/inventory_export_screen.dart';
 import '../features/inventory/view/inventory_screen.dart';
 import '../features/inventory/view/inventory_search_screen.dart';
 import '../features/inventory/view/inventory_print_labels_screen.dart';
+import '../features/inventory/view/inventory_sales_by_codes_screen.dart';
+import '../features/inventory/view/inventory_validate_barcodes_screen.dart';
 import '../features/reports/view/cierre_mikail_screen.dart';
 import '../features/reports/view/cierre_parallel_screen.dart';
 import '../features/reports/view/restock_list_screen.dart';
@@ -37,6 +39,7 @@ import '../features/invoices/view/invoice_form_screen.dart';
 import '../features/invoices/view/invoice_list_screen.dart';
 import '../features/stocking/view/automatic_pl_screen.dart';
 import '../features/stocking/view/manual_pl_screen.dart';
+import '../features/stocking/view/stagnant_items_screen.dart';
 import '../features/users/view/users_screen.dart';
 import '../shared/widgets/app_shell.dart';
 
@@ -160,6 +163,20 @@ GoRouter createRouter(AuthCubit authCubit) {
                 name: 'inventory-export',
                 pageBuilder: (context, state) => const NoTransitionPage(
                   child: InventoryExportScreen(),
+                ),
+              ),
+              GoRoute(
+                path: 'validate-barcodes',
+                name: 'inventory-validate-barcodes',
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: InventoryValidateBarcodesScreen(),
+                ),
+              ),
+              GoRoute(
+                path: 'sales-by-codes',
+                name: 'inventory-sales-by-codes',
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: InventorySalesByCodesScreen(),
                 ),
               ),
             ],
@@ -324,6 +341,13 @@ GoRouter createRouter(AuthCubit authCubit) {
             name: 'stocking-automatic-pl',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: AutomaticPlScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/stocking/movimiento-articulo',
+            name: 'stocking-movimiento-articulo',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: StagnantItemsScreen(),
             ),
           ),
           GoRoute(
