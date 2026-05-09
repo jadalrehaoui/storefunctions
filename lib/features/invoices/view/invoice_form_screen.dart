@@ -399,6 +399,7 @@ class _LineItemsTable extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: DataTable(
         columns: [
+          const DataColumn(label: Text('')),
           const DataColumn(label: Text('#')),
           DataColumn(label: Text(l10n.invoiceDescription)),
           DataColumn(label: Text(l10n.invoiceCode)),
@@ -408,11 +409,15 @@ class _LineItemsTable extends StatelessWidget {
           DataColumn(label: Text(l10n.invoiceUnitPrice)),
           DataColumn(label: Text(l10n.invoiceDiscountPct)),
           DataColumn(label: Text(l10n.invoiceLineTotal)),
-          const DataColumn(label: Text('')),
         ],
         rows: [
           for (var i = 0; i < items.length; i++)
             DataRow(cells: [
+              DataCell(IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () =>
+                    context.read<InvoiceFormCubit>().removeLine(i),
+              )),
               DataCell(Text('${i + 1}')),
               DataCell(SizedBox(width: 200, child: Text(items[i].description))),
               DataCell(Text(items[i].sitsaCode)),
@@ -429,11 +434,6 @@ class _LineItemsTable extends StatelessWidget {
                 value: items[i].discountPct,
               )),
               DataCell(Text(_ceilMoney(items[i].lineTotal))),
-              DataCell(IconButton(
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: () =>
-                    context.read<InvoiceFormCubit>().removeLine(i),
-              )),
             ]),
         ],
       ),

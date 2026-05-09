@@ -169,6 +169,30 @@ class _ClosuresGraphsViewState extends State<_ClosuresGraphsView> {
               ),
             )
           else ...[
+            _MultiChartCard(
+              title: 'Venta Bruta · Venta Neta · Inventario',
+              labels: aggregated.labels,
+              series: [
+                _ChartSeries(
+                  label: 'Venta Bruta',
+                  values: aggregated.ventaBruta,
+                  color: const Color(0xFF1976D2),
+                ),
+                _ChartSeries(
+                  label: 'Venta Neta',
+                  values: aggregated.ventaNeta,
+                  color: const Color(0xFF2E7D32),
+                ),
+                if (showCosts)
+                  _ChartSeries(
+                    label: 'Inventario',
+                    values: aggregated.inventario,
+                    color: const Color(0xFFE65100),
+                  ),
+              ],
+              yFormatter: _formatColones,
+            ),
+            const SizedBox(height: 16),
             _ChartCard(
               title: 'Venta Neta',
               labels: aggregated.labels,
@@ -490,6 +514,206 @@ class _ChartCard extends StatelessWidget {
                               '$lbl\n${yFormatter(s.y)}',
                               TextStyle(
                                 color: lineColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static LineChartBarData _series(List<double?> values, Color color) {
+    final spots = <FlSpot>[];
+    for (var i = 0; i < values.length; i++) {
+      final v = values[i];
+      if (v != null) spots.add(FlSpot(i.toDouble(), v));
+    }
+    return LineChartBarData(
+      spots: spots,
+      isCurved: false,
+      color: color,
+      barWidth: 2.5,
+      isStrokeCapRound: true,
+      dotData: FlDotData(
+        show: true,
+        getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+          radius: 3,
+          color: color,
+          strokeColor: Colors.white,
+          strokeWidth: 1.5,
+        ),
+      ),
+    );
+  }
+
+  static double _maxOf(Iterable<double?> values) {
+    double m = double.negativeInfinity;
+    for (final v in values) {
+      if (v != null && v > m) m = v;
+    }
+    return m == double.negativeInfinity ? 0 : m;
+  }
+
+  static double _minOf(Iterable<double?> values) {
+    double m = double.infinity;
+    for (final v in values) {
+      if (v != null && v < m) m = v;
+    }
+    return m == double.infinity ? 0 : m;
+  }
+}
+
+class _ChartSeries {
+  final String label;
+  final List<double?> values;
+  final Color color;
+  const _ChartSeries({
+    required this.label,
+    required this.values,
+    required this.color,
+  });
+}
+
+class _MultiChartCard extends StatelessWidget {
+  final String title;
+  final List<String> labels;
+  final List<_ChartSeries> series;
+  final String Function(double) yFormatter;
+
+  const _MultiChartCard({
+    required this.title,
+    required this.labels,
+    required this.series,
+    required this.yFormatter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final allValues = series.expand((s) => s.values).toList();
+    final hasAny = allValues.any((v) => v != null);
+    final maxY = _maxOf(allValues);
+    final minY = _minOf(allValues);
+    final yRange = (maxY - minY).abs();
+    final yPad = yRange == 0 ? (maxY.abs() * 0.1 + 1) : yRange * 0.1;
+
+    final n = labels.length;
+    final labelInterval = n <= 12 ? 1.0 : (n / 12).ceilToDouble();
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 24, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 16,
+            runSpacing: 4,
+            children: series
+                .map((s) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: s.color,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(s.label, style: theme.textTheme.labelSmall),
+                      ],
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 280,
+            child: !hasAny
+                ? Center(
+                    child: Text('Sin datos',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant)))
+                : LineChart(
+                    LineChartData(
+                      minX: 0,
+                      maxX: (n - 1).toDouble().clamp(0, double.infinity),
+                      minY: minY - yPad,
+                      maxY: maxY + yPad,
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        getDrawingHorizontalLine: (_) => FlLine(
+                            color: theme.colorScheme.outlineVariant
+                                .withValues(alpha: 0.4),
+                            strokeWidth: 1),
+                      ),
+                      titlesData: FlTitlesData(
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 56,
+                            getTitlesWidget: (v, meta) => Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: Text(yFormatter(v),
+                                  style: theme.textTheme.labelSmall),
+                            ),
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            interval: labelInterval,
+                            getTitlesWidget: (v, meta) {
+                              final i = v.round();
+                              if (i < 0 || i >= labels.length) {
+                                return const SizedBox();
+                              }
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(labels[i],
+                                    style: theme.textTheme.labelSmall),
+                              );
+                            },
+                          ),
+                        ),
+                        rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                      ),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: Border.all(
+                            color: theme.colorScheme.outlineVariant),
+                      ),
+                      lineBarsData:
+                          series.map((s) => _series(s.values, s.color)).toList(),
+                      lineTouchData: LineTouchData(
+                        touchTooltipData: LineTouchTooltipData(
+                          getTooltipItems: (touched) => touched.map((spot) {
+                            final i = spot.x.round();
+                            final lbl = (i >= 0 && i < labels.length)
+                                ? labels[i]
+                                : '';
+                            final s = series[spot.barIndex];
+                            return LineTooltipItem(
+                              '${s.label}\n$lbl\n${yFormatter(spot.y)}',
+                              TextStyle(
+                                color: s.color,
                                 fontWeight: FontWeight.w600,
                               ),
                             );
