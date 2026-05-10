@@ -36,7 +36,7 @@ class ExportInventoryCubit extends Cubit<ExportInventoryState> {
   Future<void> export({
     DateTime? startingDate,
     DateTime? endingDate,
-    String? clasificacion,
+    List<String>? clasificaciones,
   }) async {
     emit(ExportInventoryLoading());
     try {
@@ -44,7 +44,7 @@ class ExportInventoryCubit extends Cubit<ExportInventoryState> {
       final data = await _inventoryService.getInventory(
         startingDate: startingDate != null ? fmt.format(startingDate) : null,
         endingDate: endingDate != null ? fmt.format(endingDate) : null,
-        clasificacion: clasificacion,
+        clasificaciones: clasificaciones,
       );
 
       final items = (data is Map && data['data'] is List)
@@ -69,7 +69,7 @@ class ExportInventoryCubit extends Cubit<ExportInventoryState> {
   Future<void> exportWithTica({
     DateTime? startingDate,
     DateTime? endingDate,
-    String? clasificacion,
+    List<String>? clasificaciones,
   }) async {
     emit(ExportInventoryLoading(stage: 'Seleccionando archivo de TICA...'));
     final FilePickerResult? picked;
@@ -109,7 +109,7 @@ class ExportInventoryCubit extends Cubit<ExportInventoryState> {
       final data = await _inventoryService.getInventory(
         startingDate: startingDate != null ? fmt.format(startingDate) : null,
         endingDate: endingDate != null ? fmt.format(endingDate) : null,
-        clasificacion: clasificacion,
+        clasificaciones: clasificaciones,
       );
       final sitsaItems = (data is Map && data['data'] is List)
           ? (data['data'] as List<dynamic>)

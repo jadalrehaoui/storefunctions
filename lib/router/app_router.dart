@@ -9,6 +9,7 @@ import '../shared/widgets/side_nav/nav_config.dart';
 import '../features/auth/cubit/auth_cubit.dart';
 import '../features/auth/view/login_screen.dart';
 import '../features/inventory/view/inventory_export_screen.dart';
+import '../features/inventory/view/inventory_lists_screen.dart';
 import '../features/inventory/view/inventory_screen.dart';
 import '../features/inventory/view/inventory_search_screen.dart';
 import '../features/inventory/view/inventory_print_labels_screen.dart';
@@ -177,6 +178,13 @@ GoRouter createRouter(AuthCubit authCubit) {
                 name: 'inventory-sales-by-codes',
                 pageBuilder: (context, state) => const NoTransitionPage(
                   child: InventorySalesByCodesScreen(),
+                ),
+              ),
+              GoRoute(
+                path: 'lists',
+                name: 'inventory-lists',
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: InventoryListsScreen(),
                 ),
               ),
             ],

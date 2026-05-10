@@ -37,13 +37,14 @@ class InventoryService {
   Future<dynamic> getInventory({
     String? startingDate,
     String? endingDate,
-    String? clasificacion,
+    List<String>? clasificaciones,
   }) {
     return _client.post('/api/sitsa/get-inventory', {
       'bodega': _sitsaBodega,
       if (startingDate != null) 'startingDate': startingDate,
       if (endingDate != null) 'endingDate': endingDate,
-      if (clasificacion != null) 'clasificacion': clasificacion,
+      if (clasificaciones != null && clasificaciones.isNotEmpty)
+        'clasificaciones': clasificaciones,
     });
   }
 

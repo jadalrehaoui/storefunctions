@@ -188,6 +188,13 @@ final navItems = <NavItemConfig>[
         route: '/inventory/sales-by-codes',
         privilege: 'inspect_inventory',
       ),
+      NavSubConfig(
+        id: 'inventory-lists',
+        icon: Icons.checklist_outlined,
+        label: (l10n) => 'Listas',
+        route: '/inventory/lists',
+        privilege: 'inspect_inventory',
+      ),
     ],
   ),
   NavItemConfig(

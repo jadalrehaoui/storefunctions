@@ -80,6 +80,7 @@ class _AndroidShell extends StatelessWidget {
       '/bodega/despacho-tec': 'Despacho Tec',
       '/inventory/search': 'Buscar items',
       '/inventory/print-labels': 'Imprimir etiquetas',
+      '/inventory/lists': 'Listas',
       '/settings': 'Configuración',
     };
     return titles[location] ?? 'Sistema';

@@ -28,7 +28,7 @@ class _ExportView extends StatefulWidget {
 class _ExportViewState extends State<_ExportView> {
   DateTime? _startDate;
   DateTime? _endDate;
-  String? _clasificacion;
+  final List<String> _clasificaciones = [];
 
   final _dateFmt = DateFormat('dd/MM/yyyy');
 
@@ -58,7 +58,7 @@ class _ExportViewState extends State<_ExportView> {
     context.read<ExportInventoryCubit>().export(
           startingDate: _startDate,
           endingDate: _endDate,
-          clasificacion: _clasificacion,
+          clasificaciones: _clasificaciones.isEmpty ? null : _clasificaciones,
         );
   }
 
@@ -66,8 +66,44 @@ class _ExportViewState extends State<_ExportView> {
     context.read<ExportInventoryCubit>().exportWithTica(
           startingDate: _startDate,
           endingDate: _endDate,
-          clasificacion: _clasificacion,
+          clasificaciones: _clasificaciones.isEmpty ? null : _clasificaciones,
         );
+  }
+
+  Future<void> _addClasificacion() async {
+    final cubit = context.read<ExportInventoryCubit>();
+    final available = cubit.clasificaciones.where((c) {
+      final id = c['PK_Clasificacion']?.toString();
+      return id != null && !_clasificaciones.contains(id);
+    }).toList();
+    if (available.isEmpty) return;
+
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(context.l10n.labelClasificacion),
+        children: [
+          for (final c in available)
+            SimpleDialogOption(
+              onPressed: () =>
+                  Navigator.pop(ctx, c['PK_Clasificacion']?.toString()),
+              child: Text(c['Descripcion']?.toString() ?? ''),
+            ),
+        ],
+      ),
+    );
+    if (picked != null) {
+      setState(() => _clasificaciones.add(picked));
+    }
+  }
+
+  String _clasificacionLabel(String id) {
+    final cubit = context.read<ExportInventoryCubit>();
+    final match = cubit.clasificaciones.firstWhere(
+      (c) => c['PK_Clasificacion']?.toString() == id,
+      orElse: () => <String, dynamic>{},
+    );
+    return match['Descripcion']?.toString() ?? id;
   }
 
   @override
@@ -85,6 +121,7 @@ class _ExportViewState extends State<_ExportView> {
 
           // Date range + filters row
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _DatePickerTile(
                 label: context.l10n.labelFechaInicio,
@@ -99,39 +136,54 @@ class _ExportViewState extends State<_ExportView> {
                     : null,
               ),
               const SizedBox(width: 16),
-              BlocBuilder<ExportInventoryCubit, ExportInventoryState>(
-                builder: (context, _) {
-                  final cubit = context.read<ExportInventoryCubit>();
-                  final items = cubit.clasificaciones;
-                  return ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 250),
-                    child: DropdownButtonFormField<String?>(
-                      isExpanded: true,
-                      value: _clasificacion,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.labelClasificacion,
-                        border: const OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
-                      ),
-                      items: [
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text(context.l10n.labelTodas),
+              Expanded(
+                child: BlocBuilder<ExportInventoryCubit, ExportInventoryState>(
+                  builder: (context, _) {
+                    final cubit = context.read<ExportInventoryCubit>();
+                    final allSelected = _clasificaciones.length >=
+                        cubit.clasificaciones.length;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.labelClasificacion,
+                          style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant),
                         ),
-                        ...items.map((c) => DropdownMenuItem<String?>(
-                              value: c['PK_Clasificacion']?.toString(),
-                              child: Text(
-                                c['Descripcion']?.toString() ?? '',
-                                overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            if (_clasificaciones.isEmpty)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 6),
+                                child: Text(
+                                  context.l10n.labelTodas,
+                                  style: textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurfaceVariant),
+                                ),
                               ),
-                            )),
+                            for (final id in _clasificaciones)
+                              InputChip(
+                                label: Text(_clasificacionLabel(id)),
+                                onDeleted: () => setState(
+                                    () => _clasificaciones.remove(id)),
+                              ),
+                            OutlinedButton.icon(
+                              onPressed:
+                                  allSelected ? null : _addClasificacion,
+                              icon: const Icon(Icons.add, size: 18),
+                              label: Text(context.l10n.btnAdd),
+                            ),
+                          ],
+                        ),
                       ],
-                      onChanged: (v) => setState(() => _clasificacion = v),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ],
           ),
