@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../models/item_list_membership.dart';
 import 'api_client.dart';
 
 class ItemListsService {
@@ -8,6 +9,19 @@ class ItemListsService {
   ItemListsService(this._client);
 
   Future<dynamic> getTypes() => _client.get('/api/workdb/item-lists/types');
+
+  Future<List<ItemListMembership>> fetchListsForCode(String code) async {
+    final data = await _client.get(
+      '/api/workdb/item-lists/by-code?code=${Uri.encodeQueryComponent(code)}',
+    );
+    final lists = (data is Map && data['lists'] is List)
+        ? data['lists'] as List
+        : const [];
+    return lists
+        .whereType<Map>()
+        .map((m) => ItemListMembership.fromJson(Map<String, dynamic>.from(m)))
+        .toList();
+  }
 
   Future<dynamic> getItems({String? type}) {
     if (type != null && type.isNotEmpty) {

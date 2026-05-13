@@ -8,6 +8,7 @@ import '../shared/widgets/side_nav/nav_config.dart';
 
 import '../features/auth/cubit/auth_cubit.dart';
 import '../features/auth/view/login_screen.dart';
+import '../features/inventory/view/inventory_enrich_codes_screen.dart';
 import '../features/inventory/view/inventory_export_screen.dart';
 import '../features/inventory/view/inventory_lists_screen.dart';
 import '../features/inventory/view/inventory_screen.dart';
@@ -185,6 +186,13 @@ GoRouter createRouter(AuthCubit authCubit) {
                 name: 'inventory-lists',
                 pageBuilder: (context, state) => const NoTransitionPage(
                   child: InventoryListsScreen(),
+                ),
+              ),
+              GoRoute(
+                path: 'enrich-codes',
+                name: 'inventory-enrich-codes',
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: InventoryEnrichCodesScreen(),
                 ),
               ),
             ],

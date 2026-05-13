@@ -22,6 +22,24 @@ class InventoryService {
     return _client.postMultipart('/api/sitsa/check-barcodes', formData);
   }
 
+  Future<dynamic> enrichCodesFile({
+    required String filePath,
+    required String filename,
+    bool tica = true,
+    int? concurrency,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: filename),
+    });
+    final qp = <String, String>{};
+    if (!tica) qp['tica'] = 'false';
+    if (concurrency != null) qp['concurrency'] = concurrency.toString();
+    final query = qp.isEmpty
+        ? ''
+        : '?${qp.entries.map((e) => '${e.key}=${Uri.encodeQueryComponent(e.value)}').join('&')}';
+    return _client.postMultipart('/api/sitsa/enrich-codes$query', formData);
+  }
+
   Future<dynamic> getTicaData(String barcode) {
     return _client.post('/api/tica/get-tica-data', {'barcode': barcode});
   }

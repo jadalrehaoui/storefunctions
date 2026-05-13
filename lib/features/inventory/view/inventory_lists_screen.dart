@@ -688,8 +688,10 @@ class _ItemsPanel extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
+          scrollDirection: Axis.vertical,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
             constraints:
                 const BoxConstraints(minWidth: 0, maxWidth: double.infinity),
             child: DataTable(
@@ -787,6 +789,7 @@ class _ItemsPanel extends StatelessWidget {
               ],
             ),
           ),
+        ),
         ),
       ),
     );
@@ -902,6 +905,45 @@ class _ImportListDialogState extends State<_ImportListDialog> {
       messenger.showSnackBar(
           SnackBar(content: Text('No se pudo crear la plantilla: $e')));
     }
+  }
+
+  Future<void> _downloadErrors() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final errs = _rowErrors;
+    if (errs == null || errs.isEmpty) return;
+    try {
+      final dir = Platform.isMacOS
+          ? '/Users/${Platform.environment['USER']}/Downloads'
+          : '${Platform.environment['USERPROFILE']}\\Downloads';
+      await Directory(dir).create(recursive: true);
+      final ts = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final path =
+          '$dir${Platform.pathSeparator}errores_importacion_$ts.csv';
+      final buf = StringBuffer('﻿fila,codigo,razon\n');
+      for (final e in errs) {
+        final row = (e['row'] ?? '').toString();
+        final code = (e['code'] ?? '').toString();
+        final reason = (e['reason'] ?? '').toString();
+        buf.writeln('${_csv(row)},${_csv(code)},${_csv(reason)}');
+      }
+      await File(path).writeAsString(buf.toString());
+      if (Platform.isMacOS) {
+        await Process.run('open', [path]);
+      } else if (Platform.isWindows) {
+        await Process.run('cmd', ['/c', 'start', '', path]);
+      }
+      messenger.showSnackBar(SnackBar(content: Text('Errores guardados: $path')));
+    } catch (e) {
+      messenger.showSnackBar(
+          SnackBar(content: Text('No se pudo guardar errores: $e')));
+    }
+  }
+
+  static String _csv(String v) {
+    if (v.contains(',') || v.contains('"') || v.contains('\n')) {
+      return '"${v.replaceAll('"', '""')}"';
+    }
+    return v;
   }
 
   Future<void> _submit() async {
@@ -1063,6 +1105,15 @@ class _ImportListDialogState extends State<_ImportListDialog> {
                       ),
                       if (_rowErrors != null && _rowErrors!.isNotEmpty) ...[
                         const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: _downloadErrors,
+                            icon: const Icon(Icons.download, size: 16),
+                            label: const Text('Descargar errores'),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
                         Container(
                           decoration: BoxDecoration(
                             color: colorScheme.surface,

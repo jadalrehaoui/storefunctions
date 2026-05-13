@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../di/service_locator.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/combined_item.dart';
+import '../../../models/item_list_membership.dart';
 import '../../../services/item_lists_service.dart';
 import '../../../shared/utils/label_printer.dart';
 import '../../../shared/utils/privilege_helpers.dart';
@@ -23,7 +24,7 @@ class InventorySearchScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) {
-        final cubit = InventorySearchCubit(sl());
+        final cubit = InventorySearchCubit(sl(), sl());
         if (initialQuery != null && initialQuery!.isNotEmpty) {
           cubit.search(initialQuery!);
         }
@@ -213,7 +214,8 @@ class _ItemLayout extends StatelessWidget {
                 ],
               ),
             ),
-          if (item.sitsa != null) _SitsaCard(item: item),
+          if (item.sitsa != null)
+            _SitsaCard(item: item, itemLists: state.itemLists),
           if (item.sitsa != null) const SizedBox(height: 8),
           if (item.sitsa != null)
             _ModeloSection(state: state, onCodeSelected: onCodeSelected),
@@ -1063,7 +1065,8 @@ class _ModeloRow extends StatelessWidget {
 
 class _SitsaCard extends StatelessWidget {
   final CombinedItem item;
-  const _SitsaCard({required this.item});
+  final List<ItemListMembership> itemLists;
+  const _SitsaCard({required this.item, this.itemLists = const []});
 
   @override
   Widget build(BuildContext context) {
@@ -1279,6 +1282,29 @@ class _SitsaCard extends StatelessWidget {
                   ),
               ],
             ),
+            if (itemLists.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final l in itemLists)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        '${l.type} · qty: ${l.qty}',
+                        style: textTheme.labelMedium?.copyWith(
+                            color: colorScheme.onSecondaryContainer),
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

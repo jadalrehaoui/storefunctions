@@ -39,7 +39,11 @@ class ApiClient {
     final response = await _dio.post<dynamic>(
       path,
       data: data,
-      options: Options(contentType: 'multipart/form-data'),
+      options: Options(
+        contentType: 'multipart/form-data',
+        sendTimeout: const Duration(minutes: 10),
+        receiveTimeout: const Duration(minutes: 10),
+      ),
     );
     return response.data;
   }

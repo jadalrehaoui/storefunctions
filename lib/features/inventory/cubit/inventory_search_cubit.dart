@@ -1,17 +1,21 @@
 // ignore_for_file: avoid_print
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../models/combined_item.dart';
 import '../../../services/inventory_service.dart';
+import '../../../services/item_lists_service.dart';
 import 'inventory_search_state.dart';
 
 export 'inventory_search_state.dart';
 
 class InventorySearchCubit extends Cubit<InventorySearchState> {
   final InventoryService _inventoryService;
+  final ItemListsService _itemListsService;
 
-  InventorySearchCubit(this._inventoryService)
+  InventorySearchCubit(this._inventoryService, this._itemListsService)
       : super(InventorySearchInitial());
 
   bool _includeZero = false;
@@ -113,6 +117,8 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
       final item = CombinedItem.fromJson(data);
       emit(InventorySearchSuccess(item));
 
+      unawaited(_loadItemLists(item.code));
+
       final barcode = item.sitsa?.codigoBarras;
       if (barcode != null && barcode.isNotEmpty) {
         final tica = await _fetchTica(barcode);
@@ -155,6 +161,20 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
           emit(s.copyWith(modeloLoading: false));
         }
       }
+    }
+  }
+
+  Future<void> _loadItemLists(String code) async {
+    if (code.isEmpty) return;
+    try {
+      final lists = await _itemListsService.fetchListsForCode(code);
+      if (isClosed) return;
+      final s = state;
+      if (s is InventorySearchSuccess && s.item.code == code) {
+        emit(s.copyWith(itemLists: lists));
+      }
+    } catch (_) {
+      // Auxiliary info — keep the result card silent on failure.
     }
   }
 

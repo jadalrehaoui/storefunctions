@@ -195,6 +195,13 @@ final navItems = <NavItemConfig>[
         route: '/inventory/lists',
         privilege: 'inspect_inventory',
       ),
+      NavSubConfig(
+        id: 'inventory-enrich-codes',
+        icon: Icons.auto_awesome_outlined,
+        label: (l10n) => 'Enriquecer Códigos',
+        route: '/inventory/enrich-codes',
+        privilege: 'inspect_inventory',
+      ),
     ],
   ),
   NavItemConfig(
