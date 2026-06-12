@@ -52,6 +52,15 @@ class InventorySearchCubit extends Cubit<InventorySearchState> {
     final c = input.trim();
     if (c.isEmpty) return;
 
+    // A leading '>' forces a proveedor (supplier) text search: always route to
+    // the /api/sitsa/search-text endpoint and forward the query INCLUDING the
+    // leading '>' — the API strips and interprets it. This bypasses the
+    // modelo / single-code / barcode heuristics below.
+    if (c.startsWith('>')) {
+      await _searchByDescription(c);
+      return;
+    }
+
     if (c.startsWith('/')) {
       final modelo = c.substring(1).trim();
       if (modelo.isEmpty) return;

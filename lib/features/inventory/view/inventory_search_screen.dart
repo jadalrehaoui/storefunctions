@@ -672,12 +672,12 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
       ? const ['Código', 'Descripción', 'Modelo', 'Disp.']
       : const [
           'Código', 'Barras', 'Descripción', 'Modelo', 'FOB',
-          'Costo', 'G%', 'Precio', 'Disp.', 'Res.', 'Ingr.'
+          'Costo', 'G%', 'Precio', 'Disp.', 'Res.', 'Ingr.', 'Proveedor'
         ];
 
   late final List<double?> _widths = Platform.isAndroid
       ? <double?>[100.0, 220.0, 120.0, 55.0]
-      : <double?>[100.0, 130.0, 220.0, 120.0, 85.0, 105.0, 50.0, 105.0, 55.0, 45.0, 45.0];
+      : <double?>[100.0, 130.0, 220.0, 120.0, 85.0, 105.0, 50.0, 105.0, 55.0, 45.0, 45.0, 160.0];
 
   static const double _minColumnWidth = 40.0;
 
@@ -704,6 +704,7 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
           3: 'MODELO',
           5: 'Costo',
           8: 'Cantidad_Disponible',
+          11: 'Proveedor_Nombre',
         };
 
   final ScrollController _hScroll = ScrollController();
@@ -900,6 +901,7 @@ class _DescriptionResultsListState extends State<_DescriptionResultsList> {
                                       '${m['Cantidad_Disponible'] ?? 0}',
                                       '${m['Cantidad_Reservada'] ?? 0}',
                                       '${m['Ingresado'] ?? 0}',
+                                      canSeeProfitMargins(context) ? (m['Proveedor_Nombre'] as String? ?? '') : redacted,
                                     ],
                               widths: _widths,
                               isHeader: false,
@@ -1143,6 +1145,14 @@ class _SitsaCard extends StatelessWidget {
                         ],
                       ],
                     ),
+                    if ((sitsa.proveedor ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      SelectableText(
+                        'Proveedor: ${canSeeProfitMargins(context) ? sitsa.proveedor : redacted}',
+                        style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant),
+                      ),
+                    ],
                   ],
                 ),
                 const Spacer(),

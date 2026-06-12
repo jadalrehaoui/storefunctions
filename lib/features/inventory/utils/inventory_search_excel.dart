@@ -26,6 +26,7 @@ Future<String> exportInventorySearchToExcel({
     'Disponible',
     'Reservada',
     'Ingresado',
+    if (showProfit) 'Proveedor',
   ];
 
   final buf = StringBuffer();
@@ -54,6 +55,7 @@ Future<String> exportInventorySearchToExcel({
       '${m['Cantidad_Disponible'] ?? 0}',
       '${m['Cantidad_Reservada'] ?? 0}',
       '$ingresado',
+      if (showProfit) '${m['Proveedor_Nombre'] ?? ''}',
     ];
     buf.writeln(row.map(_escape).join(','));
   }

@@ -2,6 +2,7 @@ class SitsaItem {
   final String description;
   final String model;
   final String classification;
+  final String? proveedor;
   final double fob;
   final double costo;
   final double utilidad;
@@ -19,6 +20,7 @@ class SitsaItem {
     required this.description,
     required this.model,
     required this.classification,
+    this.proveedor,
     required this.fob,
     required this.costo,
     required this.utilidad,
@@ -51,6 +53,7 @@ class SitsaItem {
       description: json['Descripcion'] as String? ?? '',
       model: json['MODELO'] as String? ?? '',
       classification: json['Clasificacion_Descripcion'] as String? ?? '',
+      proveedor: json['Proveedor_Nombre'] as String?,
       fob: (json['FOB'] as num?)?.toDouble() ?? 0,
       costo: costo,
       utilidad: utilidad,
