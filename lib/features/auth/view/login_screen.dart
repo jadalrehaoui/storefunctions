@@ -18,8 +18,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  // In dev, pre-fill with the seeded admin credentials; in prod, stay empty.
+  final _usernameController =
+      TextEditingController(text: ApiClient.isDev ? 'admin' : '');
+  final _passwordController =
+      TextEditingController(text: ApiClient.isDev ? 'admin123' : '');
   bool _obscurePassword = true;
   bool _isRemote = ApiClient.currentBaseUrl == ApiClient.remoteBaseUrl;
   late Future<bool> _isOutdatedFuture;

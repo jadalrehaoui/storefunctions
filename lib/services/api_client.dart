@@ -1,9 +1,22 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiClient {
   static const String remoteBaseUrl = 'https://jads-mac-mini.tail2ce668.ts.net';
   static const String localBaseUrl = 'http://10.10.0.130:8081';
-  static String currentBaseUrl = localBaseUrl;
+  static const String devBaseUrl = 'http://localhost:8082';
+
+  // Environment selection:
+  //   • debug builds (`flutter run`)            -> dev  (local API on :8082)
+  //   • release builds (`flutter build` / CI)   -> prod (the live mini)
+  //   • override either way: --dart-define=APP_ENV=dev|prod
+  // Result: shipped/release builds are always production, local runs default to dev,
+  // and `flutter run --dart-define=APP_ENV=prod` runs prod on your Mac.
+  static const String _envOverride = String.fromEnvironment('APP_ENV');
+  static bool get isDev =>
+      _envOverride.isNotEmpty ? _envOverride == 'dev' : kDebugMode;
+
+  static String currentBaseUrl = isDev ? devBaseUrl : localBaseUrl;
 
   final Dio _dio;
 

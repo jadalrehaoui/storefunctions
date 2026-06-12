@@ -172,13 +172,9 @@ class _CombinedItemCard extends StatefulWidget {
 class _CombinedItemCardState extends State<_CombinedItemCard> {
   late final TextEditingController _countController;
 
-  int get _quantity {
-    final d = widget.item.sitsa?.disponible;
-    if (d != null) return d.toInt();
-    return widget.item.mikail?.existencia.toInt() ?? 0;
-  }
+  int get _quantity => labelAvailableQty(widget.item);
 
-  int get _maxRows => (_quantity / 2).ceil().clamp(1, 9999);
+  int get _maxRows => maxLabelRows(widget.item);
 
   @override
   void initState() {

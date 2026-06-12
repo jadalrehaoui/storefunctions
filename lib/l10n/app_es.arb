@@ -224,9 +224,11 @@
   "tooltipCannotDeleteSelf": "No puede eliminarse a sí mismo",
   "tooltipGuardar": "Guardar",
   "tooltipActualizar": "Actualizar",
+  "tooltipResendEmail": "Reenviar correo",
 
   "msgSaved": "Guardado",
   "msgUpdated": "Actualizado",
+  "msgEmailSent": "Correo enviado",
   "msgSelectDateGenerate": "Seleccione una fecha y presione Generar",
   "msgNoItems": "Sin artículos",
   "msgNoDepositsAdded": "Sin depósitos agregados",

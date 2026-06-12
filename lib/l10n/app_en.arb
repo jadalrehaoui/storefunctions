@@ -224,9 +224,11 @@
   "tooltipCannotDeleteSelf": "Cannot delete yourself",
   "tooltipGuardar": "Save",
   "tooltipActualizar": "Update",
+  "tooltipResendEmail": "Resend email",
 
   "msgSaved": "Saved",
   "msgUpdated": "Updated",
+  "msgEmailSent": "Email sent",
   "msgSelectDateGenerate": "Select a date and press Generate",
   "msgNoItems": "No items",
   "msgNoDepositsAdded": "No deposits added",

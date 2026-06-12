@@ -59,6 +59,15 @@ Future<void> printCustomLabel({
   await sl<LabelPrinterService>().printZpl(zpl);
 }
 
+/// Available quantity used for label printing: Sitsa disponible, else
+/// Mikail existencia, else 0.
+int labelAvailableQty(CombinedItem item) =>
+    item.sitsa?.disponible?.toInt() ?? item.mikail?.existencia.toInt() ?? 0;
+
+/// Max printable label rows (2 labels per row): ceil(available / 2), min 1.
+int maxLabelRows(CombinedItem item) =>
+    (labelAvailableQty(item) / 2).ceil().clamp(1, 9999);
+
 Future<void> printCombinedLabel(CombinedItem item, int count) async {
   final sitsa = item.sitsa;
   final barcode = sitsa?.codigoBarras ?? '';

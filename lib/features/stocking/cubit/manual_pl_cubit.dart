@@ -28,6 +28,7 @@ class ManualPlCubit extends Cubit<ManualPlState> {
   static const _bodega = 'B-01';
 
   List<Map<String, dynamic>> clasificaciones = [];
+  List<Map<String, dynamic>> proveedores = [];
 
   ManualPlCubit(this._api, this._inventoryService)
       : super(ManualPlInitial());
@@ -44,22 +45,43 @@ class ManualPlCubit extends Cubit<ManualPlState> {
     } catch (_) {}
   }
 
+  Future<void> loadProveedores() async {
+    try {
+      final data = await _inventoryService.getProveedores();
+      final list = data is List
+          ? data
+          : (data is Map ? (data['data'] ?? []) as List : []);
+      proveedores =
+          list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      if (state is ManualPlInitial) emit(ManualPlInitial());
+    } catch (_) {}
+  }
+
   Future<void> generate({
-    required DateTime startDate,
-    required DateTime endDate,
+    DateTime? startDate,
+    DateTime? endDate,
     String? clasificacion,
+    String? proveedor,
     String mode = 'sold',
+    String matchMode = 'exact',
   }) async {
     emit(ManualPlLoading());
     try {
       final body = <String, dynamic>{
-        'salesStartDate': _fmt.format(startDate),
-        'salesEndDate': _fmt.format(endDate),
         'bodega': _bodega,
         'mode': mode,
+        'matchMode': matchMode,
       };
+      // Only send dates when BOTH are present; omit entirely for "all time".
+      if (startDate != null && endDate != null) {
+        body['salesStartDate'] = _fmt.format(startDate);
+        body['salesEndDate'] = _fmt.format(endDate);
+      }
       if (clasificacion != null) {
         body['clasificacion'] = int.parse(clasificacion);
+      }
+      if (proveedor != null && proveedor.isNotEmpty) {
+        body['proveedor'] = proveedor;
       }
       final data =
           await _api.post('/api/sitsa/get-sales-report-by-clasificacion', body);

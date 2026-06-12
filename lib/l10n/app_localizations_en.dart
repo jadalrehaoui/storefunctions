@@ -651,10 +651,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipActualizar => 'Update';
 
   @override
+  String get tooltipResendEmail => 'Resend email';
+
+  @override
   String get msgSaved => 'Saved';
 
   @override
   String get msgUpdated => 'Updated';
+
+  @override
+  String get msgEmailSent => 'Email sent';
 
   @override
   String get msgSelectDateGenerate => 'Select a date and press Generate';

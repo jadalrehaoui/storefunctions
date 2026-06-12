@@ -1376,6 +1376,12 @@ abstract class AppLocalizations {
   /// **'Actualizar'**
   String get tooltipActualizar;
 
+  /// No description provided for @tooltipResendEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar correo'**
+  String get tooltipResendEmail;
+
   /// No description provided for @msgSaved.
   ///
   /// In es, this message translates to:
@@ -1387,6 +1393,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Actualizado'**
   String get msgUpdated;
+
+  /// No description provided for @msgEmailSent.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo enviado'**
+  String get msgEmailSent;
 
   /// No description provided for @msgSelectDateGenerate.
   ///

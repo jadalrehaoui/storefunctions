@@ -70,6 +70,10 @@ class InventoryService {
     return _client.get('/api/sitsa/get-clasificaciones');
   }
 
+  Future<dynamic> getProveedores() {
+    return _client.get('/api/sitsa/get-proveedores');
+  }
+
   Future<dynamic> getStagnantItems({
     int? days,
     int? clasificacion,

@@ -68,6 +68,8 @@ class _ClosureDetailView extends StatelessWidget {
                             tooltip: context.l10n.tooltipEdit,
                           ),
                           const SizedBox(width: 8),
+                          _ResendEmailButton(closure: state.closure),
+                          const SizedBox(width: 8),
                           IconButton.outlined(
                             onPressed: () async {
                           try {
@@ -112,6 +114,59 @@ class _ClosureDetailView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ResendEmailButton extends StatefulWidget {
+  final Map<String, dynamic> closure;
+
+  const _ResendEmailButton({required this.closure});
+
+  @override
+  State<_ResendEmailButton> createState() => _ResendEmailButtonState();
+}
+
+class _ResendEmailButtonState extends State<_ResendEmailButton> {
+  bool _sending = false;
+
+  Future<void> _resend() async {
+    setState(() => _sending = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    try {
+      await context.read<ClosureDetailCubit>().resendEmail(
+            widget.closure,
+            showCosts: canSeeProfitMargins(context),
+          );
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.msgEmailSent)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.msgErrorDetail(e.toString()))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.outlined(
+      onPressed: _sending ? null : _resend,
+      icon: _sending
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.email_outlined, size: 18),
+      tooltip: context.l10n.tooltipResendEmail,
     );
   }
 }

@@ -227,11 +227,10 @@ class _ItemLayout extends StatelessWidget {
 
 Future<void> _promptAndPrintLabels(
     BuildContext context, CombinedItem item) async {
-  final disp = item.sitsa?.disponible?.toInt() ??
-      item.mikail?.existencia.toInt() ??
-      0;
-  final defaultRows = (disp / 2).ceil().clamp(1, 9999);
-  final controller = TextEditingController(text: '$defaultRows');
+  // Same rule as the Print Labels page: rows are capped to the available
+  // quantity (2 labels per row), and the input defaults to that max.
+  final maxRows = maxLabelRows(item);
+  final controller = TextEditingController(text: '$maxRows');
   final messenger = ScaffoldMessenger.of(context);
 
   final count = await showDialog<int>(
@@ -239,7 +238,10 @@ Future<void> _promptAndPrintLabels(
     builder: (ctx) {
       void submit() {
         final v = int.tryParse(controller.text.trim());
-        if (v != null && v > 0) Navigator.of(ctx).pop(v);
+        if (v != null && v > 0) {
+          // Clamp to the available-quantity max, exactly like the page.
+          Navigator.of(ctx).pop(v.clamp(1, maxRows));
+        }
       }
 
       return AlertDialog(
@@ -248,9 +250,11 @@ Future<void> _promptAndPrintLabels(
           controller: controller,
           autofocus: true,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(
             labelText: 'Cantidad de filas (2 etiquetas por fila)',
-            border: OutlineInputBorder(),
+            helperText: 'Máximo $maxRows',
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) => submit(),
         ),
