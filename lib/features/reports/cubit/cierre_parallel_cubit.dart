@@ -182,6 +182,61 @@ class CierreParallelCubit extends Cubit<CierreParallelState> {
     }
   }
 
+  /// Saves the whole-day Parallel cierre (non-personal flow) via the
+  /// upsert-by-date endpoint. Returns null on success, or an error message.
+  Future<String?> saveGeneral(ParallelDailySummary summary) async {
+    final dateStr = DateFormat('yyyy-MM-dd').format(summary.date);
+    final payload = {
+      'date': dateStr,
+      'summary': _summaryJson(summary),
+      'total_net': summary.totalNet,
+      'total_gross': summary.totalGross,
+      'total_discount': summary.totalDiscount,
+    };
+    try {
+      await _api.post('/api/workdb/closures-parallel', payload);
+      return null;
+    } on DioException catch (e) {
+      return 'HTTP ${e.response?.statusCode}: ${e.response?.data ?? e.message}';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Map<String, dynamic> _summaryJson(ParallelDailySummary summary) {
+    Map<String, dynamic> invoiceJson(InvoiceSummary inv) => {
+          'id': inv.id,
+          'date': inv.date.toIso8601String(),
+          'client_name': inv.clientName,
+          'created_by': inv.createdBy,
+          'subtotal': inv.subtotal,
+          'discount': inv.discount,
+          'total': inv.total,
+          'status': inv.status,
+        };
+
+    return {
+      'date': DateFormat('yyyy-MM-dd').format(summary.date),
+      'total_gross': summary.totalGross,
+      'total_discount': summary.totalDiscount,
+      'total_net': summary.totalNet,
+      'active_invoices_count': summary.invoices.length,
+      'voided_invoices_count': summary.voidedInvoices.length,
+      'invoices': summary.invoices.map(invoiceJson).toList(),
+      'voided_invoices': summary.voidedInvoices.map(invoiceJson).toList(),
+      'items_sold': summary.itemsSold
+          .map((i) => {
+                'sitsa_code': i.sitsaCode,
+                'description': i.description,
+                'total_quantity': i.quantity,
+                'total_gross': i.gross,
+                'total_discount': i.discount,
+                'total_net': i.net,
+              })
+          .toList(),
+    };
+  }
+
   Map<String, dynamic> _buildPayload({
     required ParallelDailySummary summary,
     required String usuario,

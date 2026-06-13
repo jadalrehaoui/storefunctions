@@ -12,19 +12,22 @@ class SalesReportsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => SalesReportCubit(sl()),
-      child: const _SalesReportsView(),
+      child: const SalesReportsView(),
     );
   }
 }
 
-class _SalesReportsView extends StatefulWidget {
-  const _SalesReportsView();
+/// The Reporte-de-ventas body. Reads [SalesReportCubit] from context, so the
+/// caller must provide it (either via [SalesReportsScreen] above or the unified
+/// Exportar ventas screen). Renders no screen title — the host supplies it.
+class SalesReportsView extends StatefulWidget {
+  const SalesReportsView({super.key});
 
   @override
-  State<_SalesReportsView> createState() => _SalesReportsViewState();
+  State<SalesReportsView> createState() => _SalesReportsViewState();
 }
 
-class _SalesReportsViewState extends State<_SalesReportsView>
+class _SalesReportsViewState extends State<SalesReportsView>
     with SingleTickerProviderStateMixin {
   DateTime _startDate = DateTime.now().copyWith(day: 1);
   DateTime _endDate = DateTime.now();
@@ -75,14 +78,11 @@ class _SalesReportsViewState extends State<_SalesReportsView>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Reporte de Venta', style: theme.textTheme.headlineSmall),
-          const SizedBox(height: 20),
           Row(
             children: [
               _DateButton(

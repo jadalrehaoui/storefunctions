@@ -11,13 +11,16 @@ class InventorySalesByCodesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => SalesByCodesCubit(sl()),
-      child: const _SalesByCodesView(),
+      child: const SalesByCodesView(),
     );
   }
 }
 
-class _SalesByCodesView extends StatelessWidget {
-  const _SalesByCodesView();
+/// The Ventas-por-códigos body. Reads [SalesByCodesCubit] from context, so the
+/// caller must provide it (either via [InventorySalesByCodesScreen] above or the
+/// unified Exportar ventas screen). Renders no screen title — the host supplies it.
+class SalesByCodesView extends StatelessWidget {
+  const SalesByCodesView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +31,6 @@ class _SalesByCodesView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Ventas por Códigos', style: textTheme.headlineSmall),
-          const SizedBox(height: 8),
           Text(
             'Sube un CSV con códigos de barras (primera columna). '
             'Generaremos un CSV nuevo con columnas adicionales: '

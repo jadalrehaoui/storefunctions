@@ -77,6 +77,24 @@ class _CierreParallelViewState extends State<_CierreParallelView> {
     await _print(summary);
   }
 
+  Future<void> _saveGeneralAndPrint(ParallelDailySummary summary) async {
+    final cubit = context.read<CierreParallelCubit>();
+
+    setState(() => _saving = true);
+    final err = await cubit.saveGeneral(summary);
+    if (!mounted) return;
+    setState(() => _saving = false);
+
+    if (err != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.msgErrorDetail(err))));
+      return;
+    }
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Cierre guardado')));
+    await _print(summary);
+  }
+
   Future<void> _print(ParallelDailySummary summary) async {
     try {
       if (widget.personalOnly) {
@@ -153,13 +171,6 @@ class _CierreParallelViewState extends State<_CierreParallelView> {
                     icon: const Icon(Icons.play_arrow_outlined, size: 18),
                     label: Text(l10n.btnGenerate),
                   ),
-                  const SizedBox(width: 12),
-                  if (state is CierreParallelSuccess)
-                    IconButton.outlined(
-                      onPressed: () => _print(state.summary),
-                      icon: const Icon(Icons.print_outlined, size: 18),
-                      tooltip: l10n.btnPrint,
-                    ),
                 ],
               );
             },
@@ -178,14 +189,15 @@ class _CierreParallelViewState extends State<_CierreParallelView> {
                             color: Theme.of(context).colorScheme.error))),
                 CierreParallelSuccess(:final summary) => _ParallelLayout(
                     summary: summary,
-                    onPrint: widget.personalOnly
-                        ? null
-                        : () => _print(summary),
                     onSaveAndPrint: widget.personalOnly
                         ? () => _saveAndPrint(summary)
-                        : null,
+                        : () => _saveGeneralAndPrint(summary),
+                    saveAndPrintLabel: widget.personalOnly
+                        ? (context.read<CierreParallelCubit>().isSaved
+                            ? 'Actualizar e Imprimir'
+                            : 'Guardar e Imprimir')
+                        : 'Guardar - Imprimir',
                     saving: _saving,
-                    isUpdate: context.read<CierreParallelCubit>().isSaved,
                   ),
               },
             ),
@@ -198,16 +210,14 @@ class _CierreParallelViewState extends State<_CierreParallelView> {
 
 class _ParallelLayout extends StatelessWidget {
   final ParallelDailySummary summary;
-  final VoidCallback? onPrint;
   final VoidCallback? onSaveAndPrint;
+  final String saveAndPrintLabel;
   final bool saving;
-  final bool isUpdate;
   const _ParallelLayout({
     required this.summary,
-    this.onPrint,
     this.onSaveAndPrint,
+    this.saveAndPrintLabel = 'Guardar - Imprimir',
     this.saving = false,
-    this.isUpdate = false,
   });
 
   @override
@@ -383,22 +393,7 @@ class _ParallelLayout extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.print_outlined, size: 18),
-                  label: Text(isUpdate
-                      ? 'Actualizar e Imprimir'
-                      : 'Guardar e Imprimir'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ] else if (onPrint != null) ...[
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FilledButton.icon(
-                  onPressed: onPrint,
-                  icon: const Icon(Icons.print_outlined, size: 18),
-                  label: Text(l10n.btnPrint),
+                  label: Text(saveAndPrintLabel),
                 ),
               ],
             ),

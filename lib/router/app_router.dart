@@ -13,7 +13,6 @@ import '../features/inventory/view/inventory_lists_screen.dart';
 import '../features/inventory/view/inventory_screen.dart';
 import '../features/inventory/view/inventory_search_screen.dart';
 import '../features/inventory/view/inventory_print_labels_screen.dart';
-import '../features/inventory/view/inventory_sales_by_codes_screen.dart';
 import '../features/reports/view/cierre_mikail_screen.dart';
 import '../features/reports/view/cierre_parallel_screen.dart';
 import '../features/reports/view/restock_list_screen.dart';
@@ -24,7 +23,6 @@ import '../features/reports/view/closures_screen.dart';
 import '../features/reports/view/closures_graphs_screen.dart';
 import '../features/reports/view/cierres_personales_screen.dart';
 import '../features/reports/view/cierre_personal_detail_screen.dart';
-import '../features/reports/view/sales_reports_screen.dart';
 import '../features/billing/view/cierre_caja_screen.dart';
 import '../features/bodega/view/bodega_despacho_screen.dart';
 import '../features/bodega/view/bodega_despacho_tec_screen.dart';
@@ -37,10 +35,10 @@ import '../features/dashboard/view/dashboard_screen.dart';
 import '../features/invoices/view/invoice_detail_screen.dart';
 import '../features/invoices/view/invoice_form_screen.dart';
 import '../features/invoices/view/invoice_list_screen.dart';
-import '../features/stocking/view/automatic_pl_screen.dart';
 import '../features/stocking/view/manual_pl_screen.dart';
 import '../features/stocking/view/stagnant_items_screen.dart';
 import '../features/users/view/users_screen.dart';
+import '../features/ventas/view/exportar_ventas_screen.dart';
 import '../shared/widgets/app_shell.dart';
 
 /// Bridges a BLoC stream to a [Listenable] so GoRouter can react to auth changes.
@@ -166,13 +164,6 @@ GoRouter createRouter(AuthCubit authCubit) {
                 ),
               ),
               GoRoute(
-                path: 'sales-by-codes',
-                name: 'inventory-sales-by-codes',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: InventorySalesByCodesScreen(),
-                ),
-              ),
-              GoRoute(
                 path: 'lists',
                 name: 'inventory-lists',
                 pageBuilder: (context, state) => const NoTransitionPage(
@@ -182,10 +173,10 @@ GoRouter createRouter(AuthCubit authCubit) {
             ],
           ),
           GoRoute(
-            path: '/reports/sales',
-            name: 'reports-sales',
+            path: '/ventas/exportar',
+            name: 'ventas-exportar',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: SalesReportsScreen(),
+              child: ExportarVentasScreen(),
             ),
           ),
           GoRoute(
@@ -330,22 +321,15 @@ GoRouter createRouter(AuthCubit authCubit) {
             ),
           ),
           GoRoute(
-            path: '/stocking/manual-pl',
-            name: 'stocking-manual-pl',
+            path: '/ventas/manual-pl',
+            name: 'ventas-manual-pl',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: ManualPlScreen(),
             ),
           ),
           GoRoute(
-            path: '/stocking/automatic-pl',
-            name: 'stocking-automatic-pl',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: AutomaticPlScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/stocking/movimiento-articulo',
-            name: 'stocking-movimiento-articulo',
+            path: '/ventas/movimiento-articulo',
+            name: 'ventas-movimiento-articulo',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: StagnantItemsScreen(),
             ),

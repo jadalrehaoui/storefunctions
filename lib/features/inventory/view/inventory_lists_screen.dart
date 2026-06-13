@@ -664,7 +664,9 @@ class _ItemsPanel extends StatelessWidget {
         child: Text(error!, style: TextStyle(color: colorScheme.error)),
       );
     }
-    if (loading && items == null) {
+    // Show the spinner whenever a load is in flight (initial load OR
+    // re-selecting a list while old items are still present).
+    if (loading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (items == null || items!.isEmpty) {
@@ -679,6 +681,13 @@ class _ItemsPanel extends StatelessWidget {
 
     final dateFmt = DateFormat('dd/MM/yyyy HH:mm');
     final money = NumberFormat.currency(symbol: '₡', decimalDigits: 2);
+    final rows = items!;
+
+    final allSelected = rows.isNotEmpty &&
+        rows.every((r) {
+          final id = (r['id'] as num?)?.toInt();
+          return id != null && selectedIds.contains(id);
+        });
 
     return Container(
       decoration: BoxDecoration(
@@ -687,118 +696,229 @@ class _ItemsPanel extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-            constraints:
-                const BoxConstraints(minWidth: 0, maxWidth: double.infinity),
-            child: DataTable(
-              columnSpacing: 24,
-              showCheckboxColumn: true,
-              onSelectAll: onToggleAll,
-              headingRowColor: WidgetStatePropertyAll(
-                  colorScheme.surfaceContainerLow),
-              columns: [
-                const DataColumn(label: Text('Código')),
-                const DataColumn(label: Text('Barras')),
-                const DataColumn(label: Text('Descripción')),
-                const DataColumn(label: Text('Modelo')),
-                const DataColumn(label: Text('Costo'), numeric: true),
-                const DataColumn(label: Text('Ganancia'), numeric: true),
-                const DataColumn(label: Text('Precio'), numeric: true),
-                const DataColumn(label: Text('Qty'), numeric: true),
-                const DataColumn(label: Text('Agregado por')),
-                const DataColumn(label: Text('Fecha')),
-                const DataColumn(label: Text('')),
-              ],
-              rows: [
-                for (final r in items!)
-                  DataRow(
-                    selected: ((r['id'] as num?)?.toInt() != null) &&
-                        selectedIds.contains((r['id'] as num).toInt()),
-                    onSelectChanged: (r['id'] as num?) == null
-                        ? null
-                        : (sel) => onToggleRow((r['id'] as num).toInt(), sel),
-                    cells: [
-                    DataCell(Text(r['sitsa_code']?.toString() ?? '')),
-                    DataCell(Text(r['barcode']?.toString() ?? '')),
-                    DataCell(SizedBox(
-                      width: 280,
-                      child: Text(
-                        r['descripcion']?.toString() ?? '',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )),
-                    DataCell(Text(r['modelo']?.toString() ?? '')),
-                    DataCell(Text(
-                      showProfit
-                          ? (r['costo'] is num
-                              ? money.format((r['costo'] as num).toDouble())
-                              : '')
-                          : redacted,
-                    )),
-                    DataCell(Text(
-                      showProfit
-                          ? (r['ganancia'] is num
-                              ? money
-                                  .format((r['ganancia'] as num).toDouble())
-                              : '')
-                          : redacted,
-                    )),
-                    DataCell(Text(
-                      r['precio'] is num
-                          ? money.format((r['precio'] as num).toDouble())
-                          : '',
-                    )),
-                    DataCell(
-                      InkWell(
-                        onTap: () => onEditQty(r),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          child: Text(
-                            '${(r['qty'] as num?)?.toInt() ?? 0}',
-                            style: TextStyle(color: colorScheme.primary),
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataCell(
-                        Text(r['added_by_username']?.toString() ?? '')),
-                    DataCell(Text(_fmtDate(r['added_at'], dateFmt))),
-                    DataCell(Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: 'Mover a otra lista',
-                          icon: const Icon(Icons.drive_file_move_outlined,
-                              size: 18),
-                          onPressed: () => onMove(r),
-                        ),
-                        IconButton(
-                          tooltip: 'Eliminar',
-                          icon: Icon(Icons.delete_outline,
-                              size: 18, color: colorScheme.error),
-                          onPressed: () => onDelete(r),
-                        ),
-                      ],
-                    )),
-                  ]),
-              ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _HeaderRow(
+              allSelected: allSelected,
+              onToggleAll: onToggleAll,
+              showProfit: showProfit,
+              colorScheme: colorScheme,
+              textTheme: textTheme,
             ),
-          ),
-        ),
+            Divider(height: 1, color: colorScheme.outlineVariant),
+            // Lazy list: only visible rows are built, so a large list no
+            // longer blocks the UI thread on build.
+            Expanded(
+              child: ListView.separated(
+                itemCount: rows.length,
+                separatorBuilder: (_, __) =>
+                    Divider(height: 1, color: colorScheme.outlineVariant),
+                itemBuilder: (context, i) {
+                  final r = rows[i];
+                  final id = (r['id'] as num?)?.toInt();
+                  final selected = id != null && selectedIds.contains(id);
+                  return _ItemRow(
+                    row: r,
+                    selected: selected,
+                    showProfit: showProfit,
+                    money: money,
+                    dateFmt: dateFmt,
+                    onToggle: id == null
+                        ? null
+                        : (sel) => onToggleRow(id, sel),
+                    onEditQty: () => onEditQty(r),
+                    onMove: () => onMove(r),
+                    onDelete: () => onDelete(r),
+                    colorScheme: colorScheme,
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  String _fmtDate(dynamic raw, DateFormat fmt) {
+/// Fixed header for the lazy item list (mirrors the old DataTable columns).
+class _HeaderRow extends StatelessWidget {
+  final bool allSelected;
+  final void Function(bool? selected) onToggleAll;
+  final bool showProfit;
+  final ColorScheme colorScheme;
+  final TextTheme textTheme;
+
+  const _HeaderRow({
+    required this.allSelected,
+    required this.onToggleAll,
+    required this.showProfit,
+    required this.colorScheme,
+    required this.textTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final style = textTheme.labelMedium
+        ?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onSurface);
+    Widget cell(String label, int flex, {TextAlign align = TextAlign.left}) {
+      return Expanded(
+        flex: flex,
+        child: Text(label, style: style, textAlign: align),
+      );
+    }
+
+    return Container(
+      color: colorScheme.surfaceContainerLow,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: Checkbox(
+              value: allSelected,
+              onChanged: onToggleAll,
+            ),
+          ),
+          cell('Código', 2),
+          cell('Barras', 2),
+          cell('Descripción', 4),
+          cell('Modelo', 2),
+          cell('Costo', 2, align: TextAlign.right),
+          cell('Ganancia', 2, align: TextAlign.right),
+          cell('Precio', 2, align: TextAlign.right),
+          cell('Qty', 1, align: TextAlign.right),
+          cell('Agregado por', 2),
+          cell('Fecha', 2),
+          const SizedBox(width: 96),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single lazily-built row.
+class _ItemRow extends StatelessWidget {
+  final Map<String, dynamic> row;
+  final bool selected;
+  final bool showProfit;
+  final NumberFormat money;
+  final DateFormat dateFmt;
+  final void Function(bool? selected)? onToggle;
+  final VoidCallback onEditQty;
+  final VoidCallback onMove;
+  final VoidCallback onDelete;
+  final ColorScheme colorScheme;
+
+  const _ItemRow({
+    required this.row,
+    required this.selected,
+    required this.showProfit,
+    required this.money,
+    required this.dateFmt,
+    required this.onToggle,
+    required this.onEditQty,
+    required this.onMove,
+    required this.onDelete,
+    required this.colorScheme,
+  });
+
+  static String _fmtDate(dynamic raw, DateFormat fmt) {
     if (raw == null) return '';
     final d = DateTime.tryParse(raw.toString());
     return d == null ? raw.toString() : fmt.format(d.toLocal());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget cell(String text, int flex, {TextAlign align = TextAlign.left}) {
+      return Expanded(
+        flex: flex,
+        child: Text(
+          text,
+          textAlign: align,
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
+    }
+
+    final costo = showProfit
+        ? (row['costo'] is num
+            ? money.format((row['costo'] as num).toDouble())
+            : '')
+        : redacted;
+    final ganancia = showProfit
+        ? (row['ganancia'] is num
+            ? money.format((row['ganancia'] as num).toDouble())
+            : '')
+        : redacted;
+    final precio = row['precio'] is num
+        ? money.format((row['precio'] as num).toDouble())
+        : '';
+
+    return Container(
+      color: selected
+          ? colorScheme.primaryContainer.withValues(alpha: 0.4)
+          : null,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: Checkbox(
+              value: selected,
+              onChanged: onToggle,
+            ),
+          ),
+          cell(row['sitsa_code']?.toString() ?? '', 2),
+          cell(row['barcode']?.toString() ?? '', 2),
+          cell(row['descripcion']?.toString() ?? '', 4),
+          cell(row['modelo']?.toString() ?? '', 2),
+          cell(costo, 2, align: TextAlign.right),
+          cell(ganancia, 2, align: TextAlign.right),
+          cell(precio, 2, align: TextAlign.right),
+          Expanded(
+            flex: 1,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: InkWell(
+                onTap: onEditQty,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    '${(row['qty'] as num?)?.toInt() ?? 0}',
+                    style: TextStyle(color: colorScheme.primary),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          cell(row['added_by_username']?.toString() ?? '', 2),
+          cell(_fmtDate(row['added_at'], dateFmt), 2),
+          SizedBox(
+            width: 96,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Mover a otra lista',
+                  icon: const Icon(Icons.drive_file_move_outlined, size: 18),
+                  onPressed: onMove,
+                ),
+                IconButton(
+                  tooltip: 'Eliminar',
+                  icon: Icon(Icons.delete_outline,
+                      size: 18, color: colorScheme.error),
+                  onPressed: onDelete,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

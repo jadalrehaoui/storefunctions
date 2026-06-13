@@ -199,13 +199,6 @@ final navItems = <NavItemConfig>[
         privilege: 'inspect_inventory',
       ),
       NavSubConfig(
-        id: 'inventory-sales-by-codes',
-        icon: Icons.point_of_sale_outlined,
-        label: (l10n) => 'Ventas por Códigos',
-        route: '/inventory/sales-by-codes',
-        privilege: 'inspect_inventory',
-      ),
-      NavSubConfig(
         id: 'inventory-lists',
         icon: Icons.checklist_outlined,
         label: (l10n) => 'Listas',
@@ -215,17 +208,40 @@ final navItems = <NavItemConfig>[
     ],
   ),
   NavItemConfig(
+    id: 'ventas',
+    icon: Icons.point_of_sale_outlined,
+    label: (l10n) => 'Ventas',
+    subItems: [
+      NavSubConfig(
+        id: 'ventas-exportar',
+        icon: Icons.download_outlined,
+        label: (l10n) => 'Exportar ventas',
+        route: '/ventas/exportar',
+        // Left null: the two modes are gated inside the screen by their own
+        // privileges, so anyone with EITHER privilege can open it.
+        privilege: null,
+      ),
+      NavSubConfig(
+        id: 'ventas-manual-pl',
+        icon: Icons.list_alt_outlined,
+        label: (l10n) => 'Manual PL',
+        route: '/ventas/manual-pl',
+        privilege: 'purchasing_user',
+      ),
+      NavSubConfig(
+        id: 'ventas-movimiento-articulo',
+        icon: Icons.trending_down_outlined,
+        label: (l10n) => 'Movimiento de Artículo',
+        route: '/ventas/movimiento-articulo',
+        privilege: 'inspect_inventory',
+      ),
+    ],
+  ),
+  NavItemConfig(
     id: 'reports',
     icon: Icons.bar_chart_outlined,
     label: (l10n) => l10n.navReports,
     subItems: [
-      NavSubConfig(
-        id: 'reports-sales',
-        icon: Icons.receipt_long_outlined,
-        label: (l10n) => l10n.navSalesReports,
-        route: '/reports/sales',
-        privilege: 'generate_sales_report',
-      ),
       NavSubConfig(
         id: 'reports-restock-list',
         icon: Icons.playlist_add_outlined,
@@ -281,34 +297,6 @@ final navItems = <NavItemConfig>[
         label: (l10n) => 'Personales',
         route: '/reports/cierres-personales',
         privilege: 'inspect_own_cierre_personal',
-      ),
-    ],
-  ),
-  NavItemConfig(
-    id: 'stocking',
-    icon: Icons.local_shipping_outlined,
-    label: (l10n) => 'Stocking',
-    subItems: [
-      NavSubConfig(
-        id: 'stocking-manual-pl',
-        icon: Icons.list_alt_outlined,
-        label: (l10n) => 'Manual PL',
-        route: '/stocking/manual-pl',
-        privilege: 'purchasing_user',
-      ),
-      NavSubConfig(
-        id: 'stocking-automatic-pl',
-        icon: Icons.auto_awesome_outlined,
-        label: (l10n) => 'Automatic PL',
-        route: '/stocking/automatic-pl',
-        privilege: 'purchasing_user',
-      ),
-      NavSubConfig(
-        id: 'stocking-movimiento-articulo',
-        icon: Icons.trending_down_outlined,
-        label: (l10n) => 'Movimiento de Artículo',
-        route: '/stocking/movimiento-articulo',
-        privilege: 'inspect_inventory',
       ),
     ],
   ),
