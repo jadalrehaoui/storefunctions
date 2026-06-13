@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.jadrehaoui.storefunctions-deploy</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/jadrehaoui/storefunctions-deploy/start.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/jadrehaoui/storefunctions-deploy</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/storefunctions-deploy.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/storefunctions-deploy.err.log</string>
+</dict>
+</plist>

@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, Process, ProcessStartMode, exit;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -154,6 +154,7 @@ class _UpdateSectionState extends State<_UpdateSection> {
       }
 
       final isAndroid = !kIsWeb && Platform.isAndroid;
+      final isWindows = !kIsWeb && Platform.isWindows;
       final downloadPath = isAndroid ? androidPath : windowsPath;
       final downloadUrl = '$_deployBaseUrl$downloadPath';
 
@@ -169,23 +170,80 @@ class _UpdateSectionState extends State<_UpdateSection> {
               Text('Nueva versión: v$remoteVersion'),
               const SizedBox(height: 12),
               Text(
-                isAndroid
-                    ? 'Se descargará el APK. Instálalo manualmente.'
-                    : 'Se descargará el instalador (.zip).',
+                isWindows
+                    ? 'La aplicación se cerrará, se actualizará y volverá a abrir automáticamente.'
+                    : isAndroid
+                        ? 'Se descargará el APK. Instálalo manualmente.'
+                        : 'Se descargará el instalador (.zip).',
                 style: Theme.of(ctx).textTheme.bodySmall,
               ),
             ],
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Descargar')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Actualizar ahora')),
           ],
         ),
       );
 
-      if (confirm == true) {
-        await launchUrl(Uri.parse(downloadUrl), mode: LaunchMode.externalApplication);
+      if (confirm != true) return;
+
+      if (isWindows) {
+        // Spawn the installer detached so it survives this app being killed
+        // mid-swap (install.ps1 stops storefunctions.exe, replaces the install
+        // folder, then relaunches the app at the end).
+        try {
+          await Process.start(
+            'powershell',
+            [
+              '-NoProfile',
+              '-ExecutionPolicy',
+              'Bypass',
+              '-Command',
+              "iwr '$_deployBaseUrl/install.ps1' -UseBasicParsing | iex",
+            ],
+            mode: ProcessStartMode.detached,
+          );
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('No se pudo iniciar la actualización: $e')),
+          );
+          return;
+        }
+
+        if (!mounted) return;
+        // Non-dismissable notice while the installer takes over.
+        showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => const AlertDialog(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'Actualizando… la aplicación se cerrará y volverá a abrir.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+        // Give the user a moment to read the notice and let the detached
+        // installer get going, then exit so the files unlock for the swap.
+        await Future<void>.delayed(const Duration(seconds: 2));
+        exit(0);
       }
+
+      // Android / macOS: keep the existing browser-download behavior.
+      await launchUrl(Uri.parse(downloadUrl), mode: LaunchMode.externalApplication);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

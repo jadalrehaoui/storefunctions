@@ -148,7 +148,11 @@ try {
 Write-Host ""
 Write-Host "DONE. Installed at $InstallDir" -ForegroundColor Green
 
-if ($Launch) {
+# --- 7. Relaunch the app -----------------------------------------------------
+# Always reopen after a successful install so the app comes back automatically
+# (this is what the in-app updater relies on, and it can't pass -Launch through
+# the `iwr | iex` invocation). $exePath was already validated above.
+if (Test-Path $exePath) {
     Write-Host ""
     Write-Host "Launching..." -ForegroundColor Cyan
     Start-Process -FilePath $exePath -WorkingDirectory $InstallDir

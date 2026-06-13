@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 // Release helper.
-// Prompts: 1) platform (Android / Windows / Both), 2) bump (patch/minor/major).
+// Auto-detects the platform(s) to release from what changed since the last tag
+// (shared lib/ change -> both; windows/ or android/ only -> that one), then
+// prompts for the bump (patch/minor/major). RELEASE_PLATFORM=windows|android|both
+// overrides; a manual menu is the fallback when detection can't decide.
 // Bumps the chosen platform version file(s), updates lib/shared/constants.dart,
 // updates DB rows version_android / version_windows, increments pubspec build
 // number, commits, creates platform tag(s) (android-vX.Y.Z, windows-vX.Y.Z),
@@ -83,18 +86,71 @@ async function upsertDbVersion(client, key, value) {
   }
 }
 
+// Resolve the commit a tag points at, plus its timestamp (for picking the most
+// recent baseline). Returns null if no tag matches the pattern.
+function lastTagCommit(pattern) {
+  try {
+    const tag = execSync(`git describe --tags --abbrev=0 --match ${JSON.stringify(pattern)}`,
+      { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    if (!tag) return null;
+    const commit = execSync(`git rev-list -n 1 ${JSON.stringify(tag)}`).toString().trim();
+    const ts = parseInt(execSync(`git log -1 --format=%ct ${JSON.stringify(commit)}`).toString().trim(), 10);
+    return { tag, commit, ts };
+  } catch { return null; }
+}
+
+// Auto-detect which platforms changed since the last release.
+// Rule: a shared change (lib/, assets/, fonts/, pubspec) affects BOTH apps; a
+// change only inside windows/ or android/ targets just that platform. Baseline
+// is the most recent of the last windows-v*/android-v* tags. Returns null when
+// it can't tell (no prior tags / diff failure) so the caller can prompt.
+function detectPlatforms() {
+  const candidates = [lastTagCommit('windows-v*'), lastTagCommit('android-v*')].filter(Boolean);
+  if (candidates.length === 0) return null;
+  const baseline = candidates.sort((a, b) => a.ts - b.ts).pop();
+  let files;
+  try {
+    files = execSync(`git diff --name-only ${JSON.stringify(baseline.commit)}..HEAD`)
+      .toString().trim().split('\n').filter(Boolean);
+  } catch { return null; }
+  const shared = files.some((f) =>
+    f.startsWith('lib/') || f.startsWith('assets/') || f.startsWith('fonts/') ||
+    f === 'pubspec.yaml' || f === 'pubspec.lock');
+  const winNative = files.some((f) => f.startsWith('windows/'));
+  const andNative = files.some((f) => f.startsWith('android/'));
+  return { baseline, windows: shared || winNative, android: shared || andNative };
+}
+
 (async () => {
-  // 1) Platform
-  console.log('\nWhich platform is being released?');
-  console.log('  1) Android');
-  console.log('  2) Windows');
-  console.log('  3) Both');
-  const platChoice = await ask('> ');
-  if (!['1', '2', '3'].includes(platChoice)) {
-    console.error('Invalid choice.'); process.exit(1);
+  // 1) Platform — auto-detected from what changed since the last release.
+  // Override anytime with RELEASE_PLATFORM=windows|android|both; falls back to a
+  // manual menu when nothing can be detected.
+  let releaseAndroid;
+  let releaseWindows;
+  const forced = (process.env.RELEASE_PLATFORM || '').toLowerCase();
+  const detected = forced ? null : detectPlatforms();
+  if (['windows', 'android', 'both'].includes(forced)) {
+    releaseWindows = forced === 'windows' || forced === 'both';
+    releaseAndroid = forced === 'android' || forced === 'both';
+    console.log(`\nPlatform forced via RELEASE_PLATFORM=${forced}.`);
+  } else if (detected && (detected.windows || detected.android)) {
+    releaseWindows = detected.windows;
+    releaseAndroid = detected.android;
+    const picked = [releaseWindows && 'Windows', releaseAndroid && 'Android'].filter(Boolean).join(' + ');
+    console.log(`\nAuto-detected changes since ${detected.baseline.tag} → releasing: ${picked}`);
+  } else {
+    console.log('\nCould not auto-detect a changed platform — choose manually.');
+    console.log('Which platform is being released?');
+    console.log('  1) Android');
+    console.log('  2) Windows');
+    console.log('  3) Both');
+    const platChoice = await ask('> ');
+    if (!['1', '2', '3'].includes(platChoice)) {
+      console.error('Invalid choice.'); process.exit(1);
+    }
+    releaseAndroid = platChoice === '1' || platChoice === '3';
+    releaseWindows = platChoice === '2' || platChoice === '3';
   }
-  const releaseAndroid = platChoice === '1' || platChoice === '3';
-  const releaseWindows = platChoice === '2' || platChoice === '3';
 
   // 2) Bump kind
   const kindRaw = (await ask('Bump type [patch/minor/major] (patch): ')).toLowerCase() || 'patch';

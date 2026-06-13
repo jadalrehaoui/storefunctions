@@ -135,23 +135,39 @@ async function syncWorkflow(workflowFile, cfg, state) {
   console.log(`  ${workflowFile}: ✓ updated -> public/${cfg.outputFile} (run #${run.run_number}, ${originalName})`);
 }
 
+let syncInProgress = false;
 async function syncAllArtifacts() {
   if (!GITHUB_TOKEN) {
     console.log('⚠ GITHUB_TOKEN not set, skipping artifact sync');
     return;
   }
-  console.log('Checking for updated artifacts on GitHub...');
-  const state = loadState();
-  for (const [wf, cfg] of Object.entries(WORKFLOWS)) {
-    try {
-      await syncWorkflow(wf, cfg, state);
-    } catch (e) {
-      console.error(`  ${wf}: ERROR ${e.message}`);
-    }
+  // Guard against overlapping runs (the boot sync and the interval, or a slow
+  // download outlasting the next tick).
+  if (syncInProgress) {
+    console.log('Artifact sync already in progress, skipping this tick.');
+    return;
   }
-  saveState(state);
-  console.log('Artifact sync complete.\n');
+  syncInProgress = true;
+  try {
+    console.log('Checking for updated artifacts on GitHub...');
+    const state = loadState();
+    for (const [wf, cfg] of Object.entries(WORKFLOWS)) {
+      try {
+        await syncWorkflow(wf, cfg, state);
+      } catch (e) {
+        console.error(`  ${wf}: ERROR ${e.message}`);
+      }
+    }
+    saveState(state);
+    console.log('Artifact sync complete.\n');
+  } finally {
+    syncInProgress = false;
+  }
 }
+
+// How often to re-check GitHub for new builds (so the mini picks up new
+// releases without a manual restart).
+const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
 // ──────────────────────────────────────────────────────────────────────────
 // HTTP server
@@ -262,6 +278,9 @@ const server = http.createServer(async (req, res) => {
 
 (async () => {
   await syncAllArtifacts();
+
+  // Keep current with new GitHub builds without a manual restart.
+  setInterval(() => { syncAllArtifacts().catch((e) => console.error(`sync error: ${e.message}`)); }, SYNC_INTERVAL_MS);
 
   server.listen(PORT, '0.0.0.0', () => {
     const { networkInterfaces } = require('os');
