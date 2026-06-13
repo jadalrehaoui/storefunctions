@@ -206,18 +206,29 @@ class _UpdateSectionState extends State<_UpdateSection> {
       if (confirm != true) return;
 
       if (isWindows) {
-        // Spawn the installer detached so it survives this app being killed
-        // mid-swap (install.ps1 stops storefunctions.exe, replaces the install
-        // folder, then relaunches the app at the end).
+        // Spawn the installer in its OWN console window via cmd's `start` so it
+        // is NOT a child of this process and survives the app's exit(0). It
+        // first waits for storefunctions to fully exit before running
+        // install.ps1, avoiding the file-lock race during the folder swap.
+        // `irm` (Invoke-RestMethod) avoids the IE first-launch security prompt
+        // that `iwr` can trigger.
         try {
+          final updateCmd =
+              "Start-Sleep -Seconds 1; "
+              "while (Get-Process storefunctions -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 300 }; "
+              "iex (irm '$_deployBaseUrl/install.ps1')";
           await Process.start(
-            'powershell',
+            'cmd',
             [
+              '/c',
+              'start',
+              'Actualizando Storefunctions',
+              'powershell',
               '-NoProfile',
               '-ExecutionPolicy',
               'Bypass',
               '-Command',
-              "iwr '$_deployBaseUrl/install.ps1' -UseBasicParsing | iex",
+              updateCmd,
             ],
             mode: ProcessStartMode.detached,
           );
@@ -253,9 +264,10 @@ class _UpdateSectionState extends State<_UpdateSection> {
           ),
         );
 
-        // Give the user a moment to read the notice and let the detached
-        // installer get going, then exit so the files unlock for the swap.
-        await Future<void>.delayed(const Duration(seconds: 2));
+        // Give the user a brief moment to read the notice, then exit so the
+        // independent updater's wait-loop sees storefunctions gone and proceeds
+        // with the swap. (The updater handles all the real timing now.)
+        await Future<void>.delayed(const Duration(seconds: 1));
         exit(0);
       }
 

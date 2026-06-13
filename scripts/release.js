@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Release helper.
 // Auto-detects the platform(s) to release from what changed since the last tag
-// (shared lib/ change -> both; windows/ or android/ only -> that one), then
+// (shared/lib or windows/ change -> Windows; only android/ changes -> Android), then
 // prompts for the bump (patch/minor/major). RELEASE_PLATFORM=windows|android|both
 // overrides; a manual menu is the fallback when detection can't decide.
 // Bumps the chosen platform version file(s), updates lib/shared/constants.dart,
@@ -100,10 +100,11 @@ function lastTagCommit(pattern) {
 }
 
 // Auto-detect which platforms changed since the last release.
-// Rule: a shared change (lib/, assets/, fonts/, pubspec) affects BOTH apps; a
-// change only inside windows/ or android/ targets just that platform. Baseline
-// is the most recent of the last windows-v*/android-v* tags. Returns null when
-// it can't tell (no prior tags / diff failure) so the caller can prompt.
+// Rule: shared changes (lib/, assets/, fonts/, pubspec) and windows/ changes
+// release Windows. Android is released ONLY when android/ itself changes —
+// Android ships rarely, so shared/lib changes must NOT drag a new Android
+// version along. Baseline is the most recent of the last windows-v*/android-v*
+// tags. Returns null when it can't tell (no prior tags / diff failure).
 function detectPlatforms() {
   const candidates = [lastTagCommit('windows-v*'), lastTagCommit('android-v*')].filter(Boolean);
   if (candidates.length === 0) return null;
@@ -118,7 +119,8 @@ function detectPlatforms() {
     f === 'pubspec.yaml' || f === 'pubspec.lock');
   const winNative = files.some((f) => f.startsWith('windows/'));
   const andNative = files.some((f) => f.startsWith('android/'));
-  return { baseline, windows: shared || winNative, android: shared || andNative };
+  // Android only when android/ native code changed; shared/lib changes are Windows-only.
+  return { baseline, windows: shared || winNative, android: andNative };
 }
 
 (async () => {
