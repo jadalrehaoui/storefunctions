@@ -17,7 +17,24 @@ import '../../../shared/constants.dart';
 import '../../../shared/cubit/health_cubit.dart';
 import '../../../shared/cubit/locale_cubit.dart';
 
-const String _deployBaseUrl = 'http://100.113.65.42:8080';
+/// Base URL of the update/download server (port 8080, plain http — it is not
+/// behind the Tailscale funnel). It follows the SAME local-vs-remote selection
+/// as the main API (`ApiClient.currentBaseUrl`), just mapped to port 8080:
+///   • Local  (10.10.0.130:8081, LAN)        -> http://10.10.0.130:8080
+///   • Remote (tailscale funnel host)        -> http://100.113.65.42:8080
+///   • Dev    (localhost:8082)               -> http://10.10.0.130:8080 (LAN default;
+///       the deploy server doesn't run in dev, so the LAN host is the sane fallback)
+String get _deployBaseUrl {
+  final current = ApiClient.currentBaseUrl;
+  // Remote = the Tailscale funnel host. Its deploy server is reachable over
+  // the tailnet at the mini's tailnet IP on :8080.
+  if (current == ApiClient.remoteBaseUrl) {
+    return 'http://100.113.65.42:8080';
+  }
+  // Local (10.10.0.130:8081) and dev (localhost:8082) both map to the LAN
+  // deploy host. The LAN path is fast and avoids the slow tailnet timeout.
+  return 'http://10.10.0.130:8080';
+}
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -129,8 +146,8 @@ class _UpdateSectionState extends State<_UpdateSection> {
     try {
       final dio = Dio(BaseOptions(
         baseUrl: _deployBaseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 20),
       ));
       final platform = Platform.isAndroid ? 'android' : 'windows';
       final response = await dio.get<dynamic>(
