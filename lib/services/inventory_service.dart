@@ -40,6 +40,12 @@ class InventoryService {
     return _client.postMultipart('/api/sitsa/enrich-codes$query', formData);
   }
 
+  Future<dynamic> checkCabys({String? bodega}) {
+    return _client.post('/api/sitsa/check-cabys', {
+      'bodega': bodega ?? _sitsaBodega,
+    });
+  }
+
   Future<dynamic> getTicaData(String barcode) {
     return _client.post('/api/tica/get-tica-data', {'barcode': barcode});
   }
@@ -56,6 +62,8 @@ class InventoryService {
     String? startingDate,
     String? endingDate,
     List<String>? clasificaciones,
+    bool tica = false,
+    int? concurrency,
   }) {
     return _client.post('/api/sitsa/get-inventory', {
       'bodega': _sitsaBodega,
@@ -63,6 +71,8 @@ class InventoryService {
       if (endingDate != null) 'endingDate': endingDate,
       if (clasificaciones != null && clasificaciones.isNotEmpty)
         'clasificaciones': clasificaciones,
+      if (tica) 'tica': true,
+      if (tica && concurrency != null) 'concurrency': concurrency,
     });
   }
 

@@ -8,14 +8,12 @@ import '../shared/widgets/side_nav/nav_config.dart';
 
 import '../features/auth/cubit/auth_cubit.dart';
 import '../features/auth/view/login_screen.dart';
-import '../features/inventory/view/inventory_enrich_codes_screen.dart';
-import '../features/inventory/view/inventory_export_screen.dart';
+import '../features/inventory/view/inventory_codes_screen.dart';
 import '../features/inventory/view/inventory_lists_screen.dart';
 import '../features/inventory/view/inventory_screen.dart';
 import '../features/inventory/view/inventory_search_screen.dart';
 import '../features/inventory/view/inventory_print_labels_screen.dart';
 import '../features/inventory/view/inventory_sales_by_codes_screen.dart';
-import '../features/inventory/view/inventory_validate_barcodes_screen.dart';
 import '../features/reports/view/cierre_mikail_screen.dart';
 import '../features/reports/view/cierre_parallel_screen.dart';
 import '../features/reports/view/restock_list_screen.dart';
@@ -161,17 +159,10 @@ GoRouter createRouter(AuthCubit authCubit) {
                 ),
               ),
               GoRoute(
-                path: 'export',
-                name: 'inventory-export',
+                path: 'codes',
+                name: 'inventory-codes',
                 pageBuilder: (context, state) => const NoTransitionPage(
-                  child: InventoryExportScreen(),
-                ),
-              ),
-              GoRoute(
-                path: 'validate-barcodes',
-                name: 'inventory-validate-barcodes',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: InventoryValidateBarcodesScreen(),
+                  child: InventoryCodesScreen(),
                 ),
               ),
               GoRoute(
@@ -186,13 +177,6 @@ GoRouter createRouter(AuthCubit authCubit) {
                 name: 'inventory-lists',
                 pageBuilder: (context, state) => const NoTransitionPage(
                   child: InventoryListsScreen(),
-                ),
-              ),
-              GoRoute(
-                path: 'enrich-codes',
-                name: 'inventory-enrich-codes',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: InventoryEnrichCodesScreen(),
                 ),
               ),
             ],

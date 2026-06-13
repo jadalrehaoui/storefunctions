@@ -66,6 +66,59 @@ class ExportInventoryCubit extends Cubit<ExportInventoryState> {
     }
   }
 
+  /// Export limited to the chosen [columns] (each `(label, key)` where `key`
+  /// is the JSON key in `get-inventory.data`). When [tica] is true the request
+  /// asks the API to fetch live Tica saldos (slow).
+  Future<void> exportSelected({
+    DateTime? startingDate,
+    DateTime? endingDate,
+    List<String>? clasificaciones,
+    bool tica = false,
+    int? concurrency,
+    required List<({String label, String key})> columns,
+  }) async {
+    if (columns.isEmpty) {
+      emit(ExportInventoryFailure('Selecciona al menos una columna.'));
+      return;
+    }
+    emit(ExportInventoryLoading(
+        stage: tica ? 'Consultando inventario + Tica...' : null));
+    try {
+      final fmt = DateFormat('yyyy-MM-dd');
+      final data = await _inventoryService.getInventory(
+        startingDate: startingDate != null ? fmt.format(startingDate) : null,
+        endingDate: endingDate != null ? fmt.format(endingDate) : null,
+        clasificaciones: clasificaciones,
+        tica: tica,
+        concurrency: concurrency,
+      );
+
+      final items = (data is Map && data['data'] is List)
+          ? (data['data'] as List<dynamic>)
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList()
+          : <Map<String, dynamic>>[];
+
+      if (items.isEmpty) {
+        emit(ExportInventoryFailure('No hay datos para exportar.'));
+        return;
+      }
+
+      final buffer = StringBuffer();
+      buffer.writeln(columns.map((c) => _escapeCsv(c.label)).join(','));
+      for (final row in items) {
+        buffer.writeln(
+            columns.map((c) => _escapeCsv('${row[c.key] ?? ''}')).join(','));
+      }
+      final filePath = await _saveCsv(buffer.toString());
+      emit(ExportInventorySuccess(filePath: filePath, rowCount: items.length));
+    } on DioException catch (e) {
+      emit(ExportInventoryFailure(e.message ?? 'Error de conexión'));
+    } catch (e) {
+      emit(ExportInventoryFailure(e.toString()));
+    }
+  }
+
   Future<void> exportWithTica({
     DateTime? startingDate,
     DateTime? endingDate,

@@ -175,6 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _usernameController,
                         enabled: !isLoading,
+                        autofocus: true,
                         decoration: InputDecoration(
                           labelText: 'Usuario',
                           prefixIcon: const Icon(Icons.person_outline),

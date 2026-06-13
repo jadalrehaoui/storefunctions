@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import '../../../l10n/l10n.dart';
 
@@ -29,8 +30,29 @@ const androidFallbackRoute = '/android/home';
 /// Returns the nav items to show, filtered for the current platform.
 /// Privilege filtering is applied separately at render time.
 List<NavItemConfig> navItemsForPlatform() {
-  if (!Platform.isAndroid) return navItems;
-  return navItems
+  // Windows-only sub-items show on Windows and in debug builds (so they're
+  // visible while developing on macOS); hidden in release on macOS/web. On
+  // Android the second pass strips anything not in androidAllowedSubIds anyway.
+  final platformItems = (Platform.isWindows || kDebugMode)
+      ? navItems
+      : navItems
+            .map((item) {
+              final subs = item.subItems
+                  .where((s) => !s.windowsOnly)
+                  .toList();
+              return NavItemConfig(
+                id: item.id,
+                icon: item.icon,
+                label: item.label,
+                route: item.route,
+                subItems: subs,
+                privilege: item.privilege,
+              );
+            })
+            .toList();
+
+  if (!Platform.isAndroid) return platformItems;
+  return platformItems
       .map((item) {
         final subs = item.subItems
             .where((s) => androidAllowedSubIds.contains(s.id))
@@ -55,6 +77,7 @@ class NavSubConfig {
   final String Function(AppLocalizations) label;
   final String route;
   final String? privilege;
+  final bool windowsOnly;
 
   const NavSubConfig({
     required this.id,
@@ -62,6 +85,7 @@ class NavSubConfig {
     required this.label,
     required this.route,
     this.privilege,
+    this.windowsOnly = false,
   });
 }
 
@@ -168,17 +192,10 @@ final navItems = <NavItemConfig>[
         privilege: 'print_labels',
       ),
       NavSubConfig(
-        id: 'inventory-export',
-        icon: Icons.download_outlined,
-        label: (l10n) => l10n.navExportInventory,
-        route: '/inventory/export',
-        privilege: 'generate_inventory',
-      ),
-      NavSubConfig(
-        id: 'inventory-validate-barcodes',
-        icon: Icons.fact_check_outlined,
-        label: (l10n) => 'Validar Códigos',
-        route: '/inventory/validate-barcodes',
+        id: 'inventory-codes',
+        icon: Icons.qr_code_2,
+        label: (l10n) => 'Códigos e inventario',
+        route: '/inventory/codes',
         privilege: 'inspect_inventory',
       ),
       NavSubConfig(
@@ -193,13 +210,6 @@ final navItems = <NavItemConfig>[
         icon: Icons.checklist_outlined,
         label: (l10n) => 'Listas',
         route: '/inventory/lists',
-        privilege: 'inspect_inventory',
-      ),
-      NavSubConfig(
-        id: 'inventory-enrich-codes',
-        icon: Icons.auto_awesome_outlined,
-        label: (l10n) => 'Enriquecer Códigos',
-        route: '/inventory/enrich-codes',
         privilege: 'inspect_inventory',
       ),
     ],
