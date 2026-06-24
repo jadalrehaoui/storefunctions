@@ -208,7 +208,9 @@ class _CierreParallelViewState extends State<_CierreParallelView> {
   }
 }
 
-class _ParallelLayout extends StatelessWidget {
+enum _ItemSource { sitsa, workdb }
+
+class _ParallelLayout extends StatefulWidget {
   final ParallelDailySummary summary;
   final VoidCallback? onSaveAndPrint;
   final String saveAndPrintLabel;
@@ -221,11 +223,30 @@ class _ParallelLayout extends StatelessWidget {
   });
 
   @override
+  State<_ParallelLayout> createState() => _ParallelLayoutState();
+}
+
+class _ParallelLayoutState extends State<_ParallelLayout> {
+  _ItemSource _itemSource = _ItemSource.sitsa;
+
+  @override
   Widget build(BuildContext context) {
+    final summary = widget.summary;
+    final onSaveAndPrint = widget.onSaveAndPrint;
+    final saveAndPrintLabel = widget.saveAndPrintLabel;
+    final saving = widget.saving;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final colones = NumberFormat.currency(symbol: '₡', decimalDigits: 0);
     final l10n = context.l10n;
+
+    final isWorkdb = _itemSource == _ItemSource.workdb;
+    final shownItems = isWorkdb ? summary.itemsSoldWorkdb : summary.itemsSold;
+    final shownGross =
+        isWorkdb ? summary.totalGrossWorkdb : summary.totalGross;
+    final shownDiscount =
+        isWorkdb ? summary.totalDiscountWorkdb : summary.totalDiscount;
+    final shownNet = isWorkdb ? summary.totalNetWorkdb : summary.totalNet;
 
     return SingleChildScrollView(
       child: Column(
@@ -313,11 +334,41 @@ class _ParallelLayout extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Items sold
-          Text('Artículos Vendidos',
-              style: textTheme.titleSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600)),
+          // Items sold — SITSA and WorkDB are shown separately, never summed.
+          Row(
+            children: [
+              Text('Artículos Vendidos',
+                  style: textTheme.titleSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600)),
+              const Spacer(),
+              SegmentedButton<_ItemSource>(
+                segments: const [
+                  ButtonSegment(
+                      value: _ItemSource.sitsa, label: Text('SITSA')),
+                  ButtonSegment(
+                      value: _ItemSource.workdb, label: Text('WorkDB')),
+                ],
+                selected: {_itemSource},
+                showSelectedIcon: false,
+                onSelectionChanged: (s) =>
+                    setState(() => _itemSource = s.first),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Per-source totals (independent from each other).
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: [
+              _Stat(label: 'Bruto', value: colones.format(shownGross)),
+              _Stat(
+                  label: l10n.invoiceDiscount,
+                  value: colones.format(shownDiscount)),
+              _Stat(label: 'Neto', value: colones.format(shownNet)),
+            ],
+          ),
           const SizedBox(height: 8),
           _ParallelTable(
             columns: const [
@@ -337,7 +388,7 @@ class _ParallelLayout extends StatelessWidget {
               TextAlign.end,
               TextAlign.end,
             ],
-            rows: summary.itemsSold
+            rows: shownItems
                 .map((i) => [
                       i.sitsaCode,
                       i.description,

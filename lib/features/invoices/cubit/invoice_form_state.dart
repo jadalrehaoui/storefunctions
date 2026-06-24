@@ -24,6 +24,10 @@ class InvoiceFormState {
   final DateTime date;
   final String notes;
 
+  /// Source of every line on this invoice: 'sitsa' or 'workdb'. Null until the
+  /// first line is added. Invoices never mix sources.
+  final String? source;
+
   // Lookup
   final bool lookupLoading;
   final InvoiceItemPreview? lookupResult;
@@ -43,6 +47,7 @@ class InvoiceFormState {
     this.clientId = '',
     required this.date,
     this.notes = '',
+    this.source,
     this.lookupLoading = false,
     this.lookupResult,
     this.lookupError,
@@ -70,6 +75,8 @@ class InvoiceFormState {
     String? clientId,
     DateTime? date,
     String? notes,
+    String? source,
+    bool clearSource = false,
     bool? lookupLoading,
     InvoiceItemPreview? lookupResult,
     bool clearLookupResult = false,
@@ -89,6 +96,7 @@ class InvoiceFormState {
       clientId: clientId ?? this.clientId,
       date: date ?? this.date,
       notes: notes ?? this.notes,
+      source: clearSource ? null : (source ?? this.source),
       lookupLoading: lookupLoading ?? this.lookupLoading,
       lookupResult:
           clearLookupResult ? null : (lookupResult ?? this.lookupResult),

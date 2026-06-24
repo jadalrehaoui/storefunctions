@@ -111,6 +111,11 @@ class CombinedItem {
   // Distinguishes "not fetched yet" (false) from "fetched but upstream
   // returned null/unavailable" (true with tica == null).
   final bool ticaFetched;
+  // Origin of the resolved item: 'sitsa' (default) or 'workdb' (Parallel-only
+  // product found via the WorkDB fallback).
+  final String source;
+
+  bool get isWorkdb => source == 'workdb';
 
   const CombinedItem({
     required this.code,
@@ -120,6 +125,7 @@ class CombinedItem {
     this.workdbVendido,
     this.tica,
     this.ticaFetched = false,
+    this.source = 'sitsa',
   });
 
   double? get totalVentas {
@@ -159,6 +165,7 @@ class CombinedItem {
       mikail: mikail,
       workdbVendido: workdbVendido,
       raw: json,
+      source: json['source'] as String? ?? 'sitsa',
     );
   }
 
@@ -171,6 +178,7 @@ class CombinedItem {
       raw: raw,
       tica: ticaValue,
       ticaFetched: true,
+      source: source,
     );
   }
 }

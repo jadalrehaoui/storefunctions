@@ -174,12 +174,16 @@ class _CombinedItemCardState extends State<_CombinedItemCard> {
 
   int get _quantity => labelAvailableQty(widget.item);
 
-  int get _maxRows => maxLabelRows(widget.item);
+  // Parallel-only products carry no stock, so the disponible-based cap doesn't
+  // apply — allow a free count (default 1) for them.
+  int get _maxRows =>
+      widget.item.isWorkdb ? 99 : maxLabelRows(widget.item);
 
   @override
   void initState() {
     super.initState();
-    _countController = TextEditingController(text: '$_maxRows');
+    _countController =
+        TextEditingController(text: widget.item.isWorkdb ? '1' : '$_maxRows');
   }
 
   @override
@@ -207,14 +211,15 @@ class _CombinedItemCardState extends State<_CombinedItemCard> {
   @override
   Widget build(BuildContext context) {
     final sitsa = widget.item.sitsa;
-    final mikail = widget.item.mikail;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final colones = NumberFormat.currency(symbol: '₡', decimalDigits: 2);
 
     final sitsaPrice = sitsa?.precio ?? 0.0;
     final barcode = sitsa?.codigoBarras ?? '';
-    final canPrint = barcode.isNotEmpty && _quantity > 0;
+    // Parallel products have no stock count, but a label can always be printed.
+    final canPrint =
+        barcode.isNotEmpty && (_quantity > 0 || widget.item.isWorkdb);
 
     return SingleChildScrollView(
       child: Card(
@@ -261,10 +266,27 @@ class _CombinedItemCardState extends State<_CombinedItemCard> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  _QuantityBadge(
-                    quantity: _quantity,
-                    isAvailable: _quantity > 0,
-                  ),
+                  if (widget.item.isWorkdb)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Parallel',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                    )
+                  else
+                    _QuantityBadge(
+                      quantity: _quantity,
+                      isAvailable: _quantity > 0,
+                    ),
                 ],
               ),
 

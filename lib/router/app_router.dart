@@ -13,6 +13,7 @@ import '../features/inventory/view/inventory_lists_screen.dart';
 import '../features/inventory/view/inventory_screen.dart';
 import '../features/inventory/view/inventory_search_screen.dart';
 import '../features/inventory/view/inventory_print_labels_screen.dart';
+import '../features/inventory/view/parallel_products_screen.dart';
 import '../features/reports/view/cierre_mikail_screen.dart';
 import '../features/reports/view/cierre_parallel_screen.dart';
 import '../features/reports/view/restock_list_screen.dart';
@@ -168,6 +169,13 @@ GoRouter createRouter(AuthCubit authCubit) {
                 name: 'inventory-lists',
                 pageBuilder: (context, state) => const NoTransitionPage(
                   child: InventoryListsScreen(),
+                ),
+              ),
+              GoRoute(
+                path: 'parallel-products',
+                name: 'inventory-parallel-products',
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: ParallelProductsScreen(),
                 ),
               ),
             ],

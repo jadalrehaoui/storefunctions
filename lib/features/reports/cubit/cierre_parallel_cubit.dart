@@ -44,18 +44,31 @@ class ParallelDailySummary {
   final DateTime date;
   final List<InvoiceSummary> invoices;
   final List<InvoiceSummary> voidedInvoices;
+
+  /// SITSA-sourced items (from `items_sold`).
   final List<ParallelItemSold> itemsSold;
+
+  /// WorkDB-sourced items (from `items_sold_workdb`). Never summed with [itemsSold].
+  final List<ParallelItemSold> itemsSoldWorkdb;
 
   const ParallelDailySummary({
     required this.date,
     required this.invoices,
     required this.voidedInvoices,
     required this.itemsSold,
+    this.itemsSoldWorkdb = const [],
   });
 
+  // SITSA totals.
   double get totalGross => itemsSold.fold(0, (s, i) => s + i.gross);
   double get totalDiscount => itemsSold.fold(0, (s, i) => s + i.discount);
   double get totalNet => itemsSold.fold(0, (s, i) => s + i.net);
+
+  // WorkDB totals (independent — never added to the SITSA totals).
+  double get totalGrossWorkdb => itemsSoldWorkdb.fold(0, (s, i) => s + i.gross);
+  double get totalDiscountWorkdb =>
+      itemsSoldWorkdb.fold(0, (s, i) => s + i.discount);
+  double get totalNetWorkdb => itemsSoldWorkdb.fold(0, (s, i) => s + i.net);
 
   factory ParallelDailySummary.fromJson(Map<String, dynamic> json) {
     List<InvoiceSummary> parseInvoices(dynamic raw) {
@@ -66,15 +79,20 @@ class ParallelDailySummary {
           .toList();
     }
 
-    final rawItems = (json['items_sold'] as List?) ?? const [];
+    List<ParallelItemSold> parseItems(dynamic raw) {
+      if (raw is! List) return const [];
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(ParallelItemSold.fromJson)
+          .toList();
+    }
+
     return ParallelDailySummary(
       date: DateTime.tryParse(json['date']?.toString() ?? '') ?? DateTime.now(),
       invoices: parseInvoices(json['invoices']),
       voidedInvoices: parseInvoices(json['voided_invoices']),
-      itemsSold: rawItems
-          .whereType<Map<String, dynamic>>()
-          .map(ParallelItemSold.fromJson)
-          .toList(),
+      itemsSold: parseItems(json['items_sold']),
+      itemsSoldWorkdb: parseItems(json['items_sold_workdb']),
     );
   }
 }
@@ -220,22 +238,28 @@ class CierreParallelCubit extends Cubit<CierreParallelState> {
       'total_gross': summary.totalGross,
       'total_discount': summary.totalDiscount,
       'total_net': summary.totalNet,
+      // Independent WorkDB totals (additive keys — old rows without them still
+      // read fine).
+      'total_gross_workdb': summary.totalGrossWorkdb,
+      'total_discount_workdb': summary.totalDiscountWorkdb,
+      'total_net_workdb': summary.totalNetWorkdb,
       'active_invoices_count': summary.invoices.length,
       'voided_invoices_count': summary.voidedInvoices.length,
       'invoices': summary.invoices.map(invoiceJson).toList(),
       'voided_invoices': summary.voidedInvoices.map(invoiceJson).toList(),
-      'items_sold': summary.itemsSold
-          .map((i) => {
-                'sitsa_code': i.sitsaCode,
-                'description': i.description,
-                'total_quantity': i.quantity,
-                'total_gross': i.gross,
-                'total_discount': i.discount,
-                'total_net': i.net,
-              })
-          .toList(),
+      'items_sold': summary.itemsSold.map(_itemJson).toList(),
+      'items_sold_workdb': summary.itemsSoldWorkdb.map(_itemJson).toList(),
     };
   }
+
+  Map<String, dynamic> _itemJson(ParallelItemSold i) => {
+        'sitsa_code': i.sitsaCode,
+        'description': i.description,
+        'total_quantity': i.quantity,
+        'total_gross': i.gross,
+        'total_discount': i.discount,
+        'total_net': i.net,
+      };
 
   Map<String, dynamic> _buildPayload({
     required ParallelDailySummary summary,
@@ -262,22 +286,17 @@ class CierreParallelCubit extends Cubit<CierreParallelState> {
         'total_gross': summary.totalGross,
         'total_discount': summary.totalDiscount,
         'total_net': summary.totalNet,
+        'total_gross_workdb': summary.totalGrossWorkdb,
+        'total_discount_workdb': summary.totalDiscountWorkdb,
+        'total_net_workdb': summary.totalNetWorkdb,
         'active_invoices_count': summary.invoices.length,
         'voided_invoices_count': summary.voidedInvoices.length,
       },
       'invoices': summary.invoices.map(invoiceJson).toList(),
       'voided_invoices':
           summary.voidedInvoices.map(invoiceJson).toList(),
-      'items_sold': summary.itemsSold
-          .map((i) => {
-                'sitsa_code': i.sitsaCode,
-                'description': i.description,
-                'total_quantity': i.quantity,
-                'total_gross': i.gross,
-                'total_discount': i.discount,
-                'total_net': i.net,
-              })
-          .toList(),
+      'items_sold': summary.itemsSold.map(_itemJson).toList(),
+      'items_sold_workdb': summary.itemsSoldWorkdb.map(_itemJson).toList(),
     };
   }
 }

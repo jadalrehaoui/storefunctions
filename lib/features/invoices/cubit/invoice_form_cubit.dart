@@ -81,6 +81,25 @@ class InvoiceFormCubit extends Cubit<InvoiceFormState> {
         return;
       }
 
+      // Source of the resolved item: 'sitsa' or 'workdb' (defaults to sitsa for
+      // older servers that don't send the field).
+      final itemSource = (map['source'] as String?)?.trim().isNotEmpty == true
+          ? map['source'] as String
+          : 'sitsa';
+
+      // Enforce no-mixing: once an invoice has lines, every subsequent lookup
+      // must be the same source. WorkDB and SITSA products can't share a factura.
+      if (state.items.isNotEmpty &&
+          state.source != null &&
+          state.source != itemSource) {
+        emit(state.copyWith(
+          lookupLoading: false,
+          lookupError:
+              'No se pueden mezclar productos SITSA y Parallel en la misma factura',
+        ));
+        return;
+      }
+
       final costo = (map['Costo'] as num?)?.toDouble() ?? 0;
       final utilidad = (map['UTILIDAD'] as num?)?.toDouble() ??
           (map['Ganancia'] as num?)?.toDouble() ??
@@ -107,7 +126,11 @@ class InvoiceFormCubit extends Cubit<InvoiceFormState> {
           tica: tica,
         ));
       }
-      emit(state.copyWith(lookupLoading: false, items: newItems));
+      emit(state.copyWith(
+        lookupLoading: false,
+        items: newItems,
+        source: itemSource,
+      ));
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       if (status == 404) {
@@ -233,6 +256,7 @@ class InvoiceFormCubit extends Cubit<InvoiceFormState> {
         'date':
             '${state.date.year.toString().padLeft(4, '0')}-${state.date.month.toString().padLeft(2, '0')}-${state.date.day.toString().padLeft(2, '0')}',
         'notes': state.notes,
+        'source': state.source ?? 'sitsa',
         if (state.hasHighDiscount && state.discountAuthToken != null)
           'discount_auth_token': state.discountAuthToken,
         'items': state.items.map((i) => i.toJson()).toList(),

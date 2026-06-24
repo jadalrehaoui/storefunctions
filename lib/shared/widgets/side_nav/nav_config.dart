@@ -205,6 +205,13 @@ final navItems = <NavItemConfig>[
         route: '/inventory/lists',
         privilege: 'inspect_inventory',
       ),
+      NavSubConfig(
+        id: 'inventory-parallel-products',
+        icon: Icons.sell_outlined,
+        label: (l10n) => 'Productos Parallel',
+        route: '/inventory/parallel-products',
+        privilege: 'create_product',
+      ),
     ],
   ),
   NavItemConfig(

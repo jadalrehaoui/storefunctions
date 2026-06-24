@@ -31,7 +31,7 @@ class _SalesReportsViewState extends State<SalesReportsView>
     with SingleTickerProviderStateMixin {
   DateTime _startDate = DateTime.now().copyWith(day: 1);
   DateTime _endDate = DateTime.now();
-  late final TabController _tabs = TabController(length: 3, vsync: this);
+  late final TabController _tabs = TabController(length: 4, vsync: this);
 
   static final _displayFmt = DateFormat('MMM d, yyyy');
 
@@ -107,7 +107,8 @@ class _SalesReportsViewState extends State<SalesReportsView>
             tabs: const [
               Tab(text: '1. Sitsa'),
               Tab(text: '2. Parallel'),
-              Tab(text: '3. Mikail'),
+              Tab(text: '3. Parallel (WorkDB)'),
+              Tab(text: '4. Mikail'),
             ],
           ),
           const SizedBox(height: 12),
@@ -125,6 +126,12 @@ class _SalesReportsViewState extends State<SalesReportsView>
                   title: 'Parallel',
                   rowsSelector: (s) => s.parallelRows,
                   download: (cubit, rows) => cubit.downloadParallel(rows),
+                  onDownload: _download,
+                ),
+                _ReportTab(
+                  title: 'Parallel (WorkDB)',
+                  rowsSelector: (s) => s.parallelWorkdbRows,
+                  download: (cubit, rows) => cubit.downloadWorkdb(rows),
                   onDownload: _download,
                 ),
                 _ReportTab(

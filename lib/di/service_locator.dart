@@ -11,6 +11,7 @@ import '../services/inventory_service.dart';
 import '../services/invoice_service.dart';
 import '../services/item_lists_service.dart';
 import '../services/label_printer_service.dart';
+import '../services/parallel_products_service.dart';
 import '../services/receipt_printer_service.dart';
 import '../shared/cubit/health_cubit.dart';
 
@@ -24,6 +25,8 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<InventoryService>(() => InventoryService(sl()));
   sl.registerLazySingleton<InvoiceService>(() => InvoiceService(sl()));
   sl.registerLazySingleton<ItemListsService>(() => ItemListsService(sl()));
+  sl.registerLazySingleton<ParallelProductsService>(
+      () => ParallelProductsService(sl()));
   sl.registerLazySingleton<BodegaService>(() => BodegaService(sl()));
   sl.registerLazySingleton<DispatchStreamService>(
       () => DispatchStreamService(sl()));
